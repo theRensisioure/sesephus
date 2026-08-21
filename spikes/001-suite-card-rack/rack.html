@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sesefus rack · horizontal flippable</title>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --panel: #12161e;
+      --panel2: #181d28;
+      --line: #2a3344;
+      --text: #e6ebf4;
+      --muted: #8b95a8;
+      --cyan: #6ec8ff;
+      --gold: #d4b23a;
+      --green: #6bcf9b;
+      --violet: #a78bfa;
+      --bad: #e07a7a;
+      --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      --sans: "Segoe UI", system-ui, sans-serif;
+      --card-w: min(340px, 78vw);
+      --card-h: min(420px, 72vh);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+    body { display: flex; flex-direction: column; min-height: 100%; }
+
+    /* Elegant fixed frame — suite cockpit chrome */
+    .frame {
+      flex: 1;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, #0e1218 0%, var(--bg) 45%);
+      min-height: 100%;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    header h1 em { font-style: normal; color: var(--cyan); }
+    header .meta { font-size: 0.72rem; color: var(--muted); }
+
+    /* HORIZONTAL rack — cards side by side, scroll X */
+    .rack {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 28px 24px 36px;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 18px;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 24px;
+      perspective: 1400px;
+    }
+    .rack::-webkit-scrollbar { height: 10px; }
+    .rack::-webkit-scrollbar-thumb { background: #2a3548; border-radius: 5px; }
+
+    /* One flippable unit (suite face A / face B) */
+    .card {
+      scroll-snap-align: center;
+      flex: 0 0 var(--card-w);
+      width: var(--card-w);
+      height: var(--card-h);
+      position: relative;
+      perspective: 1200px;
+    }
+
+    .flipper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .card.is-flipped .flipper { transform: rotateY(180deg); }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .face.back {
+      transform: rotateY(180deg);
+      background: #0c0f14;
+    }
+    .card.is-flipped .face.front { pointer-events: none; }
+    .card:not(.is-flipped) .face.back { pointer-events: none; }
+
+    .card[data-id="circadia"] { --accent: var(--violet); }
+    .card[data-id="arcadium"] { --accent: var(--cyan); }
+    .card[data-id="aytree"] { --accent: var(--gold); }
+    .card[data-id="scanner"] { --accent: var(--green); }
+
+    .face.front {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent) inset;
+    }
+
+    .front-top {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 28px 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .front-top:hover { background: rgba(255,255,255,0.02); }
+
+    .glyph {
+      width: 72px; height: 72px;
+      border-radius: 16px;
+      display: grid; place-items: center;
+      font-size: 1.85rem;
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+      background: var(--panel2);
+      color: var(--accent);
+    }
+
+    .name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .line {
+      max-width: 28ch;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .path {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: #6a7588;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+
+    .front-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .chip {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .chip.live { color: var(--green); border-color: rgba(107,207,155,0.45); }
+    .chip.down { color: var(--bad); border-color: rgba(224,122,122,0.45); }
+    .chip.local { color: var(--cyan); border-color: rgba(110,200,255,0.4); }
+    .chip.stub { color: var(--gold); border-color: rgba(212,178,58,0.4); }
+
+    .btns { display: flex; gap: 6px; }
+    .btns button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btns button:hover { border-color: #4a5a74; }
+    .btns button.pri { color: var(--cyan); border-color: rgba(110,200,255,0.35); }
+    .btns button.flip-btn { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+    /* Face B — implementation (live or disk map) */
+    .back-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .back-bar span.ok { color: var(--green); }
+    .back-bar span.err { color: var(--bad); }
+
+    .back-body {
+      flex: 1;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      line-height: 1.45;
+      color: #b8c0d0;
+      padding: 10px 12px 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 0;
+    }
+    .back-body iframe {
+      width: 100%;
+      height: 200px;
+      border: 0;
+      border-radius: 8px;
+      background: #000;
+      display: block;
+    }
+    .back-body a { color: var(--cyan); }
+    .back-body .dim { color: #6a7588; }
+
+    .back-actions {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px 12px;
+      border-top: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+    .back-actions button {
+      flex: 1;
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .back-actions button.pri { color: var(--cyan); border-color: rgba(110,200,255,0.35); }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 10px 18px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+    }
+    footer code { color: var(--cyan); font-family: var(--mono); font-size: 0.7rem; }
+    footer strong { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header>
+      <h1>Sesefus · <em>rack</em></h1>
+      <div class="meta">horizontal · flippable cards · F = flip · Open = real surface</div>
+    </header>
+
+    <div class="rack" id="rack" role="list" aria-label="Product card rack"></div>
+
+    <footer>
+      <span><strong>Shape:</strong> horizontal rack of flippable cards (suite face A / face B).</span>
+      <span>Front = who · Back = implementation (live embed or disk map).</span>
+      <span>Serve: <code>open.bat</code> → <code>http://127.0.0.1:8791/rack.html</code></span>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Horizontal rack of FLIPPABLE cards.
+     * Face A = product identity. Face B = real implementation (live / disk).
+     * Same flip grammar as suite cards — not a marketing carousel, not a vertical list.
+     */
+    const CARDS = [
+      {
+        id: "circadia",
+        glyph: "◐",
+        name: "Circadia",
+        line: "Alarms · timekeeper · rhythm face",
+        path: "C:\\dev\\sesefus  ·  ssfs alarm / status  ·  host :3000",
+        kind: "http",
+        open: "http://127.0.0.1:3000/",
+        probes: [
+          "http://127.0.0.1:3000/api/status",
+          "http://127.0.0.1:3000/",
+        ],
+        fallback: [
+          "IMPLEMENTATION (disk / REPL — host not required)",
+          "",
+          "Wired today:",
+          "  ssfs.bat  →  alarm schedule|group|list|toggle|…",
+          "  status",
+          "  Timekeeper thread (50ms) in host binary",
+          "",
+          "UI leftovers:",
+          "  dashboard/ui/src/components/Circadia.jsx",
+          "",
+          "Open host when built:",
+          "  http://127.0.0.1:3000/api/status",
+        ].join("\n"),
+      },
+      {
+        id: "arcadium",
+        glyph: "◎",
+        name: "Arcadium",
+        line: "Voice journal — primary path, local Whisper + ETDI",
+        path: "C:\\dev\\sesefus\\voice.bat  ·  aurgio/",
+        kind: "local",
+        open: null,
+        openCmd: "voice.bat",
+        probes: [],
+        fallback: [
+          "IMPLEMENTATION (no web surface — that is honest)",
+          "",
+          "Primary loop:",
+          "  install.bat   # once",
+          "  voice.bat     # push-to-talk journal",
+          "",
+          "Speak: review last · score · dashboard · goodbye",
+          "",
+          "Data stays local:",
+          "  aurgio/recordings/",
+          "  aurgio/ scores + transcripts",
+          "",
+          "Tools:",
+          "  tools/etdi_*.py",
+          "  dashboard/ui/src/components/Arcadium.jsx (dashboard face, optional)",
+          "",
+          "REPL journal * is STUB — use voice.bat, not ssfs journal.",
+        ].join("\n"),
+      },
+      {
+        id: "aytree",
+        glyph: "⌖",
+        name: "AyTree",
+        line: "Derivation map / lineage · branch sneak-peek on info flip",
+        path: "artifact-scanner/experimental/aytree  ·  :8765/aytree",
+        kind: "http",
+        open: "http://127.0.0.1:8765/aytree",
+        openAlt: "http://127.0.0.1:8765/aytree/info",
+        probes: ["http://127.0.0.1:8765/aytree", "http://127.0.0.1:8765/api/aytree"],
+        iframe: "http://127.0.0.1:8765/aytree",
+        fallback: [
+          "IMPLEMENTATION",
+          "",
+          "  C:\\Users\\bardw\\artifact-scanner\\experimental\\aytree\\",
+          "    index_tree.html   UI (tree + info panes)",
+          "    api.py            tree · notes · pins · branch-preview",
+          "",
+          "Routes (scanner serve):",
+          "  /aytree          tree",
+          "  /aytree/info     flip / metadata + branch peek",
+          "  /api/aytree/tree",
+          "  /api/aytree/branch-preview?repo=&ref=",
+          "",
+          "Sesefus door: aytree.bat · ssfs aytree open",
+        ].join("\n"),
+      },
+      {
+        id: "scanner",
+        glyph: "▣",
+        name: "Scanner",
+        line: "Artifact finder — sessions, maps, archives (not suite host)",
+        path: "C:\\Users\\bardw\\artifact-scanner  ·  :8765/",
+        kind: "http",
+        open: "http://127.0.0.1:8765/",
+        probes: ["http://127.0.0.1:8765/", "http://127.0.0.1:8765/api/index.json"],
+        iframe: "http://127.0.0.1:8765/",
+        fallback: [
+          "IMPLEMENTATION",
+          "",
+          "  C:\\Users\\bardw\\artifact-scanner\\",
+          "    board.html      SSOT UI",
+          "    win_serve.py    :8765",
+          "    window_host.py  native windows",
+          "",
+          "Sesefus on scanner = inventory only",
+          "  GET /api/sesefus  → still no modules loaded into finder",
+          "",
+          "This rack is the opposite bet: Sesefus owns the deck.",
+        ].join("\n"),
+      },
+    ];
+
+    const rack = document.getElementById("rack");
+
+    function chipEl(text, cls) {
+      const s = document.createElement("span");
+      s.className = "chip " + (cls || "");
+      s.textContent = text;
+      return s;
+    }
+
+    function build(c) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.dataset.id = c.id;
+      card.setAttribute("role", "listitem");
+      card.setAttribute("aria-label", c.name + " card");
+
+      const flipper = document.createElement("div");
+      flipper.className = "flipper";
+
+      /* —— Face A: identity —— */
+      const front = document.createElement("div");
+      front.className = "face front";
+
+      const frontTop = document.createElement("div");
+      frontTop.className = "front-top";
+      frontTop.title = "Click to flip — implementation";
+      frontTop.innerHTML =
+        `<div class="glyph"></div>` +
+        `<div class="name"></div>` +
+        `<div class="line"></div>` +
+        `<div class="path"></div>`;
+      frontTop.querySelector(".glyph").textContent = c.glyph;
+      frontTop.querySelector(".name").textContent = c.name;
+      frontTop.querySelector(".line").textContent = c.line;
+      frontTop.querySelector(".path").textContent = c.path;
+
+      const frontBar = document.createElement("div");
+      frontBar.className = "front-bar";
+      const chip = chipEl("…", "");
+      chip.dataset.role = "chip";
+      frontBar.appendChild(chip);
+
+      const btns = document.createElement("div");
+      btns.className = "btns";
+      const bFlip = document.createElement("button");
+      bFlip.type = "button";
+      bFlip.className = "flip-btn";
+      bFlip.textContent = "Flip";
+      bFlip.title = "Show implementation (face B)";
+      const bOpen = document.createElement("button");
+      bOpen.type = "button";
+      bOpen.className = "pri";
+      bOpen.textContent = "Open";
+      btns.appendChild(bFlip);
+      btns.appendChild(bOpen);
+      frontBar.appendChild(btns);
+
+      front.appendChild(frontTop);
+      front.appendChild(frontBar);
+
+      /* —— Face B: implementation —— */
+      const back = document.createElement("div");
+      back.className = "face back";
+      back.innerHTML =
+        `<div class="back-bar">` +
+        `  <span>implementation · face B</span>` +
+        `  <span data-role="pstat">—</span>` +
+        `</div>` +
+        `<div class="back-body" data-role="body"></div>` +
+        `<div class="back-actions">` +
+        `  <button type="button" data-role="flip-back">Flip back</button>` +
+        `  <button type="button" class="pri" data-role="open-back">Open</button>` +
+        `</div>`;
+
+      flipper.appendChild(front);
+      flipper.appendChild(back);
+      card.appendChild(flipper);
+
+      const body = back.querySelector("[data-role=body]");
+      const pstat = back.querySelector("[data-role=pstat]");
+      let loaded = false;
+
+      function setFlipped(on) {
+        card.classList.toggle("is-flipped", on);
+        card.setAttribute("aria-pressed", on ? "true" : "false");
+        if (on && !loaded) {
+          loaded = true;
+          loadImpl(c, body, pstat, chip);
+        }
+      }
+
+      function toggleFlip() {
+        setFlipped(!card.classList.contains("is-flipped"));
+      }
+
+      function doOpen() {
+        if (c.open) window.open(c.open, "_blank", "noopener");
+        else alert("No HTTP open.\nRun from sesefus root:\n  " + (c.openCmd || "(see Flip)"));
+      }
+
+      frontTop.addEventListener("click", toggleFlip);
+      bFlip.addEventListener("click", (e) => { e.stopPropagation(); toggleFlip(); });
+      bOpen.addEventListener("click", (e) => { e.stopPropagation(); doOpen(); });
+      back.querySelector("[data-role=flip-back]").addEventListener("click", () => setFlipped(false));
+      back.querySelector("[data-role=open-back]").addEventListener("click", doOpen);
+
+      probe(c, chip);
+      return card;
+    }
+
+    async function probe(c, chip) {
+      if (c.kind === "local") {
+        chip.textContent = "local";
+        chip.className = "chip local";
+        return;
+      }
+      if (!c.probes || !c.probes.length) {
+        chip.textContent = "stub";
+        chip.className = "chip stub";
+        return;
+      }
+      for (const url of c.probes) {
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 1200);
+          const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+          clearTimeout(t);
+          if (res.ok) {
+            chip.textContent = "live";
+            chip.className = "chip live";
+            chip.title = url;
+            return;
+          }
+        } catch (_) { /* try next */ }
+      }
+      chip.textContent = "down";
+      chip.className = "chip down";
+    }
+
+    async function loadImpl(c, body, pstat, chip) {
+      body.textContent = "loading…";
+      pstat.textContent = "…";
+      pstat.className = "";
+
+      if (c.iframe) {
+        let up = false;
+        try {
+          const res = await fetch(c.probes[0], { cache: "no-store" });
+          up = res.ok;
+        } catch (_) { up = false; }
+
+        if (up) {
+          pstat.textContent = "live surface";
+          pstat.className = "ok";
+          body.innerHTML = "";
+          const note = document.createElement("div");
+          note.className = "dim";
+          note.style.marginBottom = "8px";
+          note.textContent = "Face B · live UI. Open for full window.";
+          body.appendChild(note);
+          const fr = document.createElement("iframe");
+          fr.src = c.iframe;
+          fr.title = c.name + " live";
+          fr.loading = "lazy";
+          body.appendChild(fr);
+          if (c.openAlt) {
+            const a = document.createElement("div");
+            a.style.marginTop = "8px";
+            a.innerHTML = `<a href="${c.openAlt}" target="_blank" rel="noopener">also: info flip →</a>`;
+            body.appendChild(a);
+          }
+          const pre = document.createElement("pre");
+          pre.style.marginTop = "10px";
+          pre.style.color = "#6a7588";
+          pre.textContent = c.fallback;
+          body.appendChild(pre);
+          return;
+        }
+      }
+
+      if (c.probes && c.probes.length) {
+        for (const url of c.probes) {
+          try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (!res.ok) continue;
+            const ct = res.headers.get("content-type") || "";
+            let text;
+            if (ct.includes("json")) {
+              const j = await res.json();
+              text = url + "\n\n" + JSON.stringify(j, null, 2).slice(0, 6000);
+            } else {
+              text = url + "\n\nHTTP " + res.status + " · " + ct + "\n(open for full UI)";
+            }
+            pstat.textContent = "live " + res.status;
+            pstat.className = "ok";
+            body.textContent = text + "\n\n---\n" + c.fallback;
+            return;
+          } catch (_) { /* next */ }
+        }
+      }
+
+      pstat.textContent = chip.classList.contains("live") ? "map" : "offline map";
+      pstat.className = chip.classList.contains("down") ? "err" : "";
+      body.textContent = c.fallback;
+    }
+
+    CARDS.forEach((c) => rack.appendChild(build(c)));
+
+    /* Keyboard: F flips focused / first card under pointer */
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "f" || e.key === "F") {
+        if (e.target.closest("input, textarea, button, a")) return;
+        const mid = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        const card = mid && mid.closest(".card");
+        if (card) {
+          e.preventDefault();
+          card.querySelector(".flip-btn")?.click();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

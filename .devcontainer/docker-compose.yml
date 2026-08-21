@@ -1,0 +1,42 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # :cached improves bind-mount performance when the repo lives on /mnt/c in WSL
+      - ..:/workspaces/sesefus:cached
+      # Persist tool caches outside the Windows mount for faster rebuilds
+      - sesefus-zig-cache:/workspaces/sesefus/core/sesephus/.zig-cache
+      - sesefus-node-modules:/workspaces/sesefus/dashboard/ui/node_modules
+      - sesefus-venv:/workspaces/sesefus/.venv
+    command: sleep infinity
+    network_mode: bridge
+    init: true
+    # WSL2 + Docker Desktop: reach host services (e.g. Windows-side Zig host during hybrid dev)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      NATS_URL: nats://nats:4222
+      SESefus_DASHBOARD_API: http://127.0.0.1:3001
+      SESefus_ZIG_HOST_API: http://127.0.0.1:3000
+      SESefus_VITE_DEV: http://127.0.0.1:5173
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "5173:5173"
+
+  # Optional legacy / full-stack profile; main dev flow polls Zig over HTTP
+  nats:
+    image: nats:2.10-alpine
+    profiles: ["full-stack"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["-js", "-m", "8222"]
+    restart: unless-stopped
+
+volumes:
+  sesefus-zig-cache:
+  sesefus-node-modules:
+  sesefus-venv:

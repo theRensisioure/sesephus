@@ -1,0 +1,29 @@
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - ./nats/data:/data
+
+  dashboard-core:
+    build:
+      context: ./aether-dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats:4222
+
+  audio-layer:
+    build:
+      context: .
+      dockerfile: Dockerfile.audio
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats:4222
+    devices:
+      - /dev/snd:/dev/snd # Linux-specific, for Windows WSL2 might need work

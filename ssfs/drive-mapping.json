@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "drives": {
+    "vault": {
+      "letter": "V:",
+      "label": "SSFS_VAULT",
+      "required": true,
+      "role": "Primary vault - audio journals + state. Always present."
+    },
+    "coldArchive": {
+      "letter": "E:",
+      "label": "SESEFUS-STAGING",
+      "required": false,
+      "role": "Cold archive / enclosure. High priority."
+    },
+    "worktrees": {
+      "letter": "T:",
+      "label": "",
+      "required": false,
+      "role": "Git/worktrees (optional, future)."
+    }
+  },
+  "paths": {
+    "vaultRoot": "ssfs-vault",
+    "audio": "audio",
+    "state": "state",
+    "vaultDb": "sesephus_vault.db",
+    "archiveRoot": "Archive\\sesefhus"
+  }
+}

@@ -1,0 +1,7 @@
+# Product essay questions — not in this repo
+
+Private product-intent worksheet lives **outside** the public tree:
+
+`%USERPROFILE%\jwrangle\contexts\sesefus\PRODUCT_ESSAY_QUESTIONS.md`
+
+Do not re-add essay answer files under `docs/` — they are gitignored (health / personal disclosures).

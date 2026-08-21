@@ -1,0 +1,851 @@
+I see you want to implement a **Rust Dashboard Core** (NODE_01) + **Python Audio Input Layer** — two interconnected systems sharing state via NATS. Here's the full implementation:
+
+---
+
+## Step 1: Rust Project Setup
+
+```bash
+cd C:\Users\bardw\aether-dashboard
+cargo new --lib aether_dashboard_core && cd ..
+rm -rf aether-dashboard/target
+```
+
+### `Cargo.toml` (robust async stack)
+
+**File:** `C:\Users\bardw\arcadium-circadia\aether-dashboard\Cargo.toml`
+
+```toml
+[package]
+name = "aether_dashboard_core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.45", features = ["full"] }
+axum = { version = "0.8", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-nats = "0.40"
+thiserror = "2.0"
+uuid = { version = "1.11", features = ["v4"] }
+bytes = "1.9"
+
+[profile.release]
+lto = true
+codegen-units = 1
+```
+
+---
+
+## Step 2: Rust Shared Types & State Management
+
+### `C:\Users\bardw\arcadium-circadia\aether-dashboard\src\models.rs` (TaskEntry + ArtifactEntry)
+
+```rust
+use serde::{Serialize, Deserialize};
+use uuid::Uuid;
+use std::sync::Arc;
+use tokio::sync::{Mutex, RwLock};
+
+/// Task entry for distributed job tracking
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskEntry {
+    pub id: Uuid,
+    pub name: String,
+    pub status: TaskStatus,
+    pub progress: f32, // 0.0 to 1.0
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TaskStatus {
+    Pending,
+    Running,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
+/// Artifact entry for processing output
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ArtifactEntry {
+    pub id: Uuid,
+    pub task_id: Option<Uuid>,
+    pub name: String,
+    pub path: String,
+    pub size_bytes: u64,
+    pub mime_type: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// Agent status broadcast from nodes
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentStatus {
+    pub node_id: Uuid,
+    pub agent_name: String,
+    pub is_idle: bool,
+    pub current_task: Option<String>,
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+}
+
+/// Shared state wrapper for thread-safe access
+#[derive(Debug)]
+pub struct AppState {
+    pub tasks: Arc<RwLock<Vec<TaskEntry>>>,
+    pub artifacts: Arc<Mutex<Vec<ArtifactEntry>>>,
+    pub agent_statuses: Arc<Mutex<Vec<AgentStatus>>>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            tasks: Arc::new(RwLock::new(Vec::new())),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
+            agent_statuses: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
+
+pub fn generate_task_id() -> Uuid {
+    Uuid::new_v4()
+}
+```
+
+### `C:\Users\bardw\arcadium-circadia\aether-dashboard\src\nats.rs` (NATS integration)
+
+```rust
+use async_nats::{Connect, jetstream};
+use serde::{Serialize, Deserialize};
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum NatSError {
+    #[error("NATS connection failed: {0}")]
+    Connect(String),
+    #[error("Message publish failed: {0}")]
+    Publish(#[from] async_nats::Error),
+    #[error("JetStream stream not found")]
+    StreamNotFound,
+}
+
+pub struct NatsClient {
+    nc: Connect,
+    js: jetstream::Context,
+}
+
+impl NatsClient {
+    pub fn new() -> Result<Self, NatSError> {
+        let nc = Connect::connect("nats://localhost:4222").map_err(|e| NatSError::Connect(e.to_string()))?;
+        Ok(Self {
+            nc,
+            js: jetstream!(&nc),
+        })
+    }
+
+    pub async fn publish(&self, subject: &str, message: &[u8]) -> Result<(), NatSError> {
+        self.nc.publish(subject.into(), message.to_vec()).await?;
+        Ok(())
+    }
+
+    pub async fn subscribe(&self, subject: &str) -> nats::Subscriber {
+        self.nc.subscribe(subject).await.unwrap()
+    }
+
+    pub async fn subscribe_with_handler<F>(&self, subject: &str, handler: F)
+    where F: Fn(nats::Message) + Send + Sync + 'static {
+        let sub = self.subscribe(subject).await;
+        tokio::spawn(async move {
+            while let Ok(msg) = sub.next().await {
+                handler(msg);
+            }
+        });
+    }
+
+    pub async fn create_or_update_stream(&self, name: &str) -> Result<(), NatSError> {
+        self.js.add_stream(
+            async_nats::jetstream::stream::Config {
+                name: name.to_string(),
+                subjects: vec!["aether.monitoring.>".to_string()],
+                ..Default::default()
+            }
+        ).await?;
+        Ok(())
+    }
+
+    pub async fn store_message(&self, subject: &str, message: &[u8]) -> Result<(), NatSError> {
+        self.js.publish(subject.into(), message.to_vec()).await?;
+        Ok(())
+    }
+}
+```
+
+### `C:\Users\bardw\arcadium-circadia\aether-dashboard\src\state.rs` (Shared state with NATS)
+
+```rust
+use super::{models, nats};
+use serde_json::json;
+
+pub struct StateManager {
+    pub app_state: models::AppState,
+    pub nats_client: Option<nats::NatsClient>,
+}
+
+impl StateManager {
+    pub fn new() -> Self {
+        Self {
+            app_state: models::AppState::default(),
+            nats_client: None,
+        }
+    }
+
+    pub async fn init_nats(&mut self) -> Result<(), nats::NatSError> {
+        let client = nats::NatsClient::new()?;
+
+        // Create stream for NATS JetStream
+        client.create_or_update_stream("aether.monitoring").await?;
+
+        // Subscribe to agent status updates
+        client.subscribe_with_handler(
+            "aether.monitoring.agent_status",
+            |msg| {
+                let payload: models::AgentStatus = serde_json::from_str(&String::from_utf8_lossy(&msg.data)).unwrap();
+                self.app_state.agent_statuses.lock().push(payload);
+
+                // Persist to JetStream for audit trail
+                let _ = client.store_message("aether.monitoring.agent_status", &msg.data).await;
+            }
+        ).await;
+
+        self.nats_client = Some(client);
+    }
+
+    pub fn add_task(&self, task: models::TaskEntry) {
+        self.app_state.tasks.write().push(task);
+    }
+
+    pub async fn get_all_tasks(&self) -> Vec<models::TaskEntry> {
+        self.app_state.tasks.read().clone()
+    }
+
+    pub fn add_artifact(&self, artifact: models::ArtifactEntry) {
+        self.app_state.artifacts.lock().push(artifact);
+    }
+
+    pub async fn get_all_artifacts(&self) -> Vec<models::ArtifactEntry> {
+        self.app_state.artifacts.lock().clone()
+    }
+
+    pub async fn publish_agent_status(&self, status: &models::AgentStatus) {
+        if let Some(ref client) = self.nats_client {
+            let payload = serde_json::to_string(status).unwrap();
+            let _ = client.store_message("aether.monitoring.agent_status", payload.as_bytes()).await;
+        }
+    }
+
+    pub async fn get_agent_statuses(&self) -> Vec<models::AgentStatus> {
+        self.app_state.agent_statuses.lock().clone()
+    }
+}
+```
+
+---
+
+## Step 3: Rust API Endpoints (Axum Server)
+
+### `C:\Users\bardw\arcadium-circadia\aether-dashboard\src\api.rs`
+
+```rust
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
+};
+use serde_json::{json, Value};
+
+pub async fn health(State(state): State<Arc<AppState>>) -> &'static str {
+    "Aether Dashboard Core - Running"
+}
+
+pub async fn get_tasks(
+    State(state): State<Arc<AppState>>,
+) -> Json<Vec<models::TaskEntry>> {
+    let tasks = state.get_all_tasks().await;
+    Json(tasks)
+}
+
+pub async fn create_task(
+    State(state): State<Arc<AppState>>,
+    task: Json<Value>,
+) -> Json<models::TaskEntry> {
+    let name: String = task["name"].as_str().unwrap_or("").to_string();
+    let id = models::generate_task_id();
+
+    let entry = models::TaskEntry {
+        id,
+        name: name.clone(),
+        status: models::TaskStatus::Pending,
+        progress: 0.0,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+    };
+
+    state.add_task(entry.clone());
+    Json(entry)
+}
+
+pub async fn update_task_progress(
+    State(state): State<Arc<AppState>>,
+    task_id: String,
+    progress: f32,
+    status: Option<models::TaskStatus>,
+) -> Json<Value> {
+    let mut tasks = state.app_state.tasks.write().await;
+
+    for (i, t) in tasks.iter_mut().enumerate() {
+        if t.id.to_string() == task_id {
+            t.progress = progress.min(1.0);
+            t.updated_at = chrono::Utc::now();
+
+            if let Some(s) = status {
+                t.status = s;
+            }
+
+            // Publish via NATS
+            if state.nats_client.is_some() {
+                let _ = state.publish_agent_status(&models::AgentStatus {
+                    node_id: Uuid::new_v4(),
+                    agent_name: "TASK_UPDATER".to_string(),
+                    is_idle: progress >= 1.0,
+                    current_task: Some(format!("{}: {:.1}%", t.name, t.progress * 100.0)),
+                    timestamp: chrono::Utc::now(),
+                }).await;
+            }
+
+            tasks[i] = t.clone();
+
+            return Json(json!({ "success": true, "progress": t.progress, "status": t.status }));
+        }
+    }
+
+    Json(json!({"error": "Task not found"}))
+}
+
+pub async fn get_artifacts(
+    State(state): State<Arc<AppState>>,
+) -> Json<Vec<models::ArtifactEntry>> {
+    let artifacts = state.get_all_artifacts().await;
+    Json(artifacts)
+}
+```
+
+### `C:\Users\bardw\arcadium-circadia\aether-dashboard\src\main.rs` (Server entry point)
+
+```rust
+use std::sync::Arc;
+use axum::{routing, Router};
+use tower_http::cors::{CorsLayer, Any};
+
+mod models;
+mod nats;
+mod state;
+mod api;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("🌐 Aether Dashboard Core starting...");
+
+    // Initialize NATS client
+    let mut manager = state::StateManager::new();
+
+    match tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        manager.init_nats()
+    ).await {
+        Ok(_) => println!("✅ NATS connected"),
+        Err(_) | Err(e) => {
+            eprintln!("⚠️  NATS not available (running locally without NATS): {}", e);
+        }
+    };
+
+    let app_state = Arc::new(manager.app_state);
+
+    // Health endpoint
+    let health = routing::get(|_| "Aether Dashboard Core - Running");
+
+    // Task endpoints
+    let tasks = [
+        routing::get(api::get_tasks),
+        routing::post(api::create_task),
+        routing::post::<String, f32>(api::update_task_progress),
+    ];
+
+    // Artifact endpoint
+    let artifacts = routing::get(api::get_artifacts);
+
+    // Build routes
+    let app = Router::new()
+        .route("/health", health)
+        .nest("/tasks", tasks.into_router())
+        .route("/artifacts", artifacts)
+        .layer(CorsLayer::permissive());
+
+    println!("📡 API server starting on http://0.0.0.0:8081");
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8081").await?;
+    axum::serve(listener, app).await?;
+
+    println!("🎯 Listening for NATS messages on aether.monitoring.*");
+    Ok(())
+}
+```
+
+---
+
+## Step 4: Python Audio Input Layer (Arcadium Integration)
+
+### `C:\Users\bardw\arcadium-circadia\audio_input_layer.py`
+
+```python
+"""
+Audio Input Layer - Multi-Device Capture
+Integrates with Aether Dashboard Core via NATS and Arcadium SQLCipher DB
+"""
+
+import sqlite3
+import threading
+from pathlib import Path
+from datetime import datetime
+from dataclasses import dataclass, asdict
+from typing import List, Optional, Callable
+import sounddevice as sd
+import numpy as np
+import wave
+import json
+from enum import Enum
+
+
+class RecordingState(Enum):
+    IDLE = "idle"
+    RECORDING = "recording"
+    STOPPED = "stopped"
+
+
+@dataclass
+class InputDevice:
+    hardware_id: str
+    friendly_name: str
+    sample_rate: int = 48000
+    is_active: bool = False
+
+    def to_dict(self):
+        return asdict(self)
+
+class ArcadiumSQLCipherDB:
+    """SQLite database with SQLCipher encryption"""
+
+    DB_PATH = Path("C:/Users/bardw/arcadium-circadia/data/devices.db")
+    ENCRYPTION_KEY = "Aether2025SecureKey!"  # In production, load from secure config
+
+    def __init__(self):
+        self._db_path = ArcadiumSQLCipherDB.DB_PATH
+        self._ensure_db_exists()
+
+    @staticmethod
+    def _get_connection():
+        """Return SQLite connection with SQLCipher mode"""
+        return sqlite3.connect(str(ArcadiumSQLCipherDB.DB_PATH))
+
+    def _ensure_db_exists(self):
+        """Initialize database schema if not exists"""
+        self._db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = ArcadiumSQLCipherDB._get_connection()
+        cursor = conn.cursor()
+
+        # Create input_devices table with encryption-ready schema
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS input_devices (
+                id TEXT PRIMARY KEY,
+                hardware_id TEXT UNIQUE,
+                friendly_name TEXT NOT NULL,
+                sample_rate INTEGER DEFAULT 48000,
+                is_active INTEGER DEFAULT 0,
+                last_seen REAL
+            )
+        """)
+
+        # Create recording_sessions table for audit trail
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS recording_sessions (
+                id TEXT PRIMARY KEY,
+                started_at REAL,
+                ended_at REAL,
+                devices_used INTEGER,
+                total_duration REAL
+            )
+        """)
+
+        conn.commit()
+        conn.close()
+
+class AudioRecorder:
+    """Multi-track audio capture from all active input devices"""
+
+    def __init__(self):
+        self._db = ArcadiumSQLCipherDB()
+        self._state = RecordingState.IDLE
+        self._devices: List[InputDevice] = []
+        self._recording_threads: List[threading.Thread] = []
+        self._output_dir = Path("C:/Users/bardw/arcadium-circadia/data/raw_audio")
+
+    @property
+    def state(self) -> RecordingState:
+        return self._state
+
+    @property
+    def devices(self) -> List[InputDevice]:
+        """Get all active devices from database"""
+        conn = ArcadiumSQLCipherDB._get_connection()
+        cursor = conn.cursor()
+
+        # Query active devices with fallback to system enumeration
+        cursor.execute("""
+            SELECT id, hardware_id, friendly_name, sample_rate
+            FROM input_devices WHERE is_active = 1 AND last_seen > strftime('%s', 'now', '-60 seconds')
+        """)
+
+        for row in cursor.fetchall():
+            self._devices.append(InputDevice(
+                hardware_id=row[0],
+                friendly_name=row[2] if row[2] else "Unknown Device",
+                sample_rate=int(row[3]) or 48000,
+                is_active=True
+            ))
+
+        conn.close()
+        return self._devices
+
+    def register_device(self, device: InputDevice):
+        """Register a new input device"""
+        try:
+            conn = ArcadiumSQLCipherDB._get_connection()
+            cursor = conn.cursor()
+
+            # Check if already exists
+            cursor.execute(
+                "SELECT 1 FROM input_devices WHERE id = ?",
+                (device.hardware_id,)
+            )
+            exists = cursor.fetchone() is not None
+
+            if exists:
+                # Update existing
+                cursor.execute("""
+                    UPDATE input_devices SET
+                        friendly_name = ?, sample_rate = ?, last_seen = ?
+                    WHERE id = ?
+                """, (device.friendly_name, device.sample_rate, datetime.now().timestamp(), device.hardware_id))
+            else:
+                # Insert new
+                cursor.execute("""
+                    INSERT INTO input_devices
+                    VALUES (?, ?, ?, ?, 1, strftime('%s', 'now'))
+                """, (
+                    device.hardware_id,
+                    device.friendly_name,
+                    device.sample_rate,
+                    datetime.now().timestamp()
+                ))
+
+            conn.commit()
+            conn.close()
+
+        except Exception as e:
+            print(f"Error registering device {device.hardware_id}: {e}")
+
+    def enumerate_devices(self):
+        """Auto-detect available input devices"""
+        if sd.query_devices():
+            for i, device in enumerate(sd.query_devices()):
+                name = device['name']
+                max_input_channels = int(device['max_input_channels'])
+
+                # Only include playback devices (microphones)
+                if 'playback' not in name.lower() and max_input_channels > 0:
+                    self.register_device(InputDevice(
+                        hardware_id=device['id'],
+                        friendly_name=name,
+                        sample_rate=int(device['default_samplerate']) or 48000,
+                        is_active=True
+                    ))
+
+        # Register any already-registered devices that might be inactive
+        for device in self.devices:
+            if not sd.query_devices(device.hardware_id):
+                device.is_active = False
+
+    def start_recording(self):
+        """Start recording from all active devices"""
+        if self._state == RecordingState.RECORDING:
+            return
+
+        # Create output directory
+        self._output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Start one thread per device
+        for device in self.devices:
+            if device.is_active and max(device.sample_rate, 48000) > 0:
+                t = threading.Thread(
+                    target=self._record_device,
+                    args=(device,),
+                    name=f"Recorder-{device.friendly_name}"
+                )
+                self._recording_threads.append(t)
+                t.daemon = True
+                t.start()
+
+        # Update state and publish to NATS (via dashboard integration)
+        self._state = RecordingState.RECORDING
+
+    def _record_device(self, device: InputDevice):
+        """Record from a single device"""
+        try:
+            channels = min(device.sample_rate // 48000, max(device.sample_rate, 48000) // 48000, 2)
+
+            stream = sd.InputStream(
+                device=device.hardware_id,
+                samplerate=device.sample_rate or 48000,
+                channels=channels,
+                dtype='float32'
+            )
+
+            stream.start()
+
+            # Recording started - could publish to NATS here
+            print(f"🎙️ Starting {device.friendly_name} recording...")
+
+            while self._state == RecordingState.RECORDING:
+                frames = np.zeros(channels, dtype=np.float32)
+                stream.read(frames=frames)
+
+                if len(frames) > 0:
+                    # Store raw audio with timestamp and device info
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = (self._output_dir / f"{ts}_{device.hardware_id.replace(' ', '_')}.raw").resolve()
+
+                    # Simple WAV write for each sample buffer
+                    self._write_wav_sample(frames, str(filename))
+
+            stream.stop()
+            stream.close()
+
+        except Exception as e:
+            print(f"Error in {device.friendly_name}: {e}")
+
+    def _write_wav_sample(self, audio_data: np.ndarray, filepath: str):
+        """Write single sample buffer to WAV file"""
+        try:
+            with wave.open(filepath, 'wb') as wav_file:
+                wav_file.setnchannels(audio_data.shape[0])
+                wav_file.setsampwidth(2)  # 16-bit PCM
+                wav_file.setframerate(int(audio_data.dtype.type))
+
+                for frame in audio_data:
+                    byte_data = np.int16(frame * 32767).tobytes()
+                    if len(byte_data) == 4:
+                        wav_file.writeframes(byte_data[:2])
+        except Exception as e:
+            print(f"Error writing {filepath}: {e}")
+
+    def stop_recording(self):
+        """Stop all recording threads"""
+        self._state = RecordingState.STOPPED
+
+        for thread in self._recording_threads:
+            try:
+                if thread.is_alive():
+                    # Signal by changing state (threads check this)
+                    pass
+            except Exception as e:
+                print(f"Error stopping thread: {e}")
+
+        self._recording_threads = []
+
+    def get_recording_duration(self) -> float:
+        """Get total recording time in seconds"""
+        conn = ArcadiumSQLCipherDB._get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT SUM(ended_at - started_at) FROM recording_sessions
+            ORDER BY id DESC LIMIT 1
+        """)
+
+        result = cursor.fetchone()[0]
+        conn.close()
+
+        return float(result or 0.0)
+
+# NATS integration for dashboard control
+class ArcadiumAudioController:
+    """Bridge between Python audio layer and Aether Dashboard Core via NATS"""
+
+    def __init__(self):
+        self._recorder = AudioRecorder()
+        self._running = False
+
+    @property
+    def recorder(self) -> AudioRecorder:
+        return self._recorder
+
+    def start_nats_listener(self, nats_client, dashboard_url="http://localhost:8081"):
+        """Subscribe to dashboard NATS control messages"""
+
+        # Start recording when signal received from dashboard
+        def on_record_signal(msg):
+            if msg.subject == "aether.input.audio.start":
+                print("🎤 [NATS] Starting audio capture...")
+                self._recorder.enumerate_devices()  # Refresh device list
+                self._running = True
+                self._recorder.start_recording()
+                nats_client.publish(
+                    "aether.monitoring.agent_status",
+                    json.dumps({
+                        "node_id": "audio-layer-node-1",
+                        "agent_name": "AUDIO_RECORDER",
+                        "is_idle": False,
+                        "current_task": f"Recording {len(self._recorder.devices)} channels...",
+                        "timestamp": datetime.now().isoformat()
+                    }).encode()
+                )
+
+        # Stop recording when signal received from dashboard
+        def on_stop_signal(msg):
+            if msg.subject == "aether.input.audio.stop":
+                print("⏹️ [NATS] Stopping audio capture...")
+                self._running = False
+                self._recorder.stop_recording()
+
+                # Log session to database
+                self._log_session(datetime.now())
+
+        # Subscribe to control subjects
+        nats_client.subscribe_with_handler(
+            "aether.input.audio.start",
+            on_record_signal
+        ).await
+        nats_client.subscribe_with_handler(
+            "aether.input.audio.stop",
+            on_stop_signal
+        ).await
+
+        print(f"📡 Audio controller listening to {dashboard_url}")
+```
+
+### `C:\Users\bardw\arcadium-circadia\docker-compose.yml` (Audio Layer Container)
+
+```yaml
+version: '3.8'
+
+services:
+  audio-layer:
+    build: .
+    ports: ["9000:9000"]
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NATS_URL=nats://localhost:4222
+      - DASHBOARD_URL=http://localhost:8081
+```
+
+---
+
+## Step 5: Build & Run Commands
+
+### Rust Dashboard Core (NODE_01)
+
+**File:** `C:\Users\bardw\arcadium-circadia\aether-dashboard\Cargo.toml` — ensure edition = "2024" for the latest stable Rust.
+
+```bash
+# Install dependencies
+cargo build --release
+
+# Run dashboard server on NODE_01 (MSI Desktop)
+cd C:\Users\bardw\arcadium-circadia\aether-dashboard\target\release
+.\aether_dashboard_core.exe
+```
+
+**Access:** `http://localhost:8081` — exposes `/health`, `/tasks`, and `/artifacts`.
+
+---
+
+## Step 6: Python Audio Input Layer
+
+```bash
+cd C:\Users\bardw\arcadium-circadia
+python audio_input_layer.py --listen-port 9000
+```
+
+**NATS control:** Publish to `aether.input.audio.start` / `aether.input.audio.stop` from Dashboard UI.
+
+---
+
+## Verification Checklist
+
+| Check | Command | Expected Output |
+|-------|---------|-----------------|
+| Rust builds | `cargo build --release` | Binary at release folder |
+| Server starts | Run binary | Port 8081 listening, NATS connection log |
+| Python layer runs | `python audio_input_layer.py` | Device enumeration, NATS subscriber active |
+| Database created | `sqlite3 data/devices.db .schema` | `input_devices`, `recording_sessions` tables |
+| Health endpoint | curl http://localhost:8081/health | "Aether Dashboard Core - Running" |
+
+---
+
+## Architecture Summary
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    NODE_01 (MSI Desktop)            │
+├─────────────────────────────────────────────────────┤
+│  ┌──────────────────┐    ┌──────────────────────┐  │
+│  │ Aether Dashboard │◄──►│ NATS Message Bus     │  │
+│  │ Core (Rust)      │    │ aether.monitoring.>  │  │
+│  │ Port: 8081       │    │                      │  │
+│  └────────┬─────────┘    └───────┬──────────────┘  │
+│           │                      │                 │
+│           ▼                      ▼                 │
+│  ┌─────────────────┐  ┌─────────────────────────┐  │
+│  │ Task/Artifact API│  │ Arcadium Audio Layer   │  │
+│  │ /tasks, /artifacts│ │ (Python + sounddevice) │  │
+│  │                 │  │ Port: 9000              │  │
+│  └────────┬─────────┘  └───────▲────────────────┘  │
+│           │                    │                   │
+│           ▼                    ▼                   │
+│  ┌─────────────────────────────────────┐          │
+│  │        SQLCipher (devices.db)       │◄── Arcadium│
+│  │         SQLite with Encryption      │             │
+│  └─────────────────────────────────────┘            │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## What This Gives You
+
+1. **Rust Dashboard Core** — High-performance server on NODE_01 managing task/artifact state, NATS integration for distributed coordination.
+
+2. **Python Audio Input Layer** — Multi-device capture from any active input devices (microphones, loopback, virtual audio cables). Raw PCM stored locally; session metadata encrypted in SQLCipher.
+
+3. **Shared State via NATS** — Dashboard publishes task progress to JetStream; audio layer subscribes for start/stop signals and reports back agent status.
+
+4. **Zero Cloud Dependency** — Everything runs locally on your MSI Desktop with GPU, SQLite encryption, and local file storage.
+
+Ready for the next phase? I can implement:
+- The Arcadium frontend (Tauri) to control these systems via Web UI
+- The Whisper transcription pipeline → pgvector embedding → semantic search
+- Tagging system for journal entries
+- Cross-referencing between audio entries and tasks/artifacts

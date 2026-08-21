@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sesefus — Directory Atlas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔷</text></svg>">
+<style>
+/* negentropic-blue tokens — inlined (Artifacts CSP blocks external CSS) */
+:root {
+  --ink: #e7e7f2; --ink-strong: #f4f4fb; --ink-soft: #a7a7bd; --ink-mute: #6c6c83; --ink-faint: #5a5a70;
+  --cyan: #7cf7ff; --cyan-soft: #9fe9f1; --cyan-deep: #28A2B2;
+  --teal: #4fd6b8; --amber: #e2a24a; --ember: #f0937c; --rose: #ff7183;
+  --gold: #e0be3e; --magenta: #ff4fd8; --violet: #9b6cff; --blue: #4a90e2; --good: #4CAE7C;
+  --line: #272739; --line-soft: #1f1f2c; --panel: rgba(16,16,24,0.7); --panel-deep: rgba(10,10,16,0.85);
+  --pill-border: rgba(124,247,255,0.22); --pill-bg: rgba(124,247,255,0.06);
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+  --body: 'Outfit', 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mod: var(--cyan); --mod-soft: var(--cyan-soft);
+}
+* { box-sizing: border-box; }
+html { background: #000; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(120% 80% at 18% -10%, rgba(124,247,255,0.07), transparent 60%),
+    radial-gradient(140% 90% at 100% 8%, rgba(124,247,255,0.05), transparent 55%),
+    linear-gradient(180deg, #17172a 0%, #050509 55%, #000 100%);
+  background-attachment: fixed; min-height: 100vh;
+  color: var(--ink); font-family: var(--body); font-weight: 300; font-size: 17px; line-height: 1.72;
+}
+.doc { box-sizing: border-box; max-width: 46rem; margin: 0 auto; padding: 60px clamp(22px,5vw,56px) 96px; }
+.masthead { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(124,247,255,0.85); }
+.sep { color: #2e2e3e; }
+h1 { font-family: var(--mono); font-weight: 700; font-size: clamp(32px,6vw,50px); line-height: 1.02; letter-spacing: 0.01em; text-transform: uppercase; margin: 22px 0 0; color: var(--ink-strong); text-wrap: balance; }
+.standfirst { margin: 18px 0 0; font-weight: 300; font-size: clamp(17px,2.4vw,21px); line-height: 1.45; color: var(--ink-soft); max-width: 34rem; }
+.nest { margin: 22px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; }
+.nest .shell { padding: 5px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink-soft); letter-spacing: 0.04em; }
+.nest .shell.here { border-color: var(--cyan); color: var(--cyan-soft); box-shadow: 0 0 0 1px rgba(124,247,255,0.25) inset; }
+.nest .shell b { color: var(--ink-strong); font-weight: 700; }
+.nest .in { color: var(--ink-faint); }
+.pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 24px 0 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; }
+.pill { padding: 4px 11px; border-radius: 999px; border: 1px solid var(--pill-border); background: var(--pill-bg); color: var(--cyan-soft); }
+.meta-date { color: var(--ink-mute); text-transform: uppercase; }
+.stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 30px 0 0; }
+@media (min-width: 560px) { .stat-row { grid-template-columns: repeat(4, 1fr); } }
+.stat { min-width: 0; padding: 18px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); text-align: center; }
+.stat .n { font-family: var(--mono); font-weight: 700; font-size: 30px; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.stat .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); margin-top: 6px; }
+section { margin: 0; }
+h2 { font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mod-soft); margin: 58px 0 4px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h2 .idx { color: var(--mod); opacity: 0.7; }
+h2 .kind { margin-left: auto; font-size: 10px; letter-spacing: 0.12em; color: var(--ink-faint); font-weight: 400; }
+.rule { height: 2px; width: 48px; background: var(--mod); opacity: 0.55; margin: 0 0 18px; border-radius: 2px; }
+p { margin: 18px 0 0; text-wrap: pretty; }
+p.lead { margin-top: 0; }
+strong { font-weight: 600; color: var(--ink-strong); }
+em { color: #d6d6e6; font-style: italic; }
+code.tag, code { font-family: var(--mono); font-size: 0.85em; padding: 2px 7px; border-radius: 6px; background: color-mix(in srgb, var(--mod) 10%, transparent); border: 1px solid color-mix(in srgb, var(--mod) 22%, transparent); color: var(--mod-soft); overflow-wrap: anywhere; }
+.cards { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; margin: 24px 0 0; }
+.card { min-width: 0; padding: 20px 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+.card.accent { border-color: color-mix(in srgb, var(--mod) 45%, var(--line)); }
+.card .c-name { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; color: var(--ink-strong); }
+.card .c-role { font-size: 14.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.55; }
+.card .c-files { font-family: var(--mono); font-size: 11.5px; color: var(--mod-soft); margin-top: 10px; line-height: 1.7; overflow-wrap: anywhere; }
+.rail { margin: 26px 0 0; padding: 0; list-style: none; position: relative; }
+.rail::before { content: ""; position: absolute; left: 9px; top: 14px; bottom: 14px; width: 2px; background: linear-gradient(180deg, color-mix(in srgb, var(--mod) 45%, transparent), transparent); }
+.station { position: relative; padding: 0 0 26px 40px; }
+.station:last-child { padding-bottom: 0; }
+.station .dot { position: absolute; left: 2px; top: 7px; width: 16px; height: 16px; border-radius: 50%; background: #0a0a12; border: 2px solid var(--mod); box-shadow: 0 0 12px color-mix(in srgb, var(--mod) 45%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .station .dot::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--mod) 60%, transparent); animation: ping 2.8s ease-out infinite; }
+  @keyframes ping { 0% { transform: scale(.6); opacity: .9; } 70%,100% { transform: scale(2.1); opacity: 0; } }
+}
+.station .s-name { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-strong); }
+.station .s-file { font-family: var(--mono); font-size: 12px; color: var(--mod-soft); margin-top: 2px; overflow-wrap: anywhere; }
+.station .s-desc { font-size: 15px; color: var(--ink-soft); margin-top: 4px; line-height: 1.55; }
+.badge { display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--pill-border); background: var(--pill-bg); color: var(--cyan-soft); margin-left: 8px; vertical-align: 2px; }
+.tbl-wrap { overflow-x: auto; margin: 22px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 520px; }
+table.data th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); text-align: left; padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
+table.data td { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); color: var(--ink-soft); vertical-align: top; }
+table.data tr:last-child td { border-bottom: none; }
+table.data td.mono { font-family: var(--mono); font-size: 12px; color: var(--mod-soft); }
+.st { display: inline-block; font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.st.good, .st.real, .st.wired { border: 1px solid color-mix(in srgb, var(--good) 45%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); color: var(--good); }
+.st.warn, .st.stub, .st.parked { border: 1px solid color-mix(in srgb, var(--amber) 50%, transparent); background: color-mix(in srgb, var(--amber) 12%, transparent); color: var(--amber); }
+.st.crit, .st.absent, .st.dead { border: 1px solid color-mix(in srgb, var(--rose) 50%, transparent); background: color-mix(in srgb, var(--rose) 12%, transparent); color: var(--rose); }
+.st.mute, .st.legacy { border: 1px solid var(--line); color: var(--ink-mute); }
+.st.hand { border: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent); background: color-mix(in srgb, var(--cyan) 10%, transparent); color: var(--cyan-soft); }
+.st.gen { border: 1px solid color-mix(in srgb, var(--violet) 45%, transparent); background: color-mix(in srgb, var(--violet) 12%, transparent); color: var(--violet); }
+.callout { margin: 24px 0 0; padding: 18px 22px; border-left: 2px solid color-mix(in srgb, var(--mod) 70%, transparent); background: color-mix(in srgb, var(--mod) 6%, transparent); border-radius: 0 12px 12px 0; font-size: 15px; line-height: 1.6; color: #d9d3cf; }
+.callout strong { color: var(--mod); }
+details { margin: 14px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
+summary { list-style: none; cursor: pointer; padding: 16px 18px; display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--mod) 80%, white 20%); -webkit-tap-highlight-color: transparent; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸"; color: var(--mod); transition: transform .15s; flex: 0 0 auto; }
+details[open] summary::before { transform: rotate(90deg); }
+summary:focus-visible { outline: 2px solid var(--mod); outline-offset: -2px; }
+summary .hint { margin-left: auto; font-weight: 400; font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint); text-transform: none; }
+.d-body { padding: 4px 20px 20px; border-top: 1px solid var(--line-soft); font-size: 15px; color: var(--ink-soft); }
+.d-body p { margin: 14px 0 0; }
+.d-body ul { margin: 12px 0 0; padding: 0; list-style: none; }
+.d-body ul li { margin: 10px 0 0; padding-left: 26px; position: relative; }
+.d-body ul li::before { content: "▹"; position: absolute; left: 0; color: var(--mod); font-family: var(--mono); font-weight: 700; }
+.d-body strong { color: var(--ink-strong); }
+.score { display: inline-block; min-width: 40px; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--pill-border); background: var(--pill-bg); color: var(--cyan); margin-right: 6px; }
+.score.hot { border-color: rgba(224,102,74,0.5); background: rgba(224,102,74,0.1); color: var(--ember); }
+.map { display: grid; grid-template-columns: 1fr; gap: 10px 24px; margin: 22px 0 0; }
+@media (min-width: 560px) { .map { grid-template-columns: 1fr 1fr; } }
+.map-item { display: flex; gap: 12px; font-size: 14px; line-height: 1.5; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.map-item code { flex: 0 0 10em; font-family: var(--mono); font-size: 12px; color: var(--cyan-soft); background: none; border: none; padding: 0; overflow-wrap: anywhere; }
+.map-item span { color: #9a9ab0; }
+.map-item[hidden] { display: none; }
+.pull { margin: 52px 0 0; text-align: center; font-family: var(--mono); font-weight: 700; font-size: clamp(20px,4vw,28px); letter-spacing: 0.03em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 28px rgba(124,247,255,0.3); line-height: 1.25; }
+.thesis { margin: 34px 0 0; text-align: center; font-family: var(--mono); font-weight: 700; font-size: clamp(15px,3vw,20px); text-transform: uppercase; color: var(--ember); text-shadow: 0 0 24px rgba(240,147,124,0.25); line-height: 1.35; }
+.mantra { margin: 40px 0 0; text-align: center; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+/* atlas-specific */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+.filter-bar button {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--pill-border); background: var(--pill-bg); color: var(--cyan-soft);
+}
+.filter-bar button[aria-pressed="true"] {
+  border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 18%, transparent); color: var(--ink-strong);
+  box-shadow: 0 0 0 1px rgba(124,247,255,0.25) inset;
+}
+.filter-bar button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.station.is-dim .s-name, .station.is-dim .s-desc, .station.is-dim .s-file { opacity: 0.35; }
+.station.is-dim .dot { border-color: var(--ink-faint); box-shadow: none; }
+.station.is-dim .dot::after { display: none; }
+.k { font-family: var(--mono); font-size: 12px; color: var(--mod-soft); }
+.verify { margin: 12px 0 0; font-family: var(--mono); font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <div class="masthead">
+    <span style="font-size:14px;">⬡</span>
+    <span>Sesefus</span>
+    <span class="sep">/</span>
+    <span style="color:#7b7b92;">Directory Atlas</span>
+  </div>
+
+  <h1>Operate<br>this tree</h1>
+
+  <p class="standfirst">
+    One page so you can run Sesefus, trust the right docs, and avoid dead paths —
+    verified against files on <code class="tag">main @ ec46d6f5</code> (2026-07-22).
+  </p>
+
+  <div class="nest">
+    <span class="shell"><b>Neurialab</b> · company</span>
+    <span class="in">⊃</span>
+    <span class="shell here"><b>Sesefus</b> · product · Zychs/sesefus</span>
+    <span class="in">⊃</span>
+    <span class="shell"><b>ssfs</b> · CLI + storage layer</span>
+  </div>
+
+  <div class="pills">
+    <span class="pill">offline voice journal</span>
+    <span class="pill">drift + ETDI</span>
+    <span class="pill">0.9.3 alpha</span>
+    <span class="meta-date">verified 2026-07-22</span>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n">267</div><div class="l">tracked files</div></div>
+    <div class="stat"><div class="n">203</div><div class="l">live / 64 archival</div></div>
+    <div class="stat"><div class="n">27.5k</div><div class="l">live LOC counted</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">root launchers</div></div>
+  </div>
+  <p class="verify">Counts from git ls-files + LOC walk (excl. archival, node_modules, zig-out). Binary present: core/sesephus/zig-out/bin/sesefus.</p>
+
+  <!-- SPINE: operate surface -->
+  <section style="--mod: var(--cyan); --mod-soft: var(--cyan-soft);">
+    <h2><span class="idx">→</span> Daily operate spine <span class="kind">launchers</span></h2>
+    <div class="rule"></div>
+    <p class="lead">
+      Testers need only steps 1–2. The Fleet (3) is optional dashboard glass.
+      Click a station to highlight its module on the map.
+    </p>
+
+    <div class="filter-bar" role="toolbar" aria-label="Highlight operate path">
+      <button type="button" data-path="all" aria-pressed="true">All</button>
+      <button type="button" data-path="voice" aria-pressed="false">Voice only</button>
+      <button type="button" data-path="fleet" aria-pressed="false">Full fleet</button>
+      <button type="button" data-path="repl" aria-pressed="false">Zig REPL</button>
+      <button type="button" data-path="recover" aria-pressed="false">Recovery</button>
+    </div>
+
+    <ol class="rail" id="spine">
+      <li class="station" data-paths="voice fleet">
+        <span class="dot"></span>
+        <div class="s-name">Install once <span class="badge">required</span></div>
+        <div class="s-file">install.bat</div>
+        <div class="s-desc">Creates venv, installs requirements-dev + Whisper, writes sesefus.config.json, rebuilds tools/atlas/sesefus-atlas.html, arms .githooks. Needs Python 3.10+ on PATH.</div>
+      </li>
+      <li class="station" data-paths="voice">
+        <span class="dot"></span>
+        <div class="s-name">Journal loop <span class="badge">ships</span></div>
+        <div class="s-file">voice.bat → tools/voice.py</div>
+        <div class="s-desc">Push-to-talk (Enter / Enter). Long speech → Whisper → aurgio/transcript/ → ETDI score. Short phrases ≤5 words: status · review last · score · dashboard · goodbye. No Zig required.</div>
+      </li>
+      <li class="station" data-paths="fleet">
+        <span class="dot"></span>
+        <div class="s-name">Bring up the Fleet</div>
+        <div class="s-file">fleet.bat → tools/fleet.ps1</div>
+        <div class="s-desc">Supervises three runtimes: Engine (Zig host, TCP 5000 + HTTP 3000), Bridge (FastAPI 3001), Glass (Vite 5173). Open Glass at http://127.0.0.1:5173 — Bridge root is API-only (404). Flags: -ProbeOnly · -Reap · -Watch.</div>
+      </li>
+      <li class="station" data-paths="repl fleet">
+        <span class="dot"></span>
+        <div class="s-name">Zig engine REPL</div>
+        <div class="s-file">ssfs.bat → zig build → zig-out/bin/sesefus.exe</div>
+        <div class="s-desc">Space-separated commands. WIRED today: status · alarm * · group * · lead qualify · vault ingest-archive · dialogue start|review · backup · exit. Host flags: --read-vault · --extract. Global: --production · --dry-run.</div>
+      </li>
+      <li class="station" data-paths="recover">
+        <span class="dot"></span>
+        <div class="s-name">Recovery moves</div>
+        <div class="s-file">fleet.ps1 -Reap · ports · guards</div>
+        <div class="s-desc">Port clash on 5000/3000/3001/5173 → fleet.ps1 -Reap. Orphan processes → -ProbeOnly first. Vault/secrets almost committed → .githooks via install.bat / tools/install_guards.sh. Rebuild machine atlas: python tools/atlas/build.py.</div>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <strong>Do not build workflows on stubs —</strong>
+      <code>journal</code>, <code>rhythm</code>, <code>stoic</code>, <code>lead mine|feed</code>, most of <code>vault</code>
+      only print canned lines. Real journal = <code>voice.bat</code>. Real scheduler = <code>alarm</code>.
+    </div>
+  </section>
+
+  <!-- ENGINE -->
+  <section style="--mod: var(--teal); --mod-soft:#7fe6cf;">
+    <h2><span class="idx">◇</span> Engine — Zig core <span class="kind">core/sesephus</span></h2>
+    <div class="rule"></div>
+    <p class="lead">
+      Unified binary <code>sesefus</code> (not host.exe/client.exe). Role chosen at first run → runtime.json, re-spawned with <code>--role host|client</code>.
+    </p>
+    <div class="cards">
+      <div class="card accent">
+        <div class="c-name">host.zig · 2447 lines</div>
+        <div class="c-role">Vault open, TCP clients (5000), embedded HTTP (3000 + /api/status), alarm Timekeeper (50&nbsp;ms), command dispatch, dead second handleVaultCommand @ ~2298.</div>
+        <div class="c-files">core/sesephus/src/host.zig · main.zig · crypto.zig · database.zig · speech.zig · dashboard.html</div>
+      </div>
+      <div class="card">
+        <div class="c-name">commands/</div>
+        <div class="c-role">dialogue (WIRED) · lead qualify (WIRED) · vault ingest-archive (WIRED) · journal/rhythm/stoic (STUB) · vault status|backup|audit (STUB).</div>
+        <div class="c-files">core/sesephus/src/commands/*.zig</div>
+      </div>
+      <div class="card">
+        <div class="c-name">Orphan / dead Zig</div>
+        <div class="c-role">core/alarm_engine.zig unwired (old SQLite APIs). core/tcp_server.zig · wav_db.zig · client/recorder.zig experiment shells. src/cli|modules|net exist from PR #49 but are not on build.zig graph.</div>
+        <div class="c-files">build.zig roots only src/main.zig</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRIDGE + VOICE -->
+  <section style="--mod: var(--amber); --mod-soft:#efc27e;">
+    <h2><span class="idx">◇</span> Bridge + voice path <span class="kind">Python</span></h2>
+    <div class="rule"></div>
+    <p class="lead">The ship path for 0.9.3 alpha. No Zig required for journaling.</p>
+    <div class="cards">
+      <div class="card accent">
+        <div class="c-name">tools/voice.py</div>
+        <div class="c-role">PTT journal loop. Manifests under aurgio/transcript/ (aje-*). Test hooks: --file · --say.</div>
+        <div class="c-files">voice.bat · tools/sesefus_config.py · sesefus.config.json (gitignored)</div>
+      </div>
+      <div class="card">
+        <div class="c-name">ETDI pipeline</div>
+        <div class="c-role">Norm formula √(v²+a²+s²)/(√3·min). Flag threshold <strong>0.30</strong>. Backends: ollama (default) · grok · heuristic. Unknown duration → UNSCORED.</div>
+        <div class="c-files">tools/etdi_pipeline.py · etdi_inference.py · etdi_store.py</div>
+      </div>
+      <div class="card">
+        <div class="c-name">dashboard_server.py :3001</div>
+        <div class="c-role">FastAPI bridge: ETDI API, polls Engine :3000/api/status, /api/machine. Not a UI root.</div>
+        <div class="c-files">dashboard/dashboard_server.py · tools/ingress_memos.py · dual_writer.py</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GLASS -->
+  <section style="--mod: var(--violet); --mod-soft:#c4a8ff;">
+    <h2><span class="idx">◇</span> Glass — dashboard UI <span class="kind">dashboard/ui</span></h2>
+    <div class="rule"></div>
+    <p class="lead">Vite + React on :5173. Proxies /api → Bridge :3001. Faces: Overview, Circadia, Arcadium, Sieve, ETDI, MachineState, Shipment console (SaturnNav lab).</p>
+    <div class="cards">
+      <div class="card accent">
+        <div class="c-name">Live UI surface</div>
+        <div class="c-role">EtdiPanel shows norm formula @ 0.30 (CANON §8 checklist still claims old product form — stale vs code as of this atlas). Circadia honesty: no mock alarms when backend down (Phase 0).</div>
+        <div class="c-files">dashboard/ui/src/App.jsx · components/* · routes/*</div>
+      </div>
+      <div class="card">
+        <div class="c-name">aether-dashboard-v2</div>
+        <div class="c-role">Rust sidecar experiment (Cargo). Not on the fleet spine.</div>
+        <div class="c-files">dashboard/aether-dashboard-v2/</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SSFS + VAULT -->
+  <section style="--mod: var(--gold); --mod-soft:#eed08a;">
+    <h2><span class="idx">◇</span> SSFS storage + vault <span class="kind">ssfs/</span></h2>
+    <div class="rule"></div>
+    <p class="lead">Declared drive SSOT for JS/Python; Zig still hardcodes some V:/E: paths.</p>
+    <div class="cards">
+      <div class="card accent">
+        <div class="c-name">drive-mapping.json</div>
+        <div class="c-role">V: vault (SSFS_VAULT) · E: cold archive · T: worktrees. archiveRoot = Archive\sesefhus (spelling is load-bearing — do not “fix”).</div>
+        <div class="c-files">ssfs/drive-mapping.json · storage/paths.js · storage/config-engine.js · tools/ssfs_config.py</div>
+      </div>
+      <div class="card">
+        <div class="c-name">Vault crypto</div>
+        <div class="c-role">ChaCha20-Poly1305 · PBKDF2-HMAC-SHA256. Default path V:\sesephus_vault.db → ./sesephus_vault.db. Password still hardcoded in host.zig (issue #63), allow-listed in .secretsallow.</div>
+        <div class="c-files">core/sesephus/src/crypto.zig · host.zig:204 · docs/vault_security.md</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIDE SYSTEMS -->
+  <section style="--mod: var(--magenta); --mod-soft:#ff9ae8;">
+    <h2><span class="idx">◇</span> Side systems <span class="kind">not on critical path</span></h2>
+    <div class="rule"></div>
+    <div class="cards">
+      <div class="card">
+        <div class="c-name">shredder/</div>
+        <div class="c-role">Image sieve: screenshot → abstract-notion chunks → debris_shards.jsonl. Semantic drift instrument.</div>
+        <div class="c-files">shredder/image_sieve.py · sieve.py · docs/IMAGE_SIEVE.md</div>
+      </div>
+      <div class="card">
+        <div class="c-name">prompts/ + lead qualify</div>
+        <div class="c-role">LeadLogic / Jetstream prompt vendors. lead qualify spawns tools/qualify_post.py against local vLLM (:8000, Crow-9B).</div>
+        <div class="c-files">prompts/*.md · tools/qualify_post.py</div>
+      </div>
+      <div class="card">
+        <div class="c-name">aurgio/</div>
+        <div class="c-role">Corpus of journal manifests (aje-*). Live write target for voice.py. Treat as user data, not source.</div>
+        <div class="c-files">aurgio/transcript/*.json</div>
+      </div>
+      <div class="card">
+        <div class="c-name">archival/ · scratch/ · simulator/</div>
+        <div class="c-role">archival = frozen older layout (64 files). scratch = one-off refactor scripts. simulator = agent mocks. Do not operate from these.</div>
+        <div class="c-files">archival/* · scratch/*.py · simulator/*</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCS PRECEDENCE -->
+  <section style="--mod: var(--blue); --mod-soft:#7eb3f0;">
+    <h2><span class="idx">▤</span> Docs — declared precedence <span class="kind">read order</span></h2>
+    <div class="rule"></div>
+    <p class="lead">When docs disagree, follow this stack. Do not silently merge conflicts.</p>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Rank</th><th>Doc</th><th>Wins on</th><th>State</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">1</td>
+            <td class="mono">docs/CANON.md</td>
+            <td>Names, WIRED/STUB/DEAD, ETDI formula, ports, vault facts. Explicit: “this file wins.”</td>
+            <td><span class="st wired">SSOT</span></td>
+          </tr>
+          <tr>
+            <td class="mono">2</td>
+            <td class="mono">docs/COVENANT.md</td>
+            <td>Architectural promise (offline-first, maker≠user). Build decisions vs this file → fix before merge.</td>
+            <td><span class="st hand">hand-owned</span></td>
+          </tr>
+          <tr>
+            <td class="mono">3</td>
+            <td class="mono">docs/DRIFT.md</td>
+            <td>Product thesis — six drift forms + shared loop.</td>
+            <td><span class="st hand">hand-owned</span></td>
+          </tr>
+          <tr>
+            <td class="mono">4</td>
+            <td class="mono">docs/ETDI.md</td>
+            <td>Metric depth; flag 0.30. Matches etdi_store.py.</td>
+            <td><span class="st wired">current</span></td>
+          </tr>
+          <tr>
+            <td class="mono">5</td>
+            <td class="mono">README.md · README-TESTERS.md</td>
+            <td>Operator + tester entry. Honest after Phase 0 (PR #75).</td>
+            <td><span class="st wired">current</span></td>
+          </tr>
+          <tr>
+            <td class="mono">6</td>
+            <td class="mono">ROADMAP.md · CHANGELOG.md</td>
+            <td>Ladder order · history. Progress here; versions only at ship tag.</td>
+            <td><span class="st hand">hand-owned</span></td>
+          </tr>
+          <tr>
+            <td class="mono">↓</td>
+            <td class="mono">docs/CLI.md</td>
+            <td>Body systematically over-optimistic. Banner admits CANON §2 wins.</td>
+            <td><span class="st legacy">stale body</span></td>
+          </tr>
+          <tr>
+            <td class="mono">↓</td>
+            <td class="mono">overallreadmee.md</td>
+            <td>Pre-rebrand (AuraEngine / Sesephus dual-exe claims).</td>
+            <td><span class="st legacy">superseded</span></td>
+          </tr>
+          <tr>
+            <td class="mono">↓</td>
+            <td class="mono">docs/INVENTORY.md</td>
+            <td>Snapshot on old branch; file counts lag (236 vs 267 tracked).</td>
+            <td><span class="st legacy">dated</span></td>
+          </tr>
+          <tr>
+            <td class="mono">↓</td>
+            <td class="mono">docs/manifest.json</td>
+            <td>Phantom circadia.zig / arcadium.zig paths.</td>
+            <td><span class="st dead">stale</span></td>
+          </tr>
+          <tr>
+            <td class="mono">≠</td>
+            <td class="mono">tools/atlas/sesefus-atlas.html</td>
+            <td><em>Machine</em> structural atlas (build.py). Not this page. Regenerate on install.</td>
+            <td><span class="st gen">generated</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <strong>Known doc lag —</strong> DRIFT.md:84 still says v1 flag <code>0.15</code> (history line; product is 0.30). CANON §8 still lists EtdiPanel as wrong product formula; live file already says 0.30.
+    </div>
+  </section>
+
+  <!-- STATUS TABLE -->
+  <section style="--mod: var(--ember); --mod-soft:#f6b6a4;">
+    <h2><span class="idx">▦</span> State board <span class="kind">verified</span></h2>
+    <div class="rule"></div>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Surface</th><th>State</th><th>Reality</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">voice.bat path</td><td><span class="st wired">wired</span></td><td>Ships for testers; primary journal.</td></tr>
+          <tr><td class="mono">alarm * / group *</td><td><span class="st wired">wired</span></td><td>Live scheduler; not legacy.</td></tr>
+          <tr><td class="mono">dialogue start|review</td><td><span class="st wired">wired</span></td><td>Covenant spine (PR #65); TTS out, voice-in partial.</td></tr>
+          <tr><td class="mono">lead qualify</td><td><span class="st wired">wired</span></td><td>Spawns qualify_post.py → local vLLM.</td></tr>
+          <tr><td class="mono">vault ingest-archive</td><td><span class="st wired">wired</span></td><td>Spawns ingress_memos.py.</td></tr>
+          <tr><td class="mono">fleet.ps1</td><td><span class="st wired">wired</span></td><td>Engine+Bridge+Glass supervisor.</td></tr>
+          <tr><td class="mono">repo guards / CI</td><td><span class="st wired">wired</span></td><td>PR #84: gitleaks, vault/bigfile guards, hooks.</td></tr>
+          <tr><td class="mono">Phase 0 honesty</td><td><span class="st wired">wired</span></td><td>PR #75 / #66 — surfaces stop lying about stubs.</td></tr>
+          <tr><td class="mono">journal / rhythm / stoic</td><td><span class="st stub">stub</span></td><td>Print-only; use voice.bat / alarm instead.</td></tr>
+          <tr><td class="mono">lead mine|feed</td><td><span class="st stub">stub</span></td><td>Deferred (#71–#73).</td></tr>
+          <tr><td class="mono">vault status|backup|audit</td><td><span class="st stub">stub</span></td><td>Use --read-vault for inspect.</td></tr>
+          <tr><td class="mono">vault key-verify…</td><td><span class="st dead">dead</span></td><td>Second handleVaultCommand unreachable (#67).</td></tr>
+          <tr><td class="mono">src/cli|modules|net</td><td><span class="st parked">parked</span></td><td>PR #49 scaffold; not on build graph.</td></tr>
+          <tr><td class="mono">alarm_engine.zig</td><td><span class="st dead">dead</span></td><td>Unwired; real scheduler is host.zig.</td></tr>
+          <tr><td class="mono">archival/</td><td><span class="st legacy">legacy</span></td><td>Frozen snapshot; intentional weight.</td></tr>
+          <tr><td class="mono">overallreadmee.md</td><td><span class="st legacy">legacy</span></td><td>Pre-rebrand architecture prose.</td></tr>
+          <tr><td class="mono">default vault password</td><td><span class="st parked">parked</span></td><td>Hardcoded; #63 open; allow-listed.</td></tr>
+          <tr><td class="mono">tag prerelease</td><td><span class="st parked">parked</span></td><td>Ladder incomplete (ROADMAP 🏁).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LADDER / LOOPS -->
+  <section style="--mod: var(--rose); --mod-soft:#ff9aab;">
+    <h2><span class="idx">◐</span> Ladder &amp; open loops <span class="kind">one tap deep</span></h2>
+    <div class="rule"></div>
+
+    <details open>
+      <summary>Prerelease ladder <span class="hint">ROADMAP.md</span></summary>
+      <div class="d-body">
+        <ul>
+          <li><strong>✅ SSFS storage</strong> — PR #26 shipped.</li>
+          <li><strong>⬜ Module extraction</strong> — files landed, not wired.</li>
+          <li><strong>⬜ Dashboard path resolver</strong> — drop hardcoded V: in UI stack.</li>
+          <li><strong>⬜ Vault resolver migration</strong> — Zig still hardcodes.</li>
+          <li><strong>⬜ Host storage integration</strong> — autostart verifier paused.</li>
+          <li><strong>⬜ End the stubs #74</strong> — Phase 0 done; Phases 1–4 open.</li>
+          <li><strong>⬜ Prerelease hardening</strong> — then tag <code>prerelease</code>.</li>
+        </ul>
+        <p>Extra shipped outside ladder: voice/ETDI (PR #30), covenant (PR #65), fleet (PR #64), repo hardening (PR #84).</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Highest-value next prunes <span class="hint">from 2026-07-21 review</span></summary>
+      <div class="d-body">
+        <ul>
+          <li><span class="score hot">1</span> <strong>#67 purge DEAD</strong> — dead handleVaultCommand; quarantine alarm_engine + scratch weight.</li>
+          <li><span class="score hot">2</span> <strong>#68 / #69 redirect</strong> — journal/rhythm fail loud or wrap voice.bat/alarm; no fake success.</li>
+          <li><span class="score">3</span> <strong>Wire or delete extracts</strong> — stop roadmap lying about module extraction.</li>
+          <li><span class="score">4</span> <strong>Canon hygiene</strong> — DRIFT 0.15 line, overallreadmee, CLI body, CANON §8 retick.</li>
+          <li><span class="score">5</span> <strong>Resolver completion</strong> — then prerelease checklist + tag.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Git / rhythm notes <span class="hint">ops</span></summary>
+      <div class="d-body">
+        <ul>
+          <li><strong>AyTree</strong> = day-to-day execution (phases A–F). <strong>Sesefus</strong> = product completions only.</li>
+          <li><strong>One branch = one squash PR</strong> into main; every merge adds CHANGELOG [Unreleased] line.</li>
+          <li><strong>Local main</strong> tracks origin/main as [gone] in some checkouts — fetch/fix tracking before push.</li>
+          <li><strong>Remotes:</strong> origin + github → https://github.com/Zychs/sesefus.git · bay-mirror local archive.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Do not re-litigate <span class="hint">load-bearing failures</span></summary>
+      <div class="d-body">
+        <ul>
+          <li><strong>NATS is gone</strong> — Bridge polls Zig HTTP :3000. Do not reintroduce the broker.</li>
+          <li><strong>Product form ETDI @ 0.15 is dead</strong> — norm @ 0.30 only (PR #30).</li>
+          <li><strong>No host.exe / client.exe</strong> — single sesefus binary + --role.</li>
+          <li><strong>No ssfs ⊂ sesefus ⊂ sesephus nesting</strong> — Sesephus is the old brand name of the same product; legal only in load-bearing code tokens.</li>
+          <li><strong>sesefhus spelling in Archive\</strong> is intentional load-bearing — not a typo to fix alone.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- MAP -->
+  <section style="--mod: var(--cyan); --mod-soft: var(--cyan-soft);">
+    <h2><span class="idx">◎</span> Map — top-level paths <span class="kind">constellation</span></h2>
+    <div class="rule"></div>
+    <p class="lead">Every real top-level path. Filter with the spine toolbar above (Voice / Fleet / REPL / Recovery).</p>
+    <div class="map" id="path-map">
+      <div class="map-item" data-paths="voice fleet recover"><code>install.bat</code><span>one-shot setup: venv, Whisper, config, atlas, hooks</span></div>
+      <div class="map-item" data-paths="voice"><code>voice.bat</code><span>ships — push-to-talk journal</span></div>
+      <div class="map-item" data-paths="fleet repl"><code>ssfs.bat</code><span>zig build + sesefus.exe dispatch</span></div>
+      <div class="map-item" data-paths="fleet recover"><code>fleet.bat</code><span>Engine + Bridge + Glass supervisor</span></div>
+      <div class="map-item" data-paths="repl"><code>core/</code><span>Zig engine (sesephus) + orphan alarm_engine/tcp/wav</span></div>
+      <div class="map-item" data-paths="voice fleet"><code>tools/</code><span>voice, ETDI, fleet.ps1, guards, qualify, atlas builder</span></div>
+      <div class="map-item" data-paths="fleet"><code>dashboard/</code><span>FastAPI bridge + Vite UI + optional Rust aether</span></div>
+      <div class="map-item" data-paths="all"><code>ssfs/</code><span>drive-mapping SSOT + JS path resolvers</span></div>
+      <div class="map-item" data-paths="all"><code>docs/</code><span>CANON first; CLI/INVENTORY/manifest lag</span></div>
+      <div class="map-item" data-paths="voice"><code>aurgio/</code><span>journal manifests / user corpus</span></div>
+      <div class="map-item" data-paths="all"><code>shredder/</code><span>image sieve side instrument</span></div>
+      <div class="map-item" data-paths="all"><code>prompts/</code><span>Jetstream / lead-qualify prompt vendors</span></div>
+      <div class="map-item" data-paths="all"><code>src/</code><span>extract scaffold — not on build graph</span></div>
+      <div class="map-item" data-paths="all"><code>audio/</code><span>noise / input experiments (pair with voice era)</span></div>
+      <div class="map-item" data-paths="all"><code>client/</code><span>recorder.zig experiment shell</span></div>
+      <div class="map-item" data-paths="all"><code>simulator/</code><span>agent / NATS-era mocks</span></div>
+      <div class="map-item" data-paths="all"><code>utils/</code><span>chat pruners, forge, tapestry (agent tooling)</span></div>
+      <div class="map-item" data-paths="all"><code>scratch/</code><span>one-off refactor scripts — not product</span></div>
+      <div class="map-item" data-paths="all"><code>archival/</code><span>frozen 64-file older layout</span></div>
+      <div class="map-item" data-paths="all"><code>README.md</code><span>primary human entry; follows CANON §2</span></div>
+      <div class="map-item" data-paths="all"><code>ROADMAP.md</code><span>ladder to prerelease tag</span></div>
+      <div class="map-item" data-paths="all"><code>CHANGELOG.md</code><span>history under [Unreleased] + releases</span></div>
+      <div class="map-item" data-paths="all"><code>export/</code><span>this operator ATLAS.html (hand-rendered)</span></div>
+      <div class="map-item" data-paths="recover"><code>.githooks/</code><span>vault + secret commit guards</span></div>
+      <div class="map-item" data-paths="recover"><code>.github/</code><span>CI workflows</span></div>
+    </div>
+  </section>
+
+  <p class="pull">Talk first. Score second.<br>Trust CANON when docs fight.</p>
+  <p class="thesis">Honesty shipped. Structural prune has not.</p>
+  <p class="mantra">negentropic · offline-first · one thing at a time</p>
+
+</main>
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.filter-bar button');
+  var stations = document.querySelectorAll('#spine .station');
+  var mapItems = document.querySelectorAll('#path-map .map-item');
+
+  function apply(path) {
+    buttons.forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-path') === path ? 'true' : 'false');
+    });
+    stations.forEach(function (s) {
+      var paths = (s.getAttribute('data-paths') || '').split(/\s+/);
+      var show = path === 'all' || paths.indexOf(path) !== -1;
+      s.classList.toggle('is-dim', !show);
+    });
+    mapItems.forEach(function (m) {
+      var paths = (m.getAttribute('data-paths') || 'all').split(/\s+/);
+      var show = path === 'all' || paths.indexOf('all') !== -1 || paths.indexOf(path) !== -1;
+      m.hidden = !show;
+    });
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      apply(b.getAttribute('data-path'));
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+Im a founder, building a suite of app features, across a broad scope.
+
+2
+Sesephus
+{
+    syncs these modules across a user defined suite of devices
+    {
+            My devices
+            {
+                tplink router mlo wifi7 @300$ pricepoint
+                192.168.0175 || 192.168.0.1 ethernet to w/ also
+                Killer(TM) Wi-Fi 7 BE1750x 320MHz
+                Wireless Network Adapter (BE200NGW) wifi backup
+                shaking hands with my
+                16gb of vram on board my 5080 in my msi meg vision ai pc
+                w/ 64 gb of ram to
+
+            run my wsl debian host from using ssh and tmux on command line,
+
+                to wire in through the other devices i own onto my msi meg.
+                -justadb@fedora -justadev@debian -justthesurface@wsx64arch
+                to gain full control of the first 2, while the last acts
+                as a portrait rotation display unification ui or DUUI for short
+                -acronym needs work
+             }
+
+            this is the return from ipconfig on C;/Bardw
+            {
+
+                bardw@VISIONOXIDE C:\Users\bardw>ipconfig /all
+
+                Windows IP Configuration
+
+                Host Name . . . . . . . . . . . . : VisionOxide
+                Primary Dns Suffix  . . . . . . . :
+                Node Type . . . . . . . . . . . . : Hybrid
+                IP Routing Enabled. . . . . . . . : No
+                WINS Proxy Enabled. . . . . . . . : No
+
+                Ethernet adapter Ethernet 4:
+
+                Media State . . . . . . . . . . . : Media disconnected
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : ASIX USB to Gigabit Ethernet Family Adapter
+                Physical Address. . . . . . . . . : C8-A3-62-7D-0D-4F
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+
+                Ethernet adapter Ethernet 2:
+
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : Killer E5000B 5 Gigabit Ethernet Controller
+                Physical Address. . . . . . . . . : 34-5A-60-BD-FE-94
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+                Link-local IPv6 Address . . . . . : fe80::14dc:2149:d85d:419d%24(Preferred)
+                IPv4 Address. . . . . . . . . . . : 192.168.0.47(Preferred)
+                Subnet Mask . . . . . . . . . . . : 255.255.255.0
+                Lease Obtained. . . . . . . . . . : Sunday, May 31, 2026 4:32:22 AM
+                Lease Expires . . . . . . . . . . : Sunday, May 31, 2026 12:57:37 PM
+                Default Gateway . . . . . . . . . : 192.168.0.1
+                DHCP Server . . . . . . . . . . . : 192.168.0.1
+                DHCPv6 IAID . . . . . . . . . . . : 120871520
+                DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-30-3E-4F-C0-04-7C-16-ED-3B-01
+                DNS Servers . . . . . . . . . . . : 192.168.0.1
+                NetBIOS over Tcpip. . . . . . . . : Enabled
+
+                Unknown adapter OpenVPN Data Channel Offload for Surfshark:
+
+                Media State . . . . . . . . . . . : Media disconnected
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : OpenVPN Data Channel Offload
+                Physical Address. . . . . . . . . :
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+
+                Wireless LAN adapter Wi-Fi:
+
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : Killer(TM) Wi-Fi 7 BE1750x 320MHz Wireless Network Adapter (BE200NGW)
+                Physical Address. . . . . . . . . : E0-8F-4C-EB-CD-DC
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+                Link-local IPv6 Address . . . . . : fe80::2857:fb92:f92a:aab%16(Preferred)
+                IPv4 Address. . . . . . . . . . . : 192.168.0.175(Preferred)
+                Subnet Mask . . . . . . . . . . . : 255.255.255.0
+                Lease Obtained. . . . . . . . . . : Sunday, May 31, 2026 9:25:14 AM
+                Lease Expires . . . . . . . . . . : Sunday, May 31, 2026 12:25:13 PM
+                Default Gateway . . . . . . . . . : 192.168.0.1
+                DHCP Server . . . . . . . . . . . : 192.168.0.1
+                DHCPv6 IAID . . . . . . . . . . . : 199266124
+                DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-30-3E-4F-C0-04-7C-16-ED-3B-01
+                DNS Servers . . . . . . . . . . . : 192.168.0.1
+                NetBIOS over Tcpip. . . . . . . . : Enabled
+
+                Wireless LAN adapter Wi-Fi 3:
+
+                Media State . . . . . . . . . . . : Media disconnected
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : Killer(TM) Wi-Fi 7 BE1750x 320MHz Wireless Network Adapter (BE200NGW) #3
+                Physical Address. . . . . . . . . : E0-8F-4C-EB-CD-DD
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+
+                Wireless LAN adapter Wi-Fi 4:
+
+                Media State . . . . . . . . . . . : Media disconnected
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : Killer(TM) Wi-Fi 7 BE1750x 320MHz Wireless Network Adapter (BE200NGW) #4
+                Physical Address. . . . . . . . . : E2-8F-4C-EB-CD-DC
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+
+                Ethernet adapter Bluetooth Network Connection:
+
+                Media State . . . . . . . . . . . : Media disconnected
+                Connection-specific DNS Suffix  . :
+                Description . . . . . . . . . . . : Bluetooth Device (Personal Area Network)
+                Physical Address. . . . . . . . . : E0-8F-4C-EB-CD-E0
+                DHCP Enabled. . . . . . . . . . . : Yes
+                Autoconfiguration Enabled . . . . : Yes
+            }
+
+            Now that the instances of complex operating systems you have
+            knowledge of, with intent to consider, the 'just' host names,
+            and from there you should be able to infer detailed confirmation, that each of them are who you think they are.
+
+            ***** NOTE; justadb is OFFLINE to due BIOS AUTH ERROR; hw still ONLINE passwd LOST *****
+
+            now, that we have solved the problem space of complex encryption
+             based locally with private routing amongst the
+             devices interdependantly checked against one another,
+             each of these devices must have access tunnels to the main host msi,
+             and to the client host (my surface tablet)
+
+             however, my linux cleint justadev is functional, and accessible. ready to use cloud compute.
+
+             justadb, however, is not. it requires massive rescue. see nitro rescue for more details.
+
+
+             justthesurface is not a live system reference handle either. that machine's ip is not handy...
+
+    }
+        Now, we ensure that we can at the very least,
+        define a method of understanding scope
+        relative to my project, and its challenges.
+            {
+                ****** MODULES ******
+                    {
+    q                   circadian alarm engine
+
+                        arcadian memo managment
+
+                        system remote & reserve
+
+
+                        ~unresolved list, appends expected here daily******************************
+                    }
+
+                _____________________________
+
+                    **** HARD CONSSTRAINTS *****
+            23          5. ARCHITECTURAL CONSTRAINTS (The Immutable Laws)
+                        No Cloud Reliance: All inference and data storage must stay within the local hardware topology.
+                        Interface-First: No implementation code shall be written without first defining the struct or enum interface.
+                        Decoupled Logic: A module in NODE_02 cannot directly access a database in NODE_01; it must use NATS/gRPC.
+                        Zero-Trust Networking: All inter-node communication assumes a local, secure mTLS environment.
+
+                _____________________________
+            }
+
+}

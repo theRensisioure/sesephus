@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Sesephus pre-push guard — whole-tree scan before anything leaves the machine.
+# Catches vault data or secrets that a --no-verify'd commit might have slipped in.
+# Enabled by the same setting as the pre-commit hook (core.hooksPath = .githooks).
+set -uo pipefail
+root="$(git rev-parse --show-toplevel)"
+rc=0
+
+echo "pre-push:"
+echo "  - vault guard (tree)"; bash "$root/tools/guard_vaults.sh" --tree || rc=1
+echo "  - secret scan (tree)"; bash "$root/tools/scan_secrets.sh" --tree || rc=1
+
+if [ "$rc" -ne 0 ]; then
+  echo "" >&2
+  echo "pre-push blocked — fix the above, or bypass once with: git push --no-verify" >&2
+  exit 1
+fi
+echo "pre-push: clean"
+exit 0

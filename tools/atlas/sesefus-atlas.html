@@ -1,0 +1,790 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>sesefus · atlas</title>
+<style>
+:root{
+  --paper:#14100c; --ink:#f3e9dc; --dim:#b39c82; --faint:#6b5c49;
+  --panel:rgba(28,22,16,.86); --panel-b:#3a2e20; --accent:#ffb454; --accent2:#7fd6c2;
+  --line:#2a2118; --danger:#ff5d5d;
+  --c-code:#ffb454; --c-doc:#7fd6c2; --c-data:#c58cff; --c-web:#ff8fb1;
+  --c-cfg:#8ab4ff; --c-media:#8ce99a; --c-build:#ffd43b; --c-other:#8a7a66;
+  --fs:16px; --ls:.01em; --ws:.06em; --lh:1.5;
+}
+:root[data-theme="paper"]{
+  --paper:#f5f2eb; --ink:#2b2015; --dim:#6b5c49; --faint:#b39c82;
+  --panel:rgba(255,252,246,.92); --panel-b:#e3d8c6; --accent:#c8791a; --accent2:#0f8a76;
+  --line:#e6ddcd; --danger:#c62828;
+  --c-code:#b5651d; --c-doc:#0f8a76; --c-data:#7b3fbf; --c-web:#c0396b;
+  --c-cfg:#2f6bd0; --c-media:#2f9e44; --c-build:#b8890a; --c-other:#8a7a66;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);
+  font-family:'Lexend','Atkinson Hyperlegible',system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:var(--fs);letter-spacing:var(--ls);line-height:var(--lh);
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
+button,select{font-family:inherit;letter-spacing:var(--ws);color:var(--ink)}
+
+/* ---- top chrome ---- */
+#bar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;gap:.4rem;align-items:center;
+  padding:.5rem .7rem;background:linear-gradient(var(--paper),transparent);pointer-events:none}
+#bar>*{pointer-events:auto}
+#brand{font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:.82rem;
+  color:var(--accent);margin-right:.3rem;white-space:nowrap}
+#brand small{color:var(--dim);font-weight:400;letter-spacing:.04em}
+.views{display:flex;gap:.25rem;flex-wrap:wrap}
+.vbtn{background:var(--panel);border:1.5px solid var(--panel-b);border-radius:.6rem;
+  padding:.5rem .7rem;min-height:2.6rem;cursor:pointer;font-size:.82rem;font-weight:600;
+  display:flex;align-items:center;gap:.4rem;transition:.12s}
+.vbtn:hover{border-color:var(--accent)}
+.vbtn[aria-pressed="true"]{background:var(--accent);color:#1a1206;border-color:var(--accent)}
+.vbtn .g{font-size:1rem;line-height:1}
+.spacer{flex:1}
+.tool{background:var(--panel);border:1.5px solid var(--panel-b);border-radius:.6rem;
+  padding:.5rem .6rem;min-height:2.6rem;cursor:pointer;font-size:.8rem;font-weight:600}
+.tool:hover{border-color:var(--accent)}
+
+/* ---- HUD panels ---- */
+.hud{position:fixed;z-index:35;background:var(--panel);border:1.5px solid var(--panel-b);
+  border-radius:.8rem;padding:.75rem .85rem;backdrop-filter:blur(6px);max-width:min(92vw,340px);
+  box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.hud h2{margin:0 0 .5rem;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+#legend{left:.7rem;bottom:.7rem}
+.leg{display:flex;align-items:center;gap:.5rem;font-size:.8rem;margin:.28rem 0;cursor:pointer;
+  padding:.15rem .25rem;border-radius:.4rem}
+.leg:hover{background:var(--line)}
+.leg .sw{width:16px;height:16px;border-radius:4px;flex:none;border:1.5px solid rgba(255,255,255,.25)}
+.leg .ct{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums}
+.leg[data-off="1"]{opacity:.35}
+#inspector{right:.7rem;top:3.6rem;min-width:240px}
+#inspector .k{color:var(--dim);font-size:.72rem;letter-spacing:.05em}
+#inspector .v{font-size:.92rem;word-break:break-all;margin:.05rem 0 .55rem}
+#inspector .badge{display:inline-block;padding:.12rem .5rem;border-radius:1rem;font-size:.72rem;
+  font-weight:700;color:#140f08}
+#status{right:.7rem;bottom:.7rem;font-size:.76rem;color:var(--dim);padding:.5rem .7rem}
+#status b{color:var(--ink);font-variant-numeric:tabular-nums}
+#help{left:50%;top:50%;transform:translate(-50%,-50%);max-width:min(92vw,520px);z-index:60;display:none}
+#help.show{display:block}
+#help table{width:100%;border-collapse:collapse;font-size:.85rem}
+#help td{padding:.28rem .4rem;border-bottom:1px solid var(--line)}
+#help kbd{background:var(--line);border:1px solid var(--panel-b);border-radius:.35rem;
+  padding:.1rem .45rem;font-family:ui-monospace,monospace;font-size:.8rem}
+#search{position:fixed;top:3.6rem;left:.7rem;z-index:35}
+#search input{background:var(--panel);border:1.5px solid var(--panel-b);border-radius:.6rem;
+  padding:.55rem .7rem;color:var(--ink);font-size:.85rem;width:220px;font-family:inherit}
+#search input:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+
+/* ---- controls dock (weave/radial) ---- */
+#dock{position:fixed;left:50%;bottom:.9rem;transform:translateX(-50%);z-index:36;
+  display:none;align-items:center;gap:.6rem;background:var(--panel);border:1.5px solid var(--panel-b);
+  border-radius:1rem;padding:.55rem .8rem;backdrop-filter:blur(6px);max-width:94vw}
+#dock.show{display:flex}
+#dock input[type=range]{width:min(46vw,420px);accent-color:var(--accent)}
+#dock .pill{font-size:.76rem;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+#dock button{background:transparent;border:1.5px solid var(--panel-b);border-radius:.5rem;
+  padding:.4rem .6rem;cursor:pointer;font-size:.9rem;min-width:2.4rem}
+#dock button:hover{border-color:var(--accent)}
+
+/* ---- tree view ---- */
+#treewrap{position:fixed;inset:3.4rem 0 0 0;z-index:20;overflow:auto;display:none;padding:1rem 1rem 4rem}
+#treewrap.show{display:block}
+.tnode{margin:.05rem 0}
+.trow{display:flex;align-items:center;gap:.5rem;padding:.32rem .5rem;border-radius:.5rem;cursor:pointer;
+  min-height:2.2rem;border:1.5px solid transparent}
+.trow:hover{background:var(--line)}
+.trow:focus-visible{outline:2px solid var(--accent);border-color:var(--accent)}
+.trow .tw{width:1.1rem;text-align:center;color:var(--dim);flex:none}
+.trow .dot{width:12px;height:12px;border-radius:3px;flex:none;border:1.5px solid rgba(255,255,255,.2)}
+.trow .nm{font-size:.9rem}
+.trow .meta{margin-left:auto;color:var(--faint);font-size:.72rem;font-variant-numeric:tabular-nums}
+.tkids{margin-left:1.15rem;border-left:1.5px solid var(--line);padding-left:.35rem}
+.hidden{display:none}
+:root[data-hide="1"] #bar,:root[data-hide="1"] .hud:not(#help),
+:root[data-hide="1"] #search,:root[data-hide="1"] #dock{display:none!important}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+a.link{color:var(--accent2)}
+</style>
+
+<div id="bar" role="toolbar" aria-label="views">
+  <div id="brand">sesefus<small>·atlas</small></div>
+  <div class="views" id="views"></div>
+  <div class="spacer"></div>
+  <button class="tool" id="loadBtn" title="Load another local repo (File System Access API)">📁 repo</button>
+  <button class="tool" id="themeBtn" title="Toggle warm/paper theme">◐</button>
+  <button class="tool" id="helpBtn" title="Help (?)">?</button>
+</div>
+
+<div id="search"><input id="q" placeholder="search files…  ( / )" aria-label="search files"></div>
+
+<canvas id="cv" aria-label="visualization canvas"></canvas>
+<div id="treewrap" role="tree" aria-label="repository tree"></div>
+
+<aside id="legend" class="hud" aria-label="legend"><h2>Categories</h2><div id="legItems"></div></aside>
+<aside id="inspector" class="hud" aria-label="inspector"><h2>Inspect</h2><div id="insBody">
+  <div class="k">hover / click a node</div></div></aside>
+<aside id="status" class="hud" aria-live="polite"></aside>
+
+<div id="dock">
+  <button id="playBtn" title="play (s)">▶</button>
+  <input id="scrub" type="range" min="0" max="1000" value="1000" aria-label="time scrubber">
+  <span class="pill" id="dockPill"></span>
+  <button id="resetBtn" title="reset (r)">⟲</button>
+</div>
+
+<div id="help" class="hud" role="dialog" aria-label="keyboard help">
+  <h2>sesefus atlas · keys</h2>
+  <table><tbody>
+    <tr><td><kbd>1</kbd>–<kbd>6</kbd></td><td>switch view</td><td><kbd>h</kbd></td><td>hide all chrome</td></tr>
+    <tr><td><kbd>/</kbd></td><td>focus search</td><td><kbd>t</kbd></td><td>toggle theme</td></tr>
+    <tr><td><kbd>s</kbd></td><td>play weave / replay</td><td><kbd>r</kbd></td><td>reset view</td></tr>
+    <tr><td><kbd>drag</kbd></td><td>pan</td><td><kbd>wheel</kbd></td><td>zoom</td></tr>
+    <tr><td><kbd>click</kbd></td><td>inspect / re-root (radial)</td><td><kbd>?</kbd></td><td>this help</td></tr>
+  </tbody></table>
+  <div style="margin-top:.6rem;font-size:.78rem;color:var(--dim)">
+  Multi-channel encoding: category = colour <b>and</b> shape. Merge = ◆ · tip = ⬡ · file = ● · dir = ▲.
+  No size/storage is encoded — pure structural presence.</div>
+</div>
+
+<script id="atlas-data" type="application/json">{"repo":"sesefus","built":"2026-08-03T19:21:58Z","guide":"sesefus \u2014 261 tracked files across 20 top-level areas.\nOpen tools/atlas/sesefus-atlas.html for the structural map (zero inference).\n  \u2022 archival: 64 files\n  \u2022 dashboard: 51 files \u2014 React UI + dashboard_server.py API\n  \u2022 core: 28 files \u2014 Zig host (sesephus) \u2014 CLI, vault, rhythm, discovery\n  \u2022 docs: 26 files \u2014 Operator guides and session notes\n  \u2022 tools: 26 files \u2014 Maintenance scripts, ETDI, atlas builder\n  \u2022 \u00b7root: 22 files","files":[{"p":".claude/launch.json","e":"json","t":".claude"},{"p":".claude/skills/audit/SKILL.md","e":"md","t":".claude"},{"p":".devcontainer/Dockerfile","e":"dockerfile","t":".devcontainer"},{"p":".devcontainer/devcontainer.json","e":"json","t":".devcontainer"},{"p":".devcontainer/docker-compose.yml","e":"yml","t":".devcontainer"},{"p":".devcontainer/post-create.sh","e":"sh","t":".devcontainer"},{"p":".devcontainer/post-start.sh","e":"sh","t":".devcontainer"},{"p":".devcontainer/wsl-precheck.sh","e":"sh","t":".devcontainer"},{"p":".gitattributes","e":"gitattributes","t":"\u00b7root"},{"p":".githooks/pre-commit","e":"pre-commit","t":".githooks"},{"p":".githooks/pre-push","e":"pre-push","t":".githooks"},{"p":".github/dependabot.yml","e":"yml","t":".github"},{"p":".github/workflows/audit.yml","e":"yml","t":".github"},{"p":".github/workflows/ci.yml","e":"yml","t":".github"},{"p":".gitignore","e":"gitignore","t":"\u00b7root"},{"p":".gitleaks.toml","e":"toml","t":"\u00b7root"},{"p":".secretsallow","e":"secretsallow","t":"\u00b7root"},{"p":".vscode/extensions.json","e":"json","t":".vscode"},{"p":"AGENTS.md","e":"md","t":"\u00b7root"},{"p":"ARCHIVED-BRANCHES.md","e":"md","t":"\u00b7root"},{"p":"CHANGELOG.md","e":"md","t":"\u00b7root"},{"p":"LICENSE","e":"license","t":"\u00b7root"},{"p":"README-TESTERS.md","e":"md","t":"\u00b7root"},{"p":"README.md","e":"md","t":"\u00b7root"},{"p":"ROADMAP.md","e":"md","t":"\u00b7root"},{"p":"archival/LICENSE","e":"license","t":"archival"},{"p":"archival/READ-me","e":"read-me","t":"archival"},{"p":"archival/audio/analyze_noise.py","e":"py","t":"archival"},{"p":"archival/audio/audio_input_layer.py","e":"py","t":"archival"},{"p":"archival/audio/monitor.py","e":"py","t":"archival"},{"p":"archival/core/sesephus/build.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/run_demo.bat","e":"bat","t":"archival"},{"p":"archival/core/sesephus/src/audio_record.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/src/client.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/src/common.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/src/crypto.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/src/dashboard.html","e":"html","t":"archival"},{"p":"archival/core/sesephus/src/database.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/src/host.zig","e":"zig","t":"archival"},{"p":"archival/core/sesephus/test_integration.py","e":"py","t":"archival"},{"p":"archival/dashboard/Dockerfile.audio","e":"audio","t":"archival"},{"p":"archival/dashboard/aether-dashboard-v2/Cargo.lock","e":"lock","t":"archival"},{"p":"archival/dashboard/aether-dashboard-v2/Cargo.toml","e":"toml","t":"archival"},{"p":"archival/dashboard/aether-dashboard-v2/src/main.rs","e":"rs","t":"archival"},{"p":"archival/dashboard/dashboard-audio-in-backend","e":"dashboard-audio-in-backend","t":"archival"},{"p":"archival/dashboard/dashboard_server.py","e":"py","t":"archival"},{"p":"archival/dashboard/docker-compose.yml","e":"yml","t":"archival"},{"p":"archival/dashboard/ui/.gitignore","e":"gitignore","t":"archival"},{"p":"archival/dashboard/ui/README.md","e":"md","t":"archival"},{"p":"archival/dashboard/ui/eslint.config.js","e":"js","t":"archival"},{"p":"archival/dashboard/ui/index.html","e":"html","t":"archival"},{"p":"archival/dashboard/ui/package-lock.json","e":"json","t":"archival"},{"p":"archival/dashboard/ui/package.json","e":"json","t":"archival"},{"p":"archival/dashboard/ui/public/favicon.svg","e":"svg","t":"archival"},{"p":"archival/dashboard/ui/public/icons.svg","e":"svg","t":"archival"},{"p":"archival/dashboard/ui/src/App.css","e":"css","t":"archival"},{"p":"archival/dashboard/ui/src/App.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/assets/hero.png","e":"png","t":"archival"},{"p":"archival/dashboard/ui/src/assets/react.svg","e":"svg","t":"archival"},{"p":"archival/dashboard/ui/src/assets/vite.svg","e":"svg","t":"archival"},{"p":"archival/dashboard/ui/src/components/Arcadium.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/components/Circadia.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/components/Overview.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/components/SaturnNav.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/components/Sidebar.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/components/Sieve.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/src/index.css","e":"css","t":"archival"},{"p":"archival/dashboard/ui/src/main.jsx","e":"jsx","t":"archival"},{"p":"archival/dashboard/ui/vite.config.js","e":"js","t":"archival"},{"p":"archival/docs/GUIDE_Vector_Engagement.md","e":"md","t":"archival"},{"p":"archival/docs/gemini_cli_log.txt","e":"txt","t":"archival"},{"p":"archival/docs/longhorizonbackup.txt","e":"txt","t":"archival"},{"p":"archival/docs/prototype-tools/26 - 2026-05-31 12.50.md","e":"md","t":"archival"},{"p":"archival/docs/prototype-tools/SYSTEM PROMPT","e":"system prompt","t":"archival"},{"p":"archival/docs/prototype-tools/agentic-ingestion","e":"agentic-ingestion","t":"archival"},{"p":"archival/docs/vision.md","e":"md","t":"archival"},{"p":"archival/primordial-read","e":"primordial-read","t":"archival"},{"p":"archival/requirements.txt","e":"txt","t":"archival"},{"p":"archival/shredder/sieve.py","e":"py","t":"archival"},{"p":"archival/simulator/agent_simulator.py","e":"py","t":"archival"},{"p":"archival/simulator/mock_nats_data.py","e":"py","t":"archival"},{"p":"archival/simulator/test_autogen.py","e":"py","t":"archival"},{"p":"archival/simulator/test_autogen_v4.py","e":"py","t":"archival"},{"p":"archival/toclaude.md","e":"md","t":"archival"},{"p":"archival/utils/badinit","e":"badinit","t":"archival"},{"p":"archival/utils/forge.py","e":"py","t":"archival"},{"p":"archival/utils/prune_chat.py","e":"py","t":"archival"},{"p":"archival/utils/spiffy_prune.py","e":"py","t":"archival"},{"p":"archival/utils/tapestry.py","e":"py","t":"archival"},{"p":"audio/analyze_noise.py","e":"py","t":"audio"},{"p":"audio/audio_input_layer.py","e":"py","t":"audio"},{"p":"audio/monitor.py","e":"py","t":"audio"},{"p":"aytree.bat","e":"bat","t":"\u00b7root"},{"p":"client/recorder.zig","e":"zig","t":"client"},{"p":"core/sesephus/README.md","e":"md","t":"core"},{"p":"core/sesephus/_vault_test_safety.py","e":"py","t":"core"},{"p":"core/sesephus/build.zig","e":"zig","t":"core"},{"p":"core/sesephus/run_demo.bat","e":"bat","t":"core"},{"p":"core/sesephus/src/audio_record.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/cli.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/client.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/aytree.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/dialogue.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/journal.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/lead.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/rhythm.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/stoic.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/commands/vault.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/common.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/crypto.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/dashboard.html","e":"html","t":"core"},{"p":"core/sesephus/src/database.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/discovery.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/host.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/main.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/runtime_config.zig","e":"zig","t":"core"},{"p":"core/sesephus/src/speech.zig","e":"zig","t":"core"},{"p":"core/sesephus/test_circadia_advanced.py","e":"py","t":"core"},{"p":"core/sesephus/test_integration.py","e":"py","t":"core"},{"p":"core/sesephus/test_structured_export.py","e":"py","t":"core"},{"p":"core/tcp_server.zig","e":"zig","t":"core"},{"p":"core/wav_db.zig","e":"zig","t":"core"},{"p":"dashboard/Dockerfile.audio","e":"audio","t":"dashboard"},{"p":"dashboard/aether-dashboard-v2/Cargo.lock","e":"lock","t":"dashboard"},{"p":"dashboard/aether-dashboard-v2/Cargo.toml","e":"toml","t":"dashboard"},{"p":"dashboard/aether-dashboard-v2/src/main.rs","e":"rs","t":"dashboard"},{"p":"dashboard/dashboard-audio-in-backend","e":"dashboard-audio-in-backend","t":"dashboard"},{"p":"dashboard/dashboard_server.py","e":"py","t":"dashboard"},{"p":"dashboard/docker-compose.yml","e":"yml","t":"dashboard"},{"p":"dashboard/ui/.gitignore","e":"gitignore","t":"dashboard"},{"p":"dashboard/ui/README.md","e":"md","t":"dashboard"},{"p":"dashboard/ui/eslint.config.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/index.html","e":"html","t":"dashboard"},{"p":"dashboard/ui/package-lock.json","e":"json","t":"dashboard"},{"p":"dashboard/ui/package.json","e":"json","t":"dashboard"},{"p":"dashboard/ui/public/favicon.svg","e":"svg","t":"dashboard"},{"p":"dashboard/ui/public/icons.svg","e":"svg","t":"dashboard"},{"p":"dashboard/ui/src/App.css","e":"css","t":"dashboard"},{"p":"dashboard/ui/src/App.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/assets/hero.png","e":"png","t":"dashboard"},{"p":"dashboard/ui/src/assets/react.svg","e":"svg","t":"dashboard"},{"p":"dashboard/ui/src/assets/vite.svg","e":"svg","t":"dashboard"},{"p":"dashboard/ui/src/components/Arcadium.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/Circadia.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/EtdiPanel.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/MachineState.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/Overview.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/SaturnNav.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/Sidebar.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/components/Sieve.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/data/mockRoutes.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/src/data/riderProfiles.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/src/data/routeSession.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/src/data/shipments.json","e":"json","t":"dashboard"},{"p":"dashboard/ui/src/dyslexiui-tokens.css","e":"css","t":"dashboard"},{"p":"dashboard/ui/src/index.css","e":"css","t":"dashboard"},{"p":"dashboard/ui/src/main.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/routes/ShipmentConsole.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/routes/ShipmentDock.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/routes/ShipmentManifest.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/routes/SystemOverview.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/BasinEditor.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/OptimizationStack.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/ParetoTray.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/PreflightPanel.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/RiderProfileSelector.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/RouteMap.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/SaturnNavLab.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/SessionPhaseBar.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/shipments/saturnnav/VoiceSpeakerPanel.jsx","e":"jsx","t":"dashboard"},{"p":"dashboard/ui/src/utils/weights.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/vite.config.js","e":"js","t":"dashboard"},{"p":"dashboard/ui/vite.config.ts","e":"ts","t":"dashboard"},{"p":"docs/ARTIFACT_SIEVE.md","e":"md","t":"docs"},{"p":"docs/CANON.md","e":"md","t":"docs"},{"p":"docs/CLI.md","e":"md","t":"docs"},{"p":"docs/COVENANT.md","e":"md","t":"docs"},{"p":"docs/DRIFT.md","e":"md","t":"docs"},{"p":"docs/ETDI.md","e":"md","t":"docs"},{"p":"docs/GIT_WORKFLOW.md","e":"md","t":"docs"},{"p":"docs/GUIDE_Vector_Engagement.md","e":"md","t":"docs"},{"p":"docs/IMAGE_SIEVE.md","e":"md","t":"docs"},{"p":"docs/INVENTORY.md","e":"md","t":"docs"},{"p":"docs/PRODUCTION.md","e":"md","t":"docs"},{"p":"docs/PRODUCT_ESSAY_QUESTIONS.md.stub","e":"stub","t":"docs"},{"p":"docs/factor/2026-07-27.md","e":"md","t":"docs"},{"p":"docs/gemini.md","e":"md","t":"docs"},{"p":"docs/gemini_cli_log.txt","e":"txt","t":"docs"},{"p":"docs/longhorizonbackup.txt","e":"txt","t":"docs"},{"p":"docs/manifest.json","e":"json","t":"docs"},{"p":"docs/prototype-tools/26 - 2026-05-31 12.50.md","e":"md","t":"docs"},{"p":"docs/prototype-tools/SYSTEM PROMPT","e":"system prompt","t":"docs"},{"p":"docs/prototype-tools/agentic-ingestion","e":"agentic-ingestion","t":"docs"},{"p":"docs/sesephus-circadian-prosthetic.md","e":"md","t":"docs"},{"p":"docs/sesephus_help.md","e":"md","t":"docs"},{"p":"docs/session-notes/2026-07-04.md","e":"md","t":"docs"},{"p":"docs/shipments.json","e":"json","t":"docs"},{"p":"docs/vault_security.md","e":"md","t":"docs"},{"p":"docs/vision.md","e":"md","t":"docs"},{"p":"export/ATLAS.html","e":"html","t":"export"},{"p":"export/gemini-fixture/Takeout/Gemini/conversations.json","e":"json","t":"export"},{"p":"fleet.bat","e":"bat","t":"\u00b7root"},{"p":"install.bat","e":"bat","t":"\u00b7root"},{"p":"overallreadmee.md","e":"md","t":"\u00b7root"},{"p":"primordial-read","e":"primordial-read","t":"\u00b7root"},{"p":"prompts/jetstream-profile-align.md","e":"md","t":"prompts"},{"p":"prompts/jetstream-sort.md","e":"md","t":"prompts"},{"p":"prompts/meta/INDEX.md","e":"md","t":"prompts"},{"p":"prompts/meta/vllm-porting-notes.md","e":"md","t":"prompts"},{"p":"prompts/qualify-post.md","e":"md","t":"prompts"},{"p":"requirements-dev.txt","e":"txt","t":"\u00b7root"},{"p":"requirements.txt","e":"txt","t":"\u00b7root"},{"p":"sesefus-prerelease-0-9-3-notes-7-21-26","e":"sesefus-prerelease-0-9-3-notes-7-21-26","t":"\u00b7root"},{"p":"shredder/artifact_sieve.py","e":"py","t":"shredder"},{"p":"shredder/image_sieve.py","e":"py","t":"shredder"},{"p":"shredder/sieve.py","e":"py","t":"shredder"},{"p":"simulator/agent_simulator.py","e":"py","t":"simulator"},{"p":"simulator/mock_nats_data.py","e":"py","t":"simulator"},{"p":"simulator/test_autogen.py","e":"py","t":"simulator"},{"p":"simulator/test_autogen_v4.py","e":"py","t":"simulator"},{"p":"src/cli/flags.zig","e":"zig","t":"src"},{"p":"src/modules/README.md","e":"md","t":"src"},{"p":"src/modules/capture/wav_record.zig","e":"zig","t":"src"},{"p":"src/net/protocol.zig","e":"zig","t":"src"},{"p":"ssfs.bat","e":"bat","t":"\u00b7root"},{"p":"ssfs/drive-mapping.json","e":"json","t":"ssfs"},{"p":"ssfs/storage/config-engine.js","e":"js","t":"ssfs"},{"p":"ssfs/storage/paths.js","e":"js","t":"ssfs"},{"p":"toclaude.md","e":"md","t":"\u00b7root"},{"p":"tools/VAULT_GUARD.md","e":"md","t":"tools"},{"p":"tools/archive_schema.py","e":"py","t":"tools"},{"p":"tools/atlas/PROMPT-guide-hud.md","e":"md","t":"tools"},{"p":"tools/atlas/build.py","e":"py","t":"tools"},{"p":"tools/atlas/sesefus-atlas.html","e":"html","t":"tools"},{"p":"tools/aytree_launch.py","e":"py","t":"tools"},{"p":"tools/compress_archive.zig","e":"zig","t":"tools"},{"p":"tools/dual_writer.py","e":"py","t":"tools"},{"p":"tools/etdi_inference.py","e":"py","t":"tools"},{"p":"tools/etdi_pipeline.py","e":"py","t":"tools"},{"p":"tools/etdi_store.py","e":"py","t":"tools"},{"p":"tools/fleet.ps1","e":"ps1","t":"tools"},{"p":"tools/gh.ps1","e":"ps1","t":"tools"},{"p":"tools/guard_bigfiles.sh","e":"sh","t":"tools"},{"p":"tools/guard_vaults.sh","e":"sh","t":"tools"},{"p":"tools/ingress_memos.py","e":"py","t":"tools"},{"p":"tools/install_guards.sh","e":"sh","t":"tools"},{"p":"tools/qualify_post.py","e":"py","t":"tools"},{"p":"tools/recreate_repo.ps1","e":"ps1","t":"tools"},{"p":"tools/remap_history.ps1","e":"ps1","t":"tools"},{"p":"tools/scan_secrets.sh","e":"sh","t":"tools"},{"p":"tools/sesefus_config.py","e":"py","t":"tools"},{"p":"tools/sesefus_maintenance.ps1","e":"ps1","t":"tools"},{"p":"tools/ssfs_config.py","e":"py","t":"tools"},{"p":"tools/strict_main.ps1","e":"ps1","t":"tools"},{"p":"tools/voice.py","e":"py","t":"tools"},{"p":"utils/badinit","e":"badinit","t":"utils"},{"p":"utils/forge.py","e":"py","t":"utils"},{"p":"utils/prune_chat.py","e":"py","t":"utils"},{"p":"utils/spiffy_prune.py","e":"py","t":"utils"},{"p":"utils/tapestry.py","e":"py","t":"utils"},{"p":"voice.bat","e":"bat","t":"\u00b7root"}],"commits":[{"h":"a9f5274e10b34e3e25fcca4920493a3d28217b73","s":"a9f5274e","p":["5082039f9172161a3d56706fabe33cc5e4a7103b"],"t":1785750236,"r":["origin/main","origin/HEAD"],"g":[],"m":"fix: land adversarial review fixes for sieve, dashboard, aytree"},{"h":"581fd26a5732faaae373100460bf2685ad91ed8a","s":"581fd26a","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785674326,"r":["origin/dependabot/npm_and_yarn/archival/dashboard/ui/postcss-8.5.25"],"g":[],"m":"chore(deps): bump postcss in /archival/dashboard/ui"},{"h":"9db10c03d2a6842b97e0a63d205f8905589e22b7","s":"9db10c03","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785674321,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/postcss-8.5.25"],"g":[],"m":"chore(deps): bump postcss from 8.5.15 to 8.5.25 in /dashboard/ui"},{"h":"5082039f9172161a3d56706fabe33cc5e4a7103b","s":"5082039f","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785651680,"r":[],"g":[],"m":"uncherrypicked"},{"h":"7d8d012eb4fb94a226bd5280af0fe605097c2208","s":"7d8d012e","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785591032,"r":["origin/dependabot/npm_and_yarn/archival/dashboard/ui/brace-expansion-5.0.9"],"g":[],"m":"chore(deps-dev): bump brace-expansion in /archival/dashboard/ui"},{"h":"2222787ad85b6c7b83fc4f2cc301bf6d96d5e8f3","s":"2222787a","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785591021,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/brace-expansion-5.0.9"],"g":[],"m":"chore(deps-dev): bump brace-expansion in /dashboard/ui"},{"h":"74536f1566e0b04047a474c6cdfd9fae82ab001b","s":"74536f15","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1785572213,"r":["origin/dependabot/pip/fastapi-gte-0.140.13"],"g":[],"m":"chore(deps-dev): update fastapi requirement from >=0.110 to >=0.140.13"},{"h":"f0460087faea1e21ab805cc9564700508d97fb7e","s":"f0460087","p":["d29dbe146422b7f9a244aa000f9d685dfea89127"],"t":1784745327,"r":["origin/cursor/parent-id-dropdown-3d88"],"g":[],"m":"feat(circadia): delay as quantity 1\u00e2\u20ac\u201c99 + sec/min/hr scale"},{"h":"d29dbe146422b7f9a244aa000f9d685dfea89127","s":"d29dbe14","p":["bac1aa7890ee783f48d92fa845c8f17db126038c"],"t":1784744906,"r":[],"g":[],"m":"refactor(circadia): replace MeetNumber with plain number inputs"},{"h":"bac1aa7890ee783f48d92fa845c8f17db126038c","s":"bac1aa78","p":["1401d5cdfc4aae29b0f7696f4b7121c44dc18e51"],"t":1784740090,"r":[],"g":[],"m":"refactor(saturnnav): no scrolling sidebar \u00e2\u20ac\u201d controls get their own page"},{"h":"1401d5cdfc4aae29b0f7696f4b7121c44dc18e51","s":"1401d5cd","p":["d6ce838e5c10ac6d6870cbda7e24579464b26483"],"t":1784739934,"r":[],"g":[],"m":"docs(agents): never fake capabilities to save ops/token cost"},{"h":"d6ce838e5c10ac6d6870cbda7e24579464b26483","s":"d6ce838e","p":["396705af36f83a0425f9660ea2c0b924e2c5df82"],"t":1784739890,"r":[],"g":[],"m":"feat(saturnnav): ride-along on route candidates"},{"h":"396705af36f83a0425f9660ea2c0b924e2c5df82","s":"396705af","p":["0ce69b58ee681c791b3a9e6da248deaa1141c7f4"],"t":1784739514,"r":[],"g":[],"m":"fix(saturnnav): stop hallucinating preflight / offline guarantees"},{"h":"8974cc4837cb508270b479309153bb359ccef35f","s":"8974cc48","p":["82108039f512b96ce29f8cd55f9cd7fa926990cc"],"t":1784732690,"r":["origin/cursor/consolidate-project-docs-0563"],"g":[],"m":"docs: consolidate ten onboarding sources into PROJECT-GUIDE.md"},{"h":"0ce69b58ee681c791b3a9e6da248deaa1141c7f4","s":"0ce69b58","p":["6c1a20b7c189d57a7d0fa17d60fe826eeebe2798"],"t":1784732528,"r":[],"g":[],"m":"feat(circadia): MeetNumber \u00e2\u20ac\u201d type or scroll-wheel for numeric fields"},{"h":"6c1a20b7c189d57a7d0fa17d60fe826eeebe2798","s":"6c1a20b7","p":["86b86025c8918570618ef0d639677ea192b45fbe"],"t":1784732087,"r":[],"g":[],"m":"feat(circadia): MIDI action with user .mid file input"},{"h":"82108039f512b96ce29f8cd55f9cd7fa926990cc","s":"82108039","p":["21f809811808794f8b1c2c85d49f425d24046bdd"],"t":1784731655,"r":["HEAD -> main"],"g":[],"m":"chore: purge DEAD vault handler, alarm_engine, and scratch scripts (#67) (#98)"},{"h":"86b86025c8918570618ef0d639677ea192b45fbe","s":"86b86025","p":["419c2262e711217c87964af883c5ff027cf9f0c1"],"t":1784731580,"r":[],"g":[],"m":"refactor(circadia): stack devices under groups until lists grow"},{"h":"419c2262e711217c87964af883c5ff027cf9f0c1","s":"419c2262","p":["94c1a21ce0df259169d529b4a537b364f3a2b018"],"t":1784731427,"r":[],"g":[],"m":"refactor(circadia): one console rail for devices, groups, schedule"},{"h":"21f809811808794f8b1c2c85d49f425d24046bdd","s":"21f80981","p":["58430058ecedd73fc85b074750afccaf6358caef"],"t":1784731160,"r":[],"g":[],"m":"fix(circadia): make Sequence Parent ID a dropdown of active intervals (#97)"},{"h":"94c1a21ce0df259169d529b4a537b364f3a2b018","s":"94c1a21c","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784718954,"r":[],"g":[],"m":"fix(circadia): make Sequence Parent ID a dropdown of active intervals"},{"h":"58430058ecedd73fc85b074750afccaf6358caef","s":"58430058","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784718683,"r":[],"g":[],"m":"docs: add AGENTS.md with Cursor Cloud dev environment instructions (#96)"},{"h":"c5c569faed5d6416fea331ba5756884d1ad79a3a","s":"c5c569fa","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784706683,"r":["origin/cursor/setup-dev-environment-3d88"],"g":[],"m":"docs: add AGENTS.md with Cursor Cloud dev environment instructions"},{"h":"6d1a120adc4c5900d12997d88986a33055087f33","s":"6d1a120a","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598702,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/eslint-10.7.0"],"g":[],"m":"chore(deps-dev): bump eslint from 10.4.1 to 10.7.0 in /dashboard/ui"},{"h":"c60d2e328a28ecbac2aac1944d20bf5325d4829a","s":"c60d2e32","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598695,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/vite-8.1.5"],"g":[],"m":"chore(deps-dev): bump vite from 8.0.16 to 8.1.5 in /dashboard/ui"},{"h":"2a8070fc8a716d64498530036a1430b20d59884f","s":"2a8070fc","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598682,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/vitejs/plugin-react-6.0.3"],"g":[],"m":"chore(deps-dev): bump @vitejs/plugin-react in /dashboard/ui"},{"h":"dc5a990c96410735bac15e7fc37826b371c50641","s":"dc5a990c","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598670,"r":["origin/dependabot/npm_and_yarn/dashboard/ui/types/react-19.2.17"],"g":[],"m":"chore(deps-dev): bump @types/react in /dashboard/ui"},{"h":"ece765c54c821a5f4a516670260a92083210d9e0","s":"ece765c5","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598662,"r":["origin/dependabot/pip/uvicorn-gte-0.51.0"],"g":[],"m":"chore(deps-dev): update uvicorn requirement from >=0.27 to >=0.51.0"},{"h":"2f9c78e6eaa99c8f4ba1eddc8418aad3c78fd85b","s":"2f9c78e6","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598649,"r":["origin/dependabot/github_actions/actions/setup-python-7"],"g":[],"m":"chore(deps): bump actions/setup-python from 5 to 7"},{"h":"f411a5bbd0cd8eaca0f0ba5d849276c909ac5bcf","s":"f411a5bb","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598645,"r":["origin/dependabot/github_actions/actions/checkout-7"],"g":[],"m":"chore(deps): bump actions/checkout from 4 to 7"},{"h":"ee92c3fa9a9bf64c7987c1373618526b6109840c","s":"ee92c3fa","p":["ec46d6f54d63bfa21f178650f82c4fec51b89a88"],"t":1784598642,"r":["origin/dependabot/github_actions/actions/setup-node-7"],"g":[],"m":"chore(deps): bump actions/setup-node from 4 to 7"},{"h":"ec46d6f54d63bfa21f178650f82c4fec51b89a88","s":"ec46d6f5","p":["941e55224e42d483d8b247d57936f7d77bdac7f0","dec2b18a26eef8b3fbcc4d24f2fdc7f3917f801a"],"t":1784598615,"r":[],"g":[],"m":"Merge docs/stub-honesty into main (PR #75 payload)"},{"h":"941e55224e42d483d8b247d57936f7d77bdac7f0","s":"941e5522","p":["6d0e1125e92d78242e7fdf2b6058b3f06695fd1f","84dacdb40031c756f66b444836a139d284eb304b"],"t":1784598598,"r":[],"g":[],"m":"Merge pull request #84 from Zychs/feat/repo-hardening"},{"h":"84dacdb40031c756f66b444836a139d284eb304b","s":"84dacdb4","p":["32813d9587d647a84d7a4031dad52800b977b26c"],"t":1784598569,"r":["origin/feat/repo-hardening"],"g":[],"m":"security: allow-list the tracked default vault password (#63); silence null-byte warning"},{"h":"32813d9587d647a84d7a4031dad52800b977b26c","s":"32813d95","p":["611e2b9746cb9cdcbbe07fc7aea9dec569543d9c"],"t":1784598568,"r":[],"g":[],"m":"feat(security): close the gaps to fully satisfy issues #57-#62"},{"h":"611e2b9746cb9cdcbbe07fc7aea9dec569543d9c","s":"611e2b97","p":["1b3857aa7ff4249458fe2e86a9a8b551db9dc6c9"],"t":1784598558,"r":[],"g":[],"m":"fix(security): apply adversarial-review findings to the defense stack"},{"h":"1b3857aa7ff4249458fe2e86a9a8b551db9dc6c9","s":"1b3857aa","p":["6d0e1125e92d78242e7fdf2b6058b3f06695fd1f"],"t":1784598558,"r":[],"g":[],"m":"feat(security): defense-in-depth stack \u00e2\u20ac\u201d hooks, CI, secret + big-file guards"},{"h":"6d0e1125e92d78242e7fdf2b6058b3f06695fd1f","s":"6d0e1125","p":["a8810e9fe0b853b4dd3f0b0049e631dc60c9b229","248b20a44583e674188fadf5a915255ec49af819"],"t":1784598542,"r":[],"g":[],"m":"Merge pull request #65 from Zychs/covenant-spine"},{"h":"a3851861e25f178f428b6236306bc36aadf2d222","s":"a3851861","p":[],"t":1783949441,"r":["origin/entire/checkpoints/v1"],"g":[],"m":"Initialize metadata ref"},{"h":"dec2b18a26eef8b3fbcc4d24f2fdc7f3917f801a","s":"dec2b18a","p":["248b20a44583e674188fadf5a915255ec49af819"],"t":1783708041,"r":["origin/docs/stub-honesty"],"g":[],"m":"stub honesty: no surface claims a stub works (Phase 0, #66/#74)"},{"h":"248b20a44583e674188fadf5a915255ec49af819","s":"248b20a4","p":["1e18a06da295633346e57eec778f690dbe6c4dac"],"t":1783706089,"r":[],"g":[],"m":"ROADMAP: add GitHub rhythm rule (AyTree = execution, Sesefus = completions)"},{"h":"1e18a06da295633346e57eec778f690dbe6c4dac","s":"1e18a06d","p":["75e6e4dc374f7fb7bd15fcd9353608dbe77b3be5"],"t":1783706089,"r":[],"g":[],"m":"covenant spine: dialogic loop, spoken output, prose in the vault"},{"h":"75e6e4dc374f7fb7bd15fcd9353608dbe77b3be5","s":"75e6e4dc","p":["a8810e9fe0b853b4dd3f0b0049e631dc60c9b229"],"t":1783706089,"r":[],"g":[],"m":"runtime_config: make config paths POSIX-portable"},{"h":"a8810e9fe0b853b4dd3f0b0049e631dc60c9b229","s":"a8810e9f","p":["facf9a1cb165b799c5227f9752f8aae0c6047096","2e43438bb107428c2580e51acab9653f237f1f6e"],"t":1783701388,"r":[],"g":[],"m":"Merge pull request #64 from Zychs/feat/fleet-runner-hardening"},{"h":"2e43438bb107428c2580e51acab9653f237f1f6e","s":"2e43438b","p":["facf9a1cb165b799c5227f9752f8aae0c6047096"],"t":1783667300,"r":[],"g":[],"m":"fix(fleet): single-window runner, log multiplexing, IPv6 readiness"},{"h":"facf9a1cb165b799c5227f9752f8aae0c6047096","s":"facf9a1c","p":["92b14b1ccb6c3fd88f2de1250fe806598a7d8cc2","bf7c3390c19f7006f82df30d94883fd3542a1ca1"],"t":1783589946,"r":[],"g":[],"m":"Merge pull request #50 from Zychs/feat/atlas-guide-hud"},{"h":"92b14b1ccb6c3fd88f2de1250fe806598a7d8cc2","s":"92b14b1c","p":["7a41e8b4bc7b808480752b6dd9a5e965665af292","b355b29212cb3a9631b5020e79ce4fb17012eadf"],"t":1783587807,"r":[],"g":[],"m":"Merge pull request #49 from Zychs/feat/extract-modules"},{"h":"b355b29212cb3a9631b5020e79ce4fb17012eadf","s":"b355b292","p":["d168ef2805fe4507607dd887e077973297922db4","7a41e8b4bc7b808480752b6dd9a5e965665af292"],"t":1783587770,"r":[],"g":[],"m":"Merge branch 'main' into feat/extract-modules"},{"h":"7a41e8b4bc7b808480752b6dd9a5e965665af292","s":"7a41e8b4","p":["5c6a68ce26625c7beb4f337dac2b76f4d0b98a57","a105d90a44f231a31765dc70b719fe41d6269ab1"],"t":1783587704,"r":[],"g":[],"m":"Merge pull request #48 from Zychs/renderer"},{"h":"bf7c3390c19f7006f82df30d94883fd3542a1ca1","s":"bf7c3390","p":["5355223854e2a55ae7e96e4102a4a75da703c088"],"t":1783584617,"r":[],"g":[],"m":"prompt(guide-hud): deferred brief for atlas guide HUD"},{"h":"5355223854e2a55ae7e96e4102a4a75da703c088","s":"53552238","p":["a105d90a44f231a31765dc70b719fe41d6269ab1"],"t":1783584611,"r":[],"g":[],"m":"feat(atlas): dynamic manifest builder + install hook; drop dev-tree CSV"},{"h":"5c6a68ce26625c7beb4f337dac2b76f4d0b98a57","s":"5c6a68ce","p":["5925acd4c87226c678cae3195f6fd12333152e0a","cbcd33eb1919f63da9fbbdc84bf4d9cc65415a6f"],"t":1783559058,"r":[],"g":[],"m":"Merge pull request #47 from Zychs/negentropic-blue"},{"h":"cbcd33eb1919f63da9fbbdc84bf4d9cc65415a6f","s":"cbcd33eb","p":["e7f15d14d5aa512d9352f2dd2cbfe113ce50c9aa"],"t":1783509276,"r":[],"g":[],"m":"canon"},{"h":"e7f15d14d5aa512d9352f2dd2cbfe113ce50c9aa","s":"e7f15d14","p":["a723071d7cf0ffda02b27c0b92bd7fcefca2277d"],"t":1783478219,"r":[],"g":[],"m":"fleet runner"},{"h":"a105d90a44f231a31765dc70b719fe41d6269ab1","s":"a105d90a","p":["365cb992535ab834d6d37f4d798b5bc03b76aa56"],"t":1783477502,"r":[],"g":[],"m":"fleet runner"},{"h":"5925acd4c87226c678cae3195f6fd12333152e0a","s":"5925acd4","p":["a723071d7cf0ffda02b27c0b92bd7fcefca2277d","d34b90ea8322b5c6ade755ce69e1fbd304662b15"],"t":1783466292,"r":[],"g":[],"m":"Merge pull request #32 from Zychs/fleet-runner"},{"h":"d34b90ea8322b5c6ade755ce69e1fbd304662b15","s":"d34b90ea","p":["a723071d7cf0ffda02b27c0b92bd7fcefca2277d"],"t":1783462973,"r":[],"g":[],"m":"Add fleet runner: supervised launch of the three runtimes"},{"h":"365cb992535ab834d6d37f4d798b5bc03b76aa56","s":"365cb992","p":["a723071d7cf0ffda02b27c0b92bd7fcefca2277d"],"t":1783452481,"r":[],"g":[],"m":"beginning stages"},{"h":"a723071d7cf0ffda02b27c0b92bd7fcefca2277d","s":"a723071d","p":["93beba3e87a49d3c29af72fd6095ecdb352ef1bc","17ed9990266a82cda9bcaf80ad9a139125a2a056"],"t":1783442734,"r":[],"g":[],"m":"Merge pull request #31 from Zychs/feat/vault-guard"},{"h":"93beba3e87a49d3c29af72fd6095ecdb352ef1bc","s":"93beba3e","p":["dc74adcd70366b07d355250d1ce31daf44c8e864","7b3a5e17d673fbc8c001c09be1823a747e40e26f"],"t":1783442373,"r":[],"g":[],"m":"Merge pull request #30 from Zychs/claude/voice-control-integration-635p5x"},{"h":"7b3a5e17d673fbc8c001c09be1823a747e40e26f","s":"7b3a5e17","p":["6b1d4a834ea7a1e9c2386171e1dd82b8dba609c6","dc74adcd70366b07d355250d1ce31daf44c8e864"],"t":1783442295,"r":[],"g":[],"m":"Merge main into voice-control-integration: vault-guard-era main, ssfs paths; port 0-9-3 notes to CHANGELOG.md"},{"h":"17ed9990266a82cda9bcaf80ad9a139125a2a056","s":"17ed9990","p":["dc74adcd70366b07d355250d1ce31daf44c8e864"],"t":1783441965,"r":[],"g":[],"m":"Add vault guard: pre-commit hook + all-branch audit script"},{"h":"6b1d4a834ea7a1e9c2386171e1dd82b8dba609c6","s":"6b1d4a83","p":["a30e0165b2c34acc8ff60e099d8a0ed6dc340ebd"],"t":1783421682,"r":["tag: archive/voice-control-integration-635p5x"],"g":["archive/voice-control-integration-635p5x"],"m":"Add branch pull commands to audit docs; refresh cheat sheet to 0.9.3"},{"h":"a30e0165b2c34acc8ff60e099d8a0ed6dc340ebd","s":"a30e0165","p":["2de6109ef17f6d9119220bfa746ec5ac0cc631e5"],"t":1783417969,"r":[],"g":[],"m":"0.9.3-alpha: voice control, review fixes, norm formula, tester packaging"},{"h":"dc74adcd70366b07d355250d1ce31daf44c8e864","s":"dc74adcd","p":["dd06eb0c2fcdae0e4324a42232fe4b99477e54b0","4489d4c5f67b0b04aaa078f6db8834a3c0a70e1b"],"t":1783414305,"r":[],"g":[],"m":"Merge pull request #27 from Zychs/claude/audit-skill-agent-branches-zkdlzl"},{"h":"dd06eb0c2fcdae0e4324a42232fe4b99477e54b0","s":"dd06eb0c","p":["2a4409a850d0d791c02e66e7870933b4e4f378eb","a5248fcc123f64ce5865d3375ca0f9f820fa4afd"],"t":1783414275,"r":[],"g":[],"m":"Merge pull request #29 from Zychs/claude/sesefus-changelog-map-zudq6j"},{"h":"a5248fcc123f64ce5865d3375ca0f9f820fa4afd","s":"a5248fcc","p":["2a4409a850d0d791c02e66e7870933b4e4f378eb"],"t":1783411299,"r":[],"g":[],"m":"docs: replace version-folder scheme with CHANGELOG.md + version-free ROADMAP.md"},{"h":"2a4409a850d0d791c02e66e7870933b4e4f378eb","s":"2a4409a8","p":["64df0a27031b8f6b491faceb9e9e859d90fc1f79","f23f40340ad76b24092b5f63ac1b262fcbb08c6c"],"t":1783269768,"r":[],"g":[],"m":"Merge pull request #28 from Zychs/claude/local-machine-data-review-kefmn6"},{"h":"f23f40340ad76b24092b5f63ac1b262fcbb08c6c","s":"f23f4034","p":["637b90d9b73351de2df05b967817aec3e197ded8"],"t":1783258581,"r":[],"g":[],"m":"feat(ssfs): make ssfs_config.py runnable for direct tracing"},{"h":"637b90d9b73351de2df05b967817aec3e197ded8","s":"637b90d9","p":["92df8d5370638d12d1bf4d43a00d7d8be07d472f"],"t":1783258489,"r":[],"g":[],"m":"fix(ssfs): correct coldArchive expected label to match actual drive"},{"h":"4489d4c5f67b0b04aaa078f6db8834a3c0a70e1b","s":"4489d4c5","p":["64df0a27031b8f6b491faceb9e9e859d90fc1f79"],"t":1783258326,"r":[],"g":[],"m":"feat(skills): add /audit skill for reviewing an agent's branch work"},{"h":"92df8d5370638d12d1bf4d43a00d7d8be07d472f","s":"92df8d53","p":["64df0a27031b8f6b491faceb9e9e859d90fc1f79"],"t":1783254872,"r":[],"g":[],"m":"fix(ssfs): resolve archive path from drive-mapping.json instead of hardcoding T:"},{"h":"2de6109ef17f6d9119220bfa746ec5ac0cc631e5","s":"2de6109e","p":["282c609c67cb74df1e1c246472ef430673346f08"],"t":1783231146,"r":[],"g":[],"m":"Add INVENTORY.md: repo-wide file inventory cheat sheet"},{"h":"9ad68a1b12725d151ba030948ba43dbd8ce80d7a","s":"9ad68a1b","p":["09391481c810cef9599c9cb779de20ccae508fad"],"t":1783212540,"r":["tag: archive/unprivate-sesefus-jvo5kd"],"g":["archive/unprivate-sesefus-jvo5kd"],"m":"Add vault guard: pre-commit hook + all-branch audit script"},{"h":"282c609c67cb74df1e1c246472ef430673346f08","s":"282c609c","p":["cbd25c7048167e3c3ca216a61a210add1bb26b77"],"t":1783206565,"r":[],"g":[],"m":"Add session ledger 2026-07-04: decisions, open loops, 0.9.3 gap, pitch kit"},{"h":"cbd25c7048167e3c3ca216a61a210add1bb26b77","s":"cbd25c70","p":["9c672a2541b21d7e2ac0225aa31900c0de879810"],"t":1783205324,"r":[],"g":[],"m":"Add DRIFT.md: the app thesis \u00e2\u20ac\u201d control over all forms of drift"},{"h":"9c672a2541b21d7e2ac0225aa31900c0de879810","s":"9c672a25","p":["df2c63273c118f853d5db1ddfbea7d9290224d1e"],"t":1783204145,"r":[],"g":[],"m":"Add image sieve: abstract-notion comprehension of Windows screenshots"},{"h":"64df0a27031b8f6b491faceb9e9e859d90fc1f79","s":"64df0a27","p":["8567cdb82c776d892eea27fdfcf2bfcb21d4ec53","5a20b5dbf21f246a5b95f3b2db4d7cb6a094e69d"],"t":1783150010,"r":[],"g":[],"m":"Merge pull request #26 from Zychs/feat/ssfs-storage"},{"h":"09391481c810cef9599c9cb779de20ccae508fad","s":"09391481","p":["0207f761adc6daa01102e7bbdab4bcc312a8eea6","42ca16bcbfc52dfdc79f7e1908fcd5ce7bf34bc2"],"t":1783150010,"r":[],"g":[],"m":"Merge pull request #26 from Zychs/feat/ssfs-storage"},{"h":"8567cdb82c776d892eea27fdfcf2bfcb21d4ec53","s":"8567cdb8","p":["45a39c8ed81477f49c194210c97b219529fc96b4","df2c63273c118f853d5db1ddfbea7d9290224d1e"],"t":1783149708,"r":[],"g":[],"m":"Merge pull request #25 from Zychs/claude/voice-control-integration-635p5x"},{"h":"0207f761adc6daa01102e7bbdab4bcc312a8eea6","s":"0207f761","p":["fcd07f064c06edae2c70528b356aa0cb95b79ca2","8085d8dc7b34f5f9fdfc254074ccaf9491474394"],"t":1783149708,"r":[],"g":[],"m":"Merge pull request #25 from Zychs/claude/voice-control-integration-635p5x"},{"h":"df2c63273c118f853d5db1ddfbea7d9290224d1e","s":"df2c6327","p":["45a39c8ed81477f49c194210c97b219529fc96b4"],"t":1783133121,"r":[],"g":[],"m":"Add v1 ETDI pipeline: memo -> Whisper -> emotion JSON -> vault -> dashboard"},{"h":"8085d8dc7b34f5f9fdfc254074ccaf9491474394","s":"8085d8dc","p":["fcd07f064c06edae2c70528b356aa0cb95b79ca2"],"t":1783133121,"r":[],"g":[],"m":"Add v1 ETDI pipeline: memo -> Whisper -> emotion JSON -> vault -> dashboard"},{"h":"5a20b5dbf21f246a5b95f3b2db4d7cb6a094e69d","s":"5a20b5db","p":["aedf907c4415e3e2169f6e61ebdfdb1a8c869a32"],"t":1783108438,"r":[],"g":[],"m":"chore(ssfs): pause autostart of drive verifier for now"},{"h":"42ca16bcbfc52dfdc79f7e1908fcd5ce7bf34bc2","s":"42ca16bc","p":["f0b3daf784c7b637c4c8be7f91a4454a6cb349c1"],"t":1783108438,"r":[],"g":[],"m":"chore(ssfs): pause autostart of drive verifier for now"},{"h":"aedf907c4415e3e2169f6e61ebdfdb1a8c869a32","s":"aedf907c","p":["1fb45c7afb8e2aab96df039cc3ee85d14b7adf01"],"t":1783108284,"r":[],"g":[],"m":"feat(ssfs): harden drive discipline to prevent repeat data loss"},{"h":"f0b3daf784c7b637c4c8be7f91a4454a6cb349c1","s":"f0b3daf7","p":["a646e612c44d159709365c4148a4f41b73890e56"],"t":1783108284,"r":[],"g":[],"m":"feat(ssfs): harden drive discipline to prevent repeat data loss"},{"h":"1fb45c7afb8e2aab96df039cc3ee85d14b7adf01","s":"1fb45c7a","p":["45a39c8ed81477f49c194210c97b219529fc96b4"],"t":1783107072,"r":[],"g":[],"m":"feat(ssfs): config-driven storage layer \u00e2\u20ac\u201d drive-mapping.json + config engine + path resolver"},{"h":"a646e612c44d159709365c4148a4f41b73890e56","s":"a646e612","p":["fcd07f064c06edae2c70528b356aa0cb95b79ca2"],"t":1783107072,"r":[],"g":[],"m":"feat(ssfs): config-driven storage layer \u00e2\u20ac\u201d drive-mapping.json + config engine + path resolver"},{"h":"d168ef2805fe4507607dd887e077973297922db4","s":"d168ef28","p":["45a39c8ed81477f49c194210c97b219529fc96b4"],"t":1783107049,"r":[],"g":[],"m":"feat(extract): restore 3 extracted modules (cli flags, capture wav, net protocol) + harden .gitignore"},{"h":"45a39c8ed81477f49c194210c97b219529fc96b4","s":"45a39c8e","p":["323f9907b7d30597aefddc9d26fbc4069621bd6a","fe4698cced6ee2e7557b9d5fa152cfd47a46f21b"],"t":1783016654,"r":[],"g":[],"m":"Merge pull request #24 from Zychs/DOCKED"},{"h":"fcd07f064c06edae2c70528b356aa0cb95b79ca2","s":"fcd07f06","p":["ecfbb2c0c5ec2641b6235e0a11090b3faf693a22","89fb02f54f7795db168bd68685012974acc0a1c1"],"t":1783016654,"r":[],"g":[],"m":"Merge pull request #24 from Zychs/DOCKED"},{"h":"fe4698cced6ee2e7557b9d5fa152cfd47a46f21b","s":"fe4698cc","p":["66069538c7f59e86b1fca6b43ce134cd19664f99"],"t":1783016545,"r":[],"g":[],"m":"Improve WSL docker precheck for Docker Desktop integration"},{"h":"89fb02f54f7795db168bd68685012974acc0a1c1","s":"89fb02f5","p":["340e33e0a63e2f46424e6c0546b113721bb3ffcc"],"t":1783016545,"r":[],"g":[],"m":"Improve WSL docker precheck for Docker Desktop integration"},{"h":"66069538c7f59e86b1fca6b43ce134cd19664f99","s":"66069538","p":["06468168dceb395e3d7d2335438e6f6d6ed55a2d"],"t":1783016533,"r":[],"g":[],"m":"Add Dev Containers setup for WSL + Docker Desktop"},{"h":"340e33e0a63e2f46424e6c0546b113721bb3ffcc","s":"340e33e0","p":["ecfbb2c0c5ec2641b6235e0a11090b3faf693a22"],"t":1783016533,"r":[],"g":[],"m":"Add Dev Containers setup for WSL + Docker Desktop"},{"h":"323f9907b7d30597aefddc9d26fbc4069621bd6a","s":"323f9907","p":["06468168dceb395e3d7d2335438e6f6d6ed55a2d"],"t":1782995508,"r":[],"g":[],"m":"Update build.zig"},{"h":"ecfbb2c0c5ec2641b6235e0a11090b3faf693a22","s":"ecfbb2c0","p":["ed5db7b6b378c90462bde13faa7c1f6e717b5929"],"t":1782337338,"r":[],"g":[],"m":"versioning structure"},{"h":"06468168dceb395e3d7d2335438e6f6d6ed55a2d","s":"06468168","p":["8e81ea395d1b19ceab15dc2304f39817d870c78e"],"t":1782337338,"r":[],"g":[],"m":"versioning structure"},{"h":"ed5db7b6b378c90462bde13faa7c1f6e717b5929","s":"ed5db7b6","p":["a4cea2ad0b533f1f7b3eb095202136fecc317f31"],"t":1781579439,"r":[],"g":[],"m":"feat: add sesefus_maintenance.ps1 for automated branch management and toolflow cleaning"},{"h":"8e81ea395d1b19ceab15dc2304f39817d870c78e","s":"8e81ea39","p":["3ccfb2065f3fe1f333748d298b57f0520512bb5f"],"t":1781579439,"r":[],"g":[],"m":"feat: add sesefus_maintenance.ps1 for automated branch management and toolflow cleaning"},{"h":"a4cea2ad0b533f1f7b3eb095202136fecc317f31","s":"a4cea2ad","p":["bfe53dd49d1b898d5ba3245119981948bbb3547a"],"t":1781549573,"r":[],"g":[],"m":"Add anecdotal paragraph to prosthetic doc"},{"h":"3ccfb2065f3fe1f333748d298b57f0520512bb5f","s":"3ccfb206","p":["7d4ac68b482b08b4d7ad1ce61e4165d794926642"],"t":1781549573,"r":[],"g":[],"m":"Add anecdotal paragraph to prosthetic doc"},{"h":"bfe53dd49d1b898d5ba3245119981948bbb3547a","s":"bfe53dd4","p":["230858951aa59ebbbaffd2c8cf2ed07af0ee636d"],"t":1781516460,"r":[],"g":[],"m":"fix(host): resolve duplicate lead import and variable typos in command dispatcher"},{"h":"7d4ac68b482b08b4d7ad1ce61e4165d794926642","s":"7d4ac68b","p":["2bdc387192343384d034fa38622b40bc3551973b"],"t":1781516460,"r":[],"g":[],"m":"fix(host): resolve duplicate lead import and variable typos in command dispatcher"},{"h":"230858951aa59ebbbaffd2c8cf2ed07af0ee636d","s":"23085895","p":["522cf75b1fdee2f76e8040685cd8496eab0a3b38"],"t":1781513835,"r":[],"g":[],"m":"docs: consolidate cleaned prosthetic docs and unify dashboard UI components"},{"h":"2bdc387192343384d034fa38622b40bc3551973b","s":"2bdc3871","p":["b5b2dcb7f4ef33b391c870ff15faab740c729a3c"],"t":1781513835,"r":[],"g":[],"m":"docs: consolidate cleaned prosthetic docs and unify dashboard UI components"},{"h":"522cf75b1fdee2f76e8040685cd8496eab0a3b38","s":"522cf75b","p":["200eb9ecd399a84c0ff101e49bef029391124161","979d86feadb4da6152957f6fd4eea4dfbec92c99"],"t":1781377793,"r":[],"g":[],"m":"Merge pull request #22 from Zychs/strict-database-host"},{"h":"b5b2dcb7f4ef33b391c870ff15faab740c729a3c","s":"b5b2dcb7","p":["cdddda69546005e663c87d10ef5b377813934967","e42ee1555bdfd455263e834019db5c3a1779246e"],"t":1781377793,"r":[],"g":[],"m":"Merge pull request #22 from Zychs/strict-database-host"},{"h":"979d86feadb4da6152957f6fd4eea4dfbec92c99","s":"979d86fe","p":["6a002e794b6963b23ab2c526e5ae03241f9eedaa","200eb9ecd399a84c0ff101e49bef029391124161"],"t":1781377740,"r":[],"g":[],"m":"Merge pull request #21 from Zychs/main"},{"h":"e42ee1555bdfd455263e834019db5c3a1779246e","s":"e42ee155","p":["8cd6985df60c02ec110f62844086b333559db74f","cdddda69546005e663c87d10ef5b377813934967"],"t":1781377740,"r":[],"g":[],"m":"Merge pull request #21 from Zychs/main"},{"h":"200eb9ecd399a84c0ff101e49bef029391124161","s":"200eb9ec","p":["fd7363b7ff0cac1946796b1d7f7edfcdf1346eff","6a002e794b6963b23ab2c526e5ae03241f9eedaa"],"t":1781377629,"r":[],"g":[],"m":"Merge pull request #19 from Zychs/strict-database-host"},{"h":"cdddda69546005e663c87d10ef5b377813934967","s":"cdddda69","p":["358b151cecdd3a59720ebaec930076191b99248b","8cd6985df60c02ec110f62844086b333559db74f"],"t":1781377629,"r":[],"g":[],"m":"Merge pull request #19 from Zychs/strict-database-host"},{"h":"6a002e794b6963b23ab2c526e5ae03241f9eedaa","s":"6a002e79","p":["87d550f4c14291c9c207ea53ddcc030599f7a27e","fd7363b7ff0cac1946796b1d7f7edfcdf1346eff"],"t":1781377622,"r":[],"g":[],"m":"Merge branch 'main' into strict-database-host"},{"h":"8cd6985df60c02ec110f62844086b333559db74f","s":"8cd6985d","p":["04b38faf777253e9fe7a1d78ad7b626d1a8f8026","358b151cecdd3a59720ebaec930076191b99248b"],"t":1781377622,"r":[],"g":[],"m":"Merge branch 'main' into strict-database-host"},{"h":"fd7363b7ff0cac1946796b1d7f7edfcdf1346eff","s":"fd7363b7","p":["f4b6f67c0613b05314c88e726a71150e4f8da451","c9024fdbde5286297f0f30cf2269ab1f39499d11"],"t":1781354623,"r":[],"g":[],"m":"Merge pull request #20 from Zychs/vault-security-and-management-of--database"},{"h":"358b151cecdd3a59720ebaec930076191b99248b","s":"358b151c","p":["e236f5ebdf6d0ef96d44fe7dcfed220f8f57f373","c9fcec9230653dd86093603b16cca60b311eb6b0"],"t":1781354623,"r":[],"g":[],"m":"Merge pull request #20 from Zychs/vault-security-and-management-of--database"},{"h":"c9024fdbde5286297f0f30cf2269ab1f39499d11","s":"c9024fdb","p":["35b0d780c2424e6829ad241d3f57b04fd6098a54","f4b6f67c0613b05314c88e726a71150e4f8da451"],"t":1781354614,"r":[],"g":[],"m":"Merge branch 'main' into vault-security-and-management-of--database"},{"h":"c9fcec9230653dd86093603b16cca60b311eb6b0","s":"c9fcec92","p":["d0b90da9674882c97a67648812a69551f20ade03","e236f5ebdf6d0ef96d44fe7dcfed220f8f57f373"],"t":1781354614,"r":[],"g":[],"m":"Merge branch 'main' into vault-security-and-management-of--database"},{"h":"35b0d780c2424e6829ad241d3f57b04fd6098a54","s":"35b0d780","p":["5a27b97dd212259000ad82cdc98068e9e86ff1a8"],"t":1781347273,"r":[],"g":[],"m":"docs: archive record on base staging (vault) 2026-06-13; see main for full. Alignment with staging contract."},{"h":"d0b90da9674882c97a67648812a69551f20ade03","s":"d0b90da9","p":["d38637068798773e423befcf00ac56e89f228dc9"],"t":1781347273,"r":[],"g":[],"m":"docs: archive record on base staging (vault) 2026-06-13; see main for full. Alignment with staging contract."},{"h":"f4b6f67c0613b05314c88e726a71150e4f8da451","s":"f4b6f67c","p":["bddab8d843f899a81e38aa2deb34a0bb98402512"],"t":1781347225,"r":[],"g":[],"m":"docs: archive merged branches 2026-06-13; keep only main + base-staging (vault-security-and-management-of--database); detailed notes per user request after naissance ac00128 + PR authoring. Alignment: INDEX first, \u00c2\u00a710, relative, todo, leadlogic rule, 3-stage mindset for branch triage."},{"h":"e236f5ebdf6d0ef96d44fe7dcfed220f8f57f373","s":"e236f5eb","p":["5a8551735a5061e96f5c9f996b557f0cfb38ea05"],"t":1781347225,"r":[],"g":[],"m":"docs: archive merged branches 2026-06-13; keep only main + base-staging (vault-security-and-management-of--database); detailed notes per user request after naissance ac00128 + PR authoring. Alignment: INDEX first, \u00c2\u00a710, relative, todo, leadlogic rule, 3-stage mindset for branch triage."},{"h":"bddab8d843f899a81e38aa2deb34a0bb98402512","s":"bddab8d8","p":["2c567ef0c0b6460285a273cace2486d065928058"],"t":1781293941,"r":[],"g":[],"m":"docs(ops): import zig-cli operator tooling (path-filter per cherry-pick manifest)"},{"h":"5a8551735a5061e96f5c9f996b557f0cfb38ea05","s":"5a855173","p":["d0d747a068c8d2f1149a51a9281e05b789c0fb29"],"t":1781293941,"r":[],"g":[],"m":"docs(ops): import zig-cli operator tooling (path-filter per cherry-pick manifest)"},{"h":"2c567ef0c0b6460285a273cace2486d065928058","s":"2c567ef0","p":["732f55ddb4f3bbdc519761d5090938d0ea591e47"],"t":1781293720,"r":[],"g":[],"m":"feat(lead): wire qualify to vLLM via tools/qualify_post.py (LeadLogic PR2)"},{"h":"d0d747a068c8d2f1149a51a9281e05b789c0fb29","s":"d0d747a0","p":["51aecbc2a4ec52c7919f8def4a1a5d30287d1efe"],"t":1781293720,"r":[],"g":[],"m":"feat(lead): wire qualify to vLLM via tools/qualify_post.py (LeadLogic PR2)"},{"h":"5ef2a97c1c570cf398a83607390325860a37994e","s":"5ef2a97c","p":["3671f5e628289b1470bdfdc3e827350ed0f44d65"],"t":1781293633,"r":["tag: archive/feat-unified-runtime-archive-20260613"],"g":["archive/feat-unified-runtime-archive-20260613"],"m":"feat(runtime): unified sesefus binary, LAN discovery, and dual-archive ingress"},{"h":"3671f5e628289b1470bdfdc3e827350ed0f44d65","s":"3671f5e6","p":["9a997bf853f9241821231cf0932394aade3b225f"],"t":1781293625,"r":[],"g":[],"m":"feat(lead): strict-database-host scaffold with vendored LeadLogic prompts"},{"h":"732f55ddb4f3bbdc519761d5090938d0ea591e47","s":"732f55dd","p":["620a27f84aecd8bc81d206c9c8f9e8a1410ccca9","a48f2d8390f400942b8925bf08ce0877a8443582"],"t":1781293620,"r":[],"g":[],"m":"Merge pull request #15 from Zychs/feat/unified-runtime-archive"},{"h":"a48f2d8390f400942b8925bf08ce0877a8443582","s":"a48f2d83","p":["0456b08fd58b7718f133d234c606e2eb227caaf1"],"t":1781293633,"r":[],"g":[],"m":"feat(runtime): unified sesefus binary, LAN discovery, and dual-archive ingress"},{"h":"0456b08fd58b7718f133d234c606e2eb227caaf1","s":"0456b08f","p":["620a27f84aecd8bc81d206c9c8f9e8a1410ccca9"],"t":1781293625,"r":[],"g":[],"m":"feat(lead): strict-database-host scaffold with vendored LeadLogic prompts"},{"h":"51aecbc2a4ec52c7919f8def4a1a5d30287d1efe","s":"51aecbc2","p":["9a997bf853f9241821231cf0932394aade3b225f","5ef2a97c1c570cf398a83607390325860a37994e"],"t":1781293620,"r":[],"g":[],"m":"Merge pull request #15 from Zychs/feat/unified-runtime-archive"},{"h":"9a997bf853f9241821231cf0932394aade3b225f","s":"9a997bf8","p":["31860afa25db60aa0689613763dab3bcc54c74b8"],"t":1781293607,"r":[],"g":[],"m":"fix(docs): resolve README merge conflict markers on main"},{"h":"620a27f84aecd8bc81d206c9c8f9e8a1410ccca9","s":"620a27f8","p":["89b2b858d320fb5557bd5355f7568fd0b633e221"],"t":1781293607,"r":[],"g":[],"m":"fix(docs): resolve README merge conflict markers on main"},{"h":"87d550f4c14291c9c207ea53ddcc030599f7a27e","s":"87d550f4","p":["5a27b97dd212259000ad82cdc98068e9e86ff1a8"],"t":1781265964,"r":[],"g":[],"m":"feat(lead): strict-database-host scaffold with vendored LeadLogic prompts"},{"h":"04b38faf777253e9fe7a1d78ad7b626d1a8f8026","s":"04b38faf","p":["d38637068798773e423befcf00ac56e89f228dc9"],"t":1781265964,"r":[],"g":[],"m":"feat(lead): strict-database-host scaffold with vendored LeadLogic prompts"},{"h":"31860afa25db60aa0689613763dab3bcc54c74b8","s":"31860afa","p":["a07f9a931551828d694fbd46b9d37c7c508b7735","6115c08128ecbe02c6eadd62eb671e3f619da78a"],"t":1781165406,"r":[],"g":[],"m":"Merge branch 'main' of https://github.com/Zychs/sesefus"},{"h":"89b2b858d320fb5557bd5355f7568fd0b633e221","s":"89b2b858","p":["03097c17a995c45ff273d261041bb3762157a711","a352c746ca14975fd797f26cd4f2bd984fff9ed0"],"t":1781165406,"r":[],"g":[],"m":"Merge branch 'main' of https://github.com/Zychs/sesefus"},{"h":"a07f9a931551828d694fbd46b9d37c7c508b7735","s":"a07f9a93","p":["ecae61434bbc8978a0338d555e07bc8f05f0b695"],"t":1781164118,"r":[],"g":[],"m":"refactor: rebrand system as Sesephus CLI and create dedicated documentation file"},{"h":"03097c17a995c45ff273d261041bb3762157a711","s":"03097c17","p":["489cfb22ccc1657372006f48ed36cd81b71746f1"],"t":1781164118,"r":[],"g":[],"m":"refactor: rebrand system as Sesephus CLI and create dedicated documentation file"},{"h":"6115c08128ecbe02c6eadd62eb671e3f619da78a","s":"6115c081","p":["50e0b2dd2914de913c1484adc89f045f37bba94e","132a06db61d86edb359cc79619a06efd4ff1d64c"],"t":1781163825,"r":[],"g":[],"m":"Merge pull request #13 from Zychs/CLI-Reinforcement"},{"h":"a352c746ca14975fd797f26cd4f2bd984fff9ed0","s":"a352c746","p":["abfe90bf386c00d274cb344de52f585ef9067bce","ad8afddb24344a88d4efb4cef2597d441f115465"],"t":1781163825,"r":[],"g":[],"m":"Merge pull request #13 from Zychs/CLI-Reinforcement"},{"h":"132a06db61d86edb359cc79619a06efd4ff1d64c","s":"132a06db","p":["02f789a4c46cb30534e5e683d846c620cba2f68b"],"t":1781163803,"r":[],"g":[],"m":"docs: update workspace organization documentation and clarify module descriptions"},{"h":"ad8afddb24344a88d4efb4cef2597d441f115465","s":"ad8afddb","p":["8452f51e48ab073a47bb23ce1a1655927c4b93c4"],"t":1781163803,"r":[],"g":[],"m":"docs: update workspace organization documentation and clarify module descriptions"},{"h":"50e0b2dd2914de913c1484adc89f045f37bba94e","s":"50e0b2dd","p":["928feed333b009b3ee6bbfc19afc0d332c1ccceb","02f789a4c46cb30534e5e683d846c620cba2f68b"],"t":1781163639,"r":[],"g":[],"m":"Merge pull request #12 from Zychs/CLI-Reinforcement"},{"h":"abfe90bf386c00d274cb344de52f585ef9067bce","s":"abfe90bf","p":["0e9debbbaa0c44c17fa00aa48def0ae1bc98bfd3","8452f51e48ab073a47bb23ce1a1655927c4b93c4"],"t":1781163639,"r":[],"g":[],"m":"Merge pull request #12 from Zychs/CLI-Reinforcement"},{"h":"02f789a4c46cb30534e5e683d846c620cba2f68b","s":"02f789a4","p":["d473cc5b5c27ebfce482a5690e561d8d85b97563"],"t":1781163590,"r":[],"g":[],"m":"feat: refactor host daemon to use modular CLI structure and add production safety documentation"},{"h":"8452f51e48ab073a47bb23ce1a1655927c4b93c4","s":"8452f51e","p":["253a9518245aeb12fddb4d4baa0e95274cc14ff7"],"t":1781163590,"r":[],"g":[],"m":"feat: refactor host daemon to use modular CLI structure and add production safety documentation"},{"h":"928feed333b009b3ee6bbfc19afc0d332c1ccceb","s":"928feed3","p":["15580874c6736964f1b7eea541564c3d57bfe43a","d38637068798773e423befcf00ac56e89f228dc9"],"t":1781138844,"r":[],"g":[],"m":"Merge pull request #11 from Zychs/vault-security-and-management-of--database"},{"h":"0e9debbbaa0c44c17fa00aa48def0ae1bc98bfd3","s":"0e9debbb","p":["67b8bebd163c49e4c794fbfc5e5ad9e21817f288","5a27b97dd212259000ad82cdc98068e9e86ff1a8"],"t":1781138844,"r":[],"g":[],"m":"Merge pull request #11 from Zychs/vault-security-and-management-of--database"},{"h":"15580874c6736964f1b7eea541564c3d57bfe43a","s":"15580874","p":["3b9198823d559f791da56542eac91cd816cac929","d473cc5b5c27ebfce482a5690e561d8d85b97563"],"t":1781136994,"r":[],"g":[],"m":"Merge pull request #10 from Zychs/feat/restore-subgroups-intervals"},{"h":"67b8bebd163c49e4c794fbfc5e5ad9e21817f288","s":"67b8bebd","p":["14fbe1877e13a7b8edfa0294f9d613c294c61554","253a9518245aeb12fddb4d4baa0e95274cc14ff7"],"t":1781136994,"r":[],"g":[],"m":"Merge pull request #10 from Zychs/feat/restore-subgroups-intervals"},{"h":"d473cc5b5c27ebfce482a5690e561d8d85b97563","s":"d473cc5b","p":["a114cdd491203cc281900e7452db9d9bb9951975"],"t":1781136989,"r":["tag: archive/feat-restore-subgroups-intervals-20260613"],"g":["archive/feat-restore-subgroups-intervals-20260613"],"m":"docs: add comprehensive Gemini agent optimization guide for Sesephus architecture"},{"h":"253a9518245aeb12fddb4d4baa0e95274cc14ff7","s":"253a9518","p":["1c74d38912b5dc352f53dfcac8971c24204e55cc"],"t":1781136989,"r":[],"g":[],"m":"docs: add comprehensive Gemini agent optimization guide for Sesephus architecture"},{"h":"a114cdd491203cc281900e7452db9d9bb9951975","s":"a114cdd4","p":["369bc155965c704f363d07b73b52501a4e7eecb0"],"t":1781136871,"r":[],"g":[],"m":"cli help"},{"h":"1c74d38912b5dc352f53dfcac8971c24204e55cc","s":"1c74d389","p":["a7bd4720d2a74c61650c8424154510d6ed9b6155"],"t":1781136871,"r":[],"g":[],"m":"cli help"},{"h":"369bc155965c704f363d07b73b52501a4e7eecb0","s":"369bc155","p":["ecec37e967ea8037d4c66fa02eb872294c455f9d","3b9198823d559f791da56542eac91cd816cac929"],"t":1781135657,"r":[],"g":[],"m":"Merge pull request #9 from Zychs/main"},{"h":"a7bd4720d2a74c61650c8424154510d6ed9b6155","s":"a7bd4720","p":["cdc2eb100d31496aa44c0efb2127968da70c3e0e","14fbe1877e13a7b8edfa0294f9d613c294c61554"],"t":1781135657,"r":[],"g":[],"m":"Merge pull request #9 from Zychs/main"},{"h":"5a27b97dd212259000ad82cdc98068e9e86ff1a8","s":"5a27b97d","p":["e41de65c30f19befcee6c06a1e654a442751996f","14fbe1877e13a7b8edfa0294f9d613c294c61554"],"t":1781135567,"r":[],"g":[],"m":"Merge pull request #8 from Zychs/main"},{"h":"d38637068798773e423befcf00ac56e89f228dc9","s":"d3863706","p":["21daf171bdd8477c8e802ab3520539e72d0fbe50","3b9198823d559f791da56542eac91cd816cac929"],"t":1781135567,"r":[],"g":[],"m":"Merge pull request #8 from Zychs/main"},{"h":"3b9198823d559f791da56542eac91cd816cac929","s":"3b919882","p":["a6358b122af08eb841283c8cc9a08e6a712cdb1a","ecec37e967ea8037d4c66fa02eb872294c455f9d"],"t":1781135482,"r":[],"g":[],"m":"Merge pull request #7 from Zychs/feat/restore-subgroups-intervals"},{"h":"14fbe1877e13a7b8edfa0294f9d613c294c61554","s":"14fbe187","p":["694f8e21ad0c37540790cf6626b39afd43038194","cdc2eb100d31496aa44c0efb2127968da70c3e0e"],"t":1781135482,"r":[],"g":[],"m":"Merge pull request #7 from Zychs/feat/restore-subgroups-intervals"},{"h":"ecec37e967ea8037d4c66fa02eb872294c455f9d","s":"ecec37e9","p":["27e37044d1aed589a095e9d1a9802db0d6ed3090"],"t":1781134893,"r":[],"g":[],"m":"docs: add machine-readable workspace manifest and reference it in README"},{"h":"cdc2eb100d31496aa44c0efb2127968da70c3e0e","s":"cdc2eb10","p":["a728c99edf873695a532de9347865692f8335133"],"t":1781134893,"r":[],"g":[],"m":"docs: add machine-readable workspace manifest and reference it in README"},{"h":"a6358b122af08eb841283c8cc9a08e6a712cdb1a","s":"a6358b12","p":["ecae61434bbc8978a0338d555e07bc8f05f0b695","21daf171bdd8477c8e802ab3520539e72d0fbe50"],"t":1781134333,"r":[],"g":[],"m":"Merge pull request #6 from Zychs/vault-security-and-management-of--database"},{"h":"694f8e21ad0c37540790cf6626b39afd43038194","s":"694f8e21","p":["489cfb22ccc1657372006f48ed36cd81b71746f1","e41de65c30f19befcee6c06a1e654a442751996f"],"t":1781134333,"r":[],"g":[],"m":"Merge pull request #6 from Zychs/vault-security-and-management-of--database"},{"h":"e41de65c30f19befcee6c06a1e654a442751996f","s":"e41de65c","p":["a728c99edf873695a532de9347865692f8335133"],"t":1781134263,"r":[],"g":[],"m":"feat: implement core daemon, vault management engine, and security documentation for Sesephus system"},{"h":"21daf171bdd8477c8e802ab3520539e72d0fbe50","s":"21daf171","p":["27e37044d1aed589a095e9d1a9802db0d6ed3090"],"t":1781134263,"r":[],"g":[],"m":"feat: implement core daemon, vault management engine, and security documentation for Sesephus system"},{"h":"27e37044d1aed589a095e9d1a9802db0d6ed3090","s":"27e37044","p":["ecae61434bbc8978a0338d555e07bc8f05f0b695"],"t":1781132595,"r":[],"g":[],"m":"feat: restore Circadia subgroups, bulk edits, interval sequences, and add interactive CLI testing commands"},{"h":"a728c99edf873695a532de9347865692f8335133","s":"a728c99e","p":["489cfb22ccc1657372006f48ed36cd81b71746f1"],"t":1781132595,"r":[],"g":[],"m":"feat: restore Circadia subgroups, bulk edits, interval sequences, and add interactive CLI testing commands"},{"h":"ecae61434bbc8978a0338d555e07bc8f05f0b695","s":"ecae6143","p":["e4a06d751500f2592fd1a65708fff946d82eef5c"],"t":1780682957,"r":[],"g":[],"m":"script bad"},{"h":"489cfb22ccc1657372006f48ed36cd81b71746f1","s":"489cfb22","p":["eb824818b5a6415c844869252d66c1e3dece629f"],"t":1780682957,"r":[],"g":[],"m":"script bad"},{"h":"e4a06d751500f2592fd1a65708fff946d82eef5c","s":"e4a06d75","p":["f26a58e25a3bc39f3e2b7097a9295302bf492951"],"t":1780681331,"r":[],"g":[],"m":"docs: add repository version sequence to gemini.md"},{"h":"eb824818b5a6415c844869252d66c1e3dece629f","s":"eb824818","p":["88f29f37a8839b59a80724a193148dbcf9a448bc"],"t":1780681331,"r":[],"g":[],"m":"docs: add repository version sequence to gemini.md"},{"h":"f26a58e25a3bc39f3e2b7097a9295302bf492951","s":"f26a58e2","p":["667453e1f0906de36a003e781b9bb30bebf10595"],"t":1780680949,"r":[],"g":[],"m":"fix(orchestrated-inference): quote build target argument in build_client.ps1"},{"h":"88f29f37a8839b59a80724a193148dbcf9a448bc","s":"88f29f37","p":["3314fc12c03c0c99ada78565b229229116cc5333"],"t":1780680949,"r":[],"g":[],"m":"fix(orchestrated-inference): quote build target argument in build_client.ps1"},{"h":"667453e1f0906de36a003e781b9bb30bebf10595","s":"667453e1","p":["8cd64c06fecf4c30a1aa0fdd7f0d80fb28fd0c47"],"t":1780680932,"r":[],"g":[],"m":"feat(orchestrated-inference): add build_client.ps1 and untrack zig-out binaries"},{"h":"3314fc12c03c0c99ada78565b229229116cc5333","s":"3314fc12","p":["0e8529f34f721ddcd1888c0f9cc1c0997f67d54d"],"t":1780680932,"r":[],"g":[],"m":"feat(orchestrated-inference): add build_client.ps1 and untrack zig-out binaries"},{"h":"8cd64c06fecf4c30a1aa0fdd7f0d80fb28fd0c47","s":"8cd64c06","p":["206992be44b41e67e9a60dbc45b869a0276b4a69","7b5d78778429e8020507b5eecd185649a5e8956a"],"t":1780674469,"r":[],"g":[],"m":"Merge pull request #4 from Zychs/feat/embed-client"},{"h":"0e8529f34f721ddcd1888c0f9cc1c0997f67d54d","s":"0e8529f3","p":["5ef5e96b28cf03e1af7d68cbafc251240b18c764","cabc8c9deb58d7f69d4f15946444839f64c4e601"],"t":1780674469,"r":[],"g":[],"m":"Merge pull request #4 from Zychs/feat/embed-client"},{"h":"7b5d78778429e8020507b5eecd185649a5e8956a","s":"7b5d7877","p":["206992be44b41e67e9a60dbc45b869a0276b4a69"],"t":1780674440,"r":[],"g":[],"m":": embed local testing client thread into host"},{"h":"cabc8c9deb58d7f69d4f15946444839f64c4e601","s":"cabc8c9d","p":["5ef5e96b28cf03e1af7d68cbafc251240b18c764"],"t":1780674440,"r":[],"g":[],"m":": embed local testing client thread into host"},{"h":"206992be44b41e67e9a60dbc45b869a0276b4a69","s":"206992be","p":["8b5f7af718d10949e178991baf703b99b9e0d2e6","f676a2af4d9ac8a6d2c3f12f0b83a9284b32dfe2"],"t":1780673963,"r":[],"g":[],"m":"Merge pull request #3 from Zychs/feat/telemetry-lighthouse-ui"},{"h":"5ef5e96b28cf03e1af7d68cbafc251240b18c764","s":"5ef5e96b","p":["ba4da844c5b3cbb7d061324042905730de6e4472","3952819f72c4b355ab6404c9c4205a0c21bdb242"],"t":1780673963,"r":[],"g":[],"m":"Merge pull request #3 from Zychs/feat/telemetry-lighthouse-ui"},{"h":"f676a2af4d9ac8a6d2c3f12f0b83a9284b32dfe2","s":"f676a2af","p":["8b5f7af718d10949e178991baf703b99b9e0d2e6"],"t":1780673807,"r":[],"g":[],"m":"Lighthouse Portal aesthetics"},{"h":"3952819f72c4b355ab6404c9c4205a0c21bdb242","s":"3952819f","p":["ba4da844c5b3cbb7d061324042905730de6e4472"],"t":1780673807,"r":[],"g":[],"m":"Lighthouse Portal aesthetics"},{"h":"8b5f7af718d10949e178991baf703b99b9e0d2e6","s":"8b5f7af7","p":["e6048ac7bb2af81f18998d51cdb45811a751bf9f"],"t":1780644677,"r":[],"g":[],"m":"Add README for Circadia Alarm Engine detailing architecture and APIs"},{"h":"ba4da844c5b3cbb7d061324042905730de6e4472","s":"ba4da844","p":["bc6c090a3fe348f9084c1368307cc56cbdd4835a"],"t":1780644677,"r":[],"g":[],"m":"Add README for Circadia Alarm Engine detailing architecture and APIs"},{"h":"e6048ac7bb2af81f18998d51cdb45811a751bf9f","s":"e6048ac7","p":["4306a6af510db78fcfc6eb7948209311e52dcc68"],"t":1780644499,"r":[],"g":[],"m":"Expand Circadia with subgroups, bulk edits, interval alarm sequences, and precision tuning"},{"h":"bc6c090a3fe348f9084c1368307cc56cbdd4835a","s":"bc6c090a","p":["c8e6b19183e1c6d9c0f749254107bfc30ca7c35f"],"t":1780644499,"r":[],"g":[],"m":"Expand Circadia with subgroups, bulk edits, interval alarm sequences, and precision tuning"},{"h":"4306a6af510db78fcfc6eb7948209311e52dcc68","s":"4306a6af","p":["2edef261f84ddd6a345d909d83f381a4ce4d29e3"],"t":1780643384,"r":[],"g":[],"m":"docs: merge persistent global rules with multi-drive layouts, sync scripts and optimizations"},{"h":"c8e6b19183e1c6d9c0f749254107bfc30ca7c35f","s":"c8e6b191","p":["122bca9c04cf3a85f233e7affe9ce4f470e4f5a2"],"t":1780643384,"r":[],"g":[],"m":"docs: merge persistent global rules with multi-drive layouts, sync scripts and optimizations"},{"h":"2edef261f84ddd6a345d909d83f381a4ce4d29e3","s":"2edef261","p":["d294d7957221652f8774681c5a408213bdb5f891"],"t":1780643305,"r":[],"g":[],"m":"docs: add gemini.md guidelines for failure logging and optimization highlights"},{"h":"122bca9c04cf3a85f233e7affe9ce4f470e4f5a2","s":"122bca9c","p":["2bf3bf5c0150783e4910ce2cee54443cdf4a4f58"],"t":1780643305,"r":[],"g":[],"m":"docs: add gemini.md guidelines for failure logging and optimization highlights"},{"h":"d294d7957221652f8774681c5a408213bdb5f891","s":"d294d795","p":["a5b373a5da081e7939c9a060477356819cc409f2"],"t":1780642932,"r":[],"g":[],"m":"feat: consolidate codebase migration, relocate db to V:, and establish drive S: workspace"},{"h":"2bf3bf5c0150783e4910ce2cee54443cdf4a4f58","s":"2bf3bf5c","p":["e0893e02c7f3451d007574c7e1e0b9c4dd8cc767"],"t":1780642932,"r":[],"g":[],"m":"feat: consolidate codebase migration, relocate db to V:, and establish drive S: workspace"},{"h":"a5b373a5da081e7939c9a060477356819cc409f2","s":"a5b373a5","p":["96cd9463fdcdd4548d6c706edb93a3070a5fce8f"],"t":1780641839,"r":[],"g":[],"m":"chore: untrack synthesis shards, logs, db, and implement robust .gitignore"},{"h":"e0893e02c7f3451d007574c7e1e0b9c4dd8cc767","s":"e0893e02","p":["fc1f9f314e997ef8e5ad44d295a6408aa3f7d115"],"t":1780641839,"r":[],"g":[],"m":"chore: untrack synthesis shards, logs, db, and implement robust .gitignore"},{"h":"96cd9463fdcdd4548d6c706edb93a3070a5fce8f","s":"96cd9463","p":["9f090eb37abb64c0733a4047b5c3dd918f062027","1caad4d14e584234e9414a02f1d4b0af123335c2"],"t":1780624010,"r":[],"g":[],"m":"Merge pull request #4 from Zychs/main"},{"h":"fc1f9f314e997ef8e5ad44d295a6408aa3f7d115","s":"fc1f9f31","p":["ac3365ac2b66e1d16b5d14ee366cce7bea216fe8","c65193b27434dd754c2b1e612ce07184ba68216e"],"t":1780624010,"r":[],"g":[],"m":"Merge pull request #4 from Zychs/main"},{"h":"9f090eb37abb64c0733a4047b5c3dd918f062027","s":"9f090eb3","p":["4ac4a1fd0c42fd2a20d0f5931302f223e478dc30"],"t":1780623971,"r":[],"g":[],"m":"Create README with project details and setup guide"},{"h":"ac3365ac2b66e1d16b5d14ee366cce7bea216fe8","s":"ac3365ac","p":["9d844c67e98f73224db40ebf627f008f9aea818f"],"t":1780623971,"r":[],"g":[],"m":"Create README with project details and setup guide"},{"h":"1caad4d14e584234e9414a02f1d4b0af123335c2","s":"1caad4d1","p":["ed6c492995599b9d579b9c5173fa6b7a16a01645","4ac4a1fd0c42fd2a20d0f5931302f223e478dc30"],"t":1780622835,"r":[],"g":[],"m":"Merge pull request #3 from Zychs/Decision,-rust,-python,-or-zig"},{"h":"c65193b27434dd754c2b1e612ce07184ba68216e","s":"c65193b2","p":["f321d108fc118d2ca2797eb0a7e45b0684c0e123","9d844c67e98f73224db40ebf627f008f9aea818f"],"t":1780622835,"r":[],"g":[],"m":"Merge pull request #3 from Zychs/Decision,-rust,-python,-or-zig"},{"h":"4ac4a1fd0c42fd2a20d0f5931302f223e478dc30","s":"4ac4a1fd","p":["ed6c492995599b9d579b9c5173fa6b7a16a01645"],"t":1780622818,"r":[],"g":[],"m":"name signals segregation from baseline"},{"h":"9d844c67e98f73224db40ebf627f008f9aea818f","s":"9d844c67","p":["f321d108fc118d2ca2797eb0a7e45b0684c0e123"],"t":1780622818,"r":[],"g":[],"m":"name signals segregation from baseline"},{"h":"ed6c492995599b9d579b9c5173fa6b7a16a01645","s":"ed6c4929","p":["a6c6e7574552d77aaa0d953174c7ea90107305c3"],"t":1780579567,"r":[],"g":[],"m":"initial commit"},{"h":"f321d108fc118d2ca2797eb0a7e45b0684c0e123","s":"f321d108","p":["a6c6e7574552d77aaa0d953174c7ea90107305c3"],"t":1780579567,"r":[],"g":[],"m":"initial commit"},{"h":"a6c6e7574552d77aaa0d953174c7ea90107305c3","s":"a6c6e757","p":["ee650b5950338a3b20cb7964b630650610c4e26f","7751593664484aad93ddf46c90ee0c3fd258e755"],"t":1780525107,"r":[],"g":[],"m":"Merge pull request #1 from Zychs/Draft-1-zig-identity"},{"h":"7751593664484aad93ddf46c90ee0c3fd258e755","s":"77515936","p":["ee650b5950338a3b20cb7964b630650610c4e26f"],"t":1780524435,"r":[],"g":[],"m":"Enhance README with project details and examples"},{"h":"ee650b5950338a3b20cb7964b630650610c4e26f","s":"ee650b59","p":[],"t":1780523971,"r":[],"g":[],"m":"Initial commit"}],"refs":[{"n":"archive/feat-restore-subgroups-intervals-20260613","o":"d473cc5b5c27ebfce482a5690e561d8d85b97563"},{"n":"archive/feat-unified-runtime-archive-20260613","o":"5ef2a97c1c570cf398a83607390325860a37994e"},{"n":"archive/unprivate-sesefus-jvo5kd","o":"9ad68a1b12725d151ba030948ba43dbd8ce80d7a"},{"n":"archive/voice-control-integration-635p5x","o":"6b1d4a834ea7a1e9c2386171e1dd82b8dba609c6"},{"n":"main","o":"82108039f512b96ce29f8cd55f9cd7fa926990cc"},{"n":"origin","o":"a9f5274e10b34e3e25fcca4920493a3d28217b73"},{"n":"origin/cursor/consolidate-project-docs-0563","o":"8974cc4837cb508270b479309153bb359ccef35f"},{"n":"origin/cursor/parent-id-dropdown-3d88","o":"f0460087faea1e21ab805cc9564700508d97fb7e"},{"n":"origin/cursor/setup-dev-environment-3d88","o":"c5c569faed5d6416fea331ba5756884d1ad79a3a"},{"n":"origin/docs/stub-honesty","o":"dec2b18a26eef8b3fbcc4d24f2fdc7f3917f801a"},{"n":"origin/feat/repo-hardening","o":"84dacdb40031c756f66b444836a139d284eb304b"},{"n":"origin/main","o":"a9f5274e10b34e3e25fcca4920493a3d28217b73"}]}</script>
+<script>
+"use strict";
+const DATA = JSON.parse(document.getElementById('atlas-data').textContent);
+const root = document.documentElement;
+
+/* ---------- category model ---------- */
+const CAT = {
+  code:{c:'--c-code', g:'</>', label:'code', sh:'circle',
+        ext:['py','zig','rs','js','ts','mjs','sh','ps1','bat','cmd','c','h','cpp','go','rb','lua']},
+  doc:{c:'--c-doc', g:'¶', label:'docs', sh:'circle',
+        ext:['md','txt','rst','read','readme','license','primordial-read','toclaude','overallreadmee']},
+  data:{c:'--c-data', g:'{}', label:'data', sh:'diamond',
+        ext:['json','csv','tsv','yaml','yml','toml','xml','db','sqlite','ndjson']},
+  web:{c:'--c-web', g:'◈', label:'web', sh:'circle', ext:['html','htm','css','scss','svg']},
+  cfg:{c:'--c-cfg', g:'⚙', label:'config', sh:'triangle',
+        ext:['gitignore','dockerfile','devcontainer','env','ini','cfg','conf','lock','editorconfig','extensions','gitattributes']},
+  media:{c:'--c-media', g:'♪', label:'media', sh:'circle', ext:['wav','mp3','flac','png','jpg','jpeg','gif','webp','ico','ogg']},
+  build:{c:'--c-build', g:'▤', label:'build', sh:'triangle', ext:['zig.zon','mk','makefile','cmake','requirements','requirements-dev']},
+  other:{c:'--c-other', g:'·', label:'other', sh:'circle', ext:[]}
+};
+const EXT2CAT = {};
+for(const k in CAT) for(const e of CAT[k].ext) EXT2CAT[e]=k;
+function catForExt(e){ return EXT2CAT[e] || 'other'; }
+function catColor(cat){ return getComputedStyle(root).getPropertyValue(CAT[cat].c).trim(); }
+
+DATA.files.forEach(f=>{ f.cat = catForExt(f.e); });
+
+/* ---------- canvas plumbing ---------- */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let DPR = Math.min(devicePixelRatio||1, 2);
+let W=0,H=0;
+function resize(){
+  DPR = Math.min(devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  draw();
+}
+addEventListener('resize', resize);
+
+// view transform (pan/zoom) shared where useful
+const cam = {x:0,y:0,k:1};
+function screen(px,py){ return [px*cam.k+cam.x, py*cam.k+cam.y]; }
+function world(sx,sy){ return [(sx-cam.x)/cam.k, (sy-cam.y)/cam.k]; }
+
+/* ---------- deterministic hash / rng ---------- */
+function hash(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+function rng(seed){ let s=seed>>>0; return ()=>{ s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0; return s/4294967296; }; }
+
+/* ---------- shape drawing (multi-channel) ---------- */
+function marker(x,y,r,shape,fill,stroke,lw){
+  ctx.beginPath();
+  if(shape==='diamond'){ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
+  else if(shape==='triangle'){ctx.moveTo(x,y-r);ctx.lineTo(x+r*.92,y+r*.72);ctx.lineTo(x-r*.92,y+r*.72);ctx.closePath();}
+  else if(shape==='hex'){for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;const fx=x+r*Math.cos(a),fy=y+r*Math.sin(a);i?ctx.lineTo(fx,fy):ctx.moveTo(fx,fy);}ctx.closePath();}
+  else {ctx.arc(x,y,r,0,7);}
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.lineWidth=lw||1.5;ctx.strokeStyle=stroke;ctx.stroke();}
+}
+
+/* =======================================================================
+   VIEW 1 — SPATIAL MAP  (clustered by top-dir, jittered, ext colouring)
+   ======================================================================= */
+const map = { nodes:[], clusters:[], off:{} };
+function buildMap(){
+  const tops = [...new Set(DATA.files.map(f=>f.t))].sort();
+  const n = tops.length, cols = Math.ceil(Math.sqrt(n));
+  map.clusters = tops.map((t,i)=>{
+    const gx = (i%cols), gy = Math.floor(i/cols);
+    const h = hash(t);
+    return { t, cx:(gx+0.5)/cols, cy:(gy+0.5)/Math.ceil(n/cols),
+             jx:((h&255)/255-.5)*0.02, jy:(((h>>8)&255)/255-.5)*0.02,
+             count:DATA.files.filter(f=>f.t===t).length };
+  });
+  const cm = {}; map.clusters.forEach(c=>cm[c.t]=c);
+  map.nodes = DATA.files.map(f=>{
+    const c = cm[f.t]; const h = hash(f.p); const rr = rng(h);
+    const ang = rr()*Math.PI*2, rad = Math.sqrt(rr())*0.09;
+    return { f, cx:c.cx + c.jx + Math.cos(ang)*rad, cy:c.cy + c.jy + Math.sin(ang)*rad };
+  });
+}
+function drawMap(){
+  const S = Math.min(W,H)*0.92, ox=(W-S)/2, oy=(H-S)/2+10;
+  // cluster halos + labels
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const c of map.clusters){
+    const [x,y] = screen(ox+c.cx*S, oy+c.cy*S);
+    ctx.beginPath(); ctx.arc(x,y,26*cam.k+ (c.count*0.5)*cam.k,0,7);
+    ctx.fillStyle = 'rgba(255,180,84,.05)'; ctx.fill();
+    ctx.fillStyle = getComputedStyle(root).getPropertyValue('--dim').trim();
+    ctx.font = '600 '+(11)+'px Lexend, system-ui';
+    ctx.fillText(c.t, x, y - (30*cam.k+ c.count*0.5*cam.k) - 8);
+  }
+  // nodes
+  for(const nd of map.nodes){
+    if(map.off[nd.f.cat]) continue;
+    const [x,y]=screen(ox+nd.cx*S, oy+nd.cy*S);
+    if(x<-20||x>W+20||y<-20||y>H+20) continue;
+    const cat=CAT[nd.f.cat]; const col=catColor(nd.f.cat);
+    const hot = hoverNode===nd || (searchHit&&searchHit.has(nd.f.p));
+    const r = (hot?5.5:3.6);
+    marker(x,y,r,cat.sh,col, hot?'#fff':'rgba(0,0,0,.35)', hot?2:1);
+  }
+  // hovered label
+  if(hoverNode){
+    const [x,y]=screen(ox+hoverNode.cx*S, oy+hoverNode.cy*S);
+    label(x,y-12, hoverNode.f.p.split('/').pop());
+  }
+}
+function pickMap(mx,my){
+  const S = Math.min(W,H)*0.92, ox=(W-S)/2, oy=(H-S)/2+10;
+  let best=null,bd=1e9;
+  for(const nd of map.nodes){ if(map.off[nd.f.cat])continue;
+    const [x,y]=screen(ox+nd.cx*S, oy+nd.cy*S);
+    const d=(x-mx)**2+(y-my)**2; if(d<bd){bd=d;best=nd;} }
+  return bd<160?best:null;
+}
+
+/* =======================================================================
+   VIEW 2 — LANED GIT DAG
+   ======================================================================= */
+const dag = { list:[], laneOf:{}, byH:{}, maxLane:0 };
+function buildDag(){
+  const cs = DATA.commits.slice().sort((a,b)=> a.t-b.t || 0); // oldest→newest
+  cs.forEach((c,i)=>{ c._i=i; dag.byH[c.h]=c; });
+  // lane allocation: first parent inherits lane; new branches get free lane
+  const lanes=[]; // lane -> expected next child hash
+  const laneOf={};
+  function freeLane(){ for(let i=0;i<lanes.length;i++) if(lanes[i]===null) return i; lanes.push(null); return lanes.length-1; }
+  // process newest→oldest so we can reserve lanes for parents
+  const rev = cs.slice().reverse();
+  const reserved={}; // hash -> lane
+  for(const c of rev){
+    let lane = reserved[c.h];
+    if(lane===undefined){ lane=freeLane(); }
+    laneOf[c.h]=lane;
+    // free this lane, then give first parent this lane
+    lanes[lane]=null;
+    if(c.p.length){
+      if(reserved[c.p[0]]===undefined){ reserved[c.p[0]]=lane; lanes[lane]=c.p[0]; }
+      for(let k=1;k<c.p.length;k++){ if(reserved[c.p[k]]===undefined){ const nl=freeLane(); reserved[c.p[k]]=nl; lanes[nl]=c.p[k]; } }
+    }
+  }
+  dag.laneOf=laneOf; dag.list=cs;
+  dag.maxLane = Math.max(0,...Object.values(laneOf));
+}
+function dagXY(c){
+  const n=dag.list.length;
+  const topPad=64, botPad=64;
+  const y = topPad + (1 - c._i/(n-1)) * (H-topPad-botPad); // newest at top
+  const lane = dag.laneOf[c.h];
+  const jitter = ((hash(c.h)&255)/255-.5)*8;
+  const laneW = Math.min(46, (W-160)/(dag.maxLane+1));
+  const x = 90 + lane*laneW + jitter;
+  return [ x*cam.k+cam.x, y*cam.k+cam.y ];
+}
+function drawDag(){
+  // edges first
+  ctx.lineWidth=1.5;
+  for(const c of dag.list){
+    const [x,y]=dagXY(c);
+    for(let pi=0; pi<c.p.length; pi++){
+      const p=dag.byH[c.p[pi]]; if(!p) continue;
+      const [px,py]=dagXY(p);
+      const merge = c.p.length>1;
+      ctx.beginPath();
+      ctx.strokeStyle = merge && pi>0 ? 'rgba(255,93,93,.55)' : 'rgba(179,156,130,.4)';
+      if(merge && pi>0) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+      ctx.moveTo(x,y);
+      const my=(y+py)/2;
+      ctx.bezierCurveTo(x,my, px,my, px,py);
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+  // nodes
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  for(const c of dag.list){
+    const [x,y]=dagXY(c);
+    if(y<-20||y>H+20) continue;
+    const merge=c.p.length>1, tip=c.r.length>0, tag=c.g.length>0;
+    const hot = hoverCommit===c;
+    let col = merge? getComputedStyle(root).getPropertyValue('--danger').trim() : catColor('code');
+    if(tip) col = catColor('doc');
+    const r = merge?6: tip?6:4;
+    const shape = merge?'hex': tip?'diamond':'circle';
+    marker(x,y,hot?r+2:r,shape,col, hot?'#fff':'rgba(0,0,0,.4)', merge?2.4:1.4);
+    if(tip||tag||hot){
+      const txt = (c.r[0]||c.g[0]||c.s);
+      ctx.fillStyle = getComputedStyle(root).getPropertyValue('--ink').trim();
+      ctx.font='600 11px Lexend, system-ui';
+      ctx.fillText(' '+shorten(txt,22), x+8, y);
+    }
+  }
+}
+function pickDag(mx,my){ let best=null,bd=1e9;
+  for(const c of dag.list){ const [x,y]=dagXY(c); const d=(x-mx)**2+(y-my)**2; if(d<bd){bd=d;best=c;} }
+  return bd<200?best:null;
+}
+
+/* =======================================================================
+   VIEW 3 — TIME-MACHINE WEAVE  (curved timeline, compounding density)
+   ======================================================================= */
+const weave = { pts:[], t0:0, t1:1 };
+function buildWeave(){
+  const cs = DATA.commits.slice().sort((a,b)=>a.t-b.t);
+  weave.chron = cs;
+  weave.t0 = cs[0].t; weave.t1 = cs[cs.length-1].t;
+}
+function weavePath(){
+  // a single curved thread across the viewport; commits ride along it
+  const n=180, pad=90; const pts=[];
+  for(let i=0;i<=n;i++){ const u=i/n;
+    const x = pad + u*(W-2*pad);
+    const y = H*0.5 + Math.sin(u*Math.PI*3.0)* (H*0.18) * (0.35+u*0.65);
+    pts.push([x,y,u]);
+  }
+  return pts;
+}
+function uToXY(path,u){ const idx=Math.min(path.length-1,Math.max(0,Math.round(u*(path.length-1)))); return path[idx]; }
+function drawWeave(){
+  const path=weavePath();
+  const cutU = playU; // 0..1 fraction of history revealed
+  // compounding density haze under the thread up to cutU
+  const cs=weave.chron, N=cs.length;
+  // draw accumulation: each revealed commit sheds faint particles that pile toward present
+  for(let i=0;i<N;i++){
+    const u = (cs[i].t-weave.t0)/(weave.t1-weave.t0||1);
+    if(u>cutU) continue;
+    const rr=rng(hash(cs[i].h));
+    const dens = 5 + Math.floor((i/N)*10); // more particles later = compounding mess
+    const [bx,by]=uToXY(path,u);
+    for(let k=0;k<dens;k++){
+      const px=bx+(rr()-.5)*46, py=by+ (rr()*70)*(0.4+u);
+      ctx.fillStyle='rgba(197,140,255,'+(0.03+0.05*u)+')';
+      ctx.fillRect(px,py,2,2);
+    }
+  }
+  // the thread itself
+  ctx.beginPath(); ctx.moveTo(path[0][0],path[0][1]);
+  for(const p of path) ctx.lineTo(p[0],p[1]);
+  ctx.strokeStyle='rgba(179,156,130,.35)'; ctx.lineWidth=2; ctx.stroke();
+  // revealed portion glow
+  ctx.beginPath(); const revealed=path.filter(p=>p[2]<=cutU);
+  revealed.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+  ctx.strokeStyle=catColor('code'); ctx.lineWidth=3; ctx.stroke();
+  // commit markers on the thread
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  for(let i=0;i<N;i++){
+    const c=cs[i]; const u=(c.t-weave.t0)/(weave.t1-weave.t0||1);
+    if(u>cutU) continue;
+    const [x,y]=uToXY(path,u);
+    const merge=c.p.length>1, tip=c.r.length>0;
+    const hot=hoverCommit===c;
+    marker(x,y, hot?6:(merge?4.5:3), merge?'hex':(tip?'diamond':'circle'),
+      merge?getComputedStyle(root).getPropertyValue('--danger').trim():catColor(tip?'doc':'code'),
+      hot?'#fff':'rgba(0,0,0,.4)', 1.4);
+    if(hot||tip){ ctx.fillStyle=getComputedStyle(root).getPropertyValue('--ink').trim();
+      ctx.font='600 10px Lexend, system-ui'; ctx.fillText(shorten(c.r[0]||c.m,20), x, y-7); }
+  }
+  // head marker
+  const [hx,hy]=uToXY(path,cutU);
+  marker(hx,hy,7,'circle',catColor('web'),'#fff',2);
+}
+function pickWeave(mx,my){ const path=weavePath(); const cs=weave.chron; let best=null,bd=1e9;
+  for(const c of cs){ const u=(c.t-weave.t0)/(weave.t1-weave.t0||1); if(u>playU)continue;
+    const [x,y]=uToXY(path,u); const d=(x-mx)**2+(y-my)**2; if(d<bd){bd=d;best=c;} }
+  return bd<180?best:null;
+}
+
+/* =======================================================================
+   VIEW 4 — RADIAL STARBURST + RE-ROOT + ONION RINGS
+   ======================================================================= */
+const radial = { tree:null, rootNode:null, focus:null, crumbs:[], placed:[] };
+function buildTree(){
+  const rootN = { name:DATA.repo, path:'', kids:[], parent:null, isDir:true };
+  const byPath = {'':rootN};
+  for(const f of DATA.files){
+    const parts=f.p.split('/'); let cur=rootN, acc='';
+    for(let i=0;i<parts.length;i++){
+      acc = acc? acc+'/'+parts[i] : parts[i];
+      let nd=byPath[acc];
+      if(!nd){ nd={name:parts[i], path:acc, kids:[], parent:cur, isDir:i<parts.length-1,
+                   f: i===parts.length-1? f:null};
+        byPath[acc]=nd; cur.kids.push(nd); }
+      cur=nd;
+    }
+  }
+  radial.tree=rootN; radial.focus=rootN; radial.crumbs=[rootN];
+  return rootN;
+}
+function drawRadial(){
+  const cx=W/2, cy=H/2+8;
+  const focus=radial.focus;
+  radial.placed=[];
+  // onion rings
+  const maxDepth=4, ringGap=Math.min(W,H)*0.11;
+  for(let d=1;d<=maxDepth;d++){
+    ctx.beginPath(); ctx.arc(cx,cy,d*ringGap,0,7);
+    ctx.strokeStyle='rgba(179,156,130,.12)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  // recursive radial layout limited to accessible subtree of focus
+  function layout(node, depth, a0, a1){
+    const mid=(a0+a1)/2, rad=depth*ringGap;
+    const x=cx+Math.cos(mid)*rad, y=cy+Math.sin(mid)*rad;
+    if(depth>0) radial.placed.push({node,x,y,depth});
+    // edge to parent center
+    if(depth>0){
+      const pr=(depth-1)*ringGap; const px=cx+Math.cos(mid)*pr, py=cy+Math.sin(mid)*pr;
+      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(x,y);
+      ctx.strokeStyle='rgba(179,156,130,.22)'; ctx.lineWidth=1.2; ctx.stroke();
+    }
+    if(depth>=maxDepth) return;
+    const kids=node.kids;
+    if(!kids.length) return;
+    const span=(a1-a0); let ca=a0;
+    // weight by leaf count so big dirs get more arc
+    const weights=kids.map(k=>Math.max(1, countLeaves(k)));
+    const tot=weights.reduce((s,w)=>s+w,0);
+    kids.forEach((k,i)=>{ const w=span*weights[i]/tot; layout(k,depth+1,ca,ca+w); ca+=w; });
+  }
+  layout(focus,0,-Math.PI/2, -Math.PI/2+Math.PI*2);
+  // draw nodes
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const pl of radial.placed){
+    const nd=pl.node; const cat= nd.isDir?null: (nd.f?nd.f.cat:'other');
+    const col = nd.isDir? getComputedStyle(root).getPropertyValue('--accent').trim() : catColor(cat);
+    const hot=hoverRad===nd;
+    const shape = nd.isDir?'triangle': (CAT[cat]?CAT[cat].sh:'circle');
+    marker(pl.x,pl.y, hot?7:(nd.isDir?5.5:4), shape, col, hot?'#fff':'rgba(0,0,0,.4)', nd.isDir?2:1.3);
+    if(hot||(nd.isDir&&pl.depth<=2)){
+      ctx.fillStyle=getComputedStyle(root).getPropertyValue('--ink').trim();
+      ctx.font='600 11px Lexend, system-ui';
+      ctx.fillText(shorten(nd.name,16), pl.x, pl.y-11);
+    }
+  }
+  // center label (current root)
+  marker(cx,cy,10,'circle',getComputedStyle(root).getPropertyValue('--accent').trim(),'#fff',2.5);
+  ctx.fillStyle=getComputedStyle(root).getPropertyValue('--ink').trim();
+  ctx.font='700 12px Lexend, system-ui';
+  ctx.fillText(shorten(focus.name||DATA.repo,18), cx, cy-18);
+  // breadcrumbs
+  ctx.textAlign='left';
+  const crumb=radial.crumbs.map(n=>n.name||DATA.repo).join('  ›  ');
+  ctx.font='600 11px Lexend, system-ui'; ctx.fillStyle=getComputedStyle(root).getPropertyValue('--dim').trim();
+  ctx.fillText('⌂ '+shorten(crumb,80), 16, H-20);
+}
+function countLeaves(n){ if(!n.kids.length) return 1; let s=0; for(const k of n.kids) s+=countLeaves(k); return s; }
+function pickRadial(mx,my){ let best=null,bd=1e9;
+  for(const pl of radial.placed){ const d=(pl.x-mx)**2+(pl.y-my)**2; if(d<bd){bd=d;best=pl;} }
+  return bd<260?best.node:null;
+}
+
+/* =======================================================================
+   VIEW 6 — HIERARCHICAL TREE (DOM, expand/collapse)
+   ======================================================================= */
+function buildTreeDom(){
+  const wrap=document.getElementById('treewrap'); wrap.innerHTML='';
+  const rootN=radial.tree||buildTree();
+  function render(node, container, depth){
+    const el=document.createElement('div'); el.className='tnode';
+    const row=document.createElement('div'); row.className='trow'; row.tabIndex=0; row.setAttribute('role','treeitem');
+    const tw=document.createElement('span'); tw.className='tw';
+    const dot=document.createElement('span'); dot.className='dot';
+    const nm=document.createElement('span'); nm.className='nm';
+    const meta=document.createElement('span'); meta.className='meta';
+    if(node.isDir){
+      tw.textContent = depth===0?'▾':'▸';
+      dot.style.background=getComputedStyle(root).getPropertyValue('--accent').trim();
+      nm.textContent=node.name||DATA.repo; nm.style.fontWeight='700';
+      meta.textContent=countLeaves(node)+' files';
+    } else {
+      tw.textContent='';
+      dot.style.background=catColor(node.f?node.f.cat:'other');
+      nm.textContent=node.name;
+      meta.textContent='.'+ (node.f?node.f.e:'');
+    }
+    row.append(tw,dot,nm,meta); el.append(row); container.append(el);
+    if(node.isDir){
+      const kids=document.createElement('div'); kids.className='tkids'+(depth>0?' hidden':'');
+      el.append(kids);
+      let built=depth<1;
+      const toggle=()=>{
+        if(!built){ node.kids.sort((a,b)=> (b.isDir-a.isDir)||a.name.localeCompare(b.name))
+                       .forEach(k=>render(k,kids,depth+1)); built=true; }
+        kids.classList.toggle('hidden');
+        tw.textContent = kids.classList.contains('hidden')?'▸':'▾';
+      };
+      row.addEventListener('click',toggle);
+      row.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+      if(depth<1){ node.kids.sort((a,b)=> (b.isDir-a.isDir)||a.name.localeCompare(b.name))
+                       .forEach(k=>render(k,kids,depth+1)); tw.textContent='▾'; }
+    } else {
+      row.addEventListener('click',()=>inspectFile(node.f));
+      row.addEventListener('keydown',e=>{ if(e.key==='Enter'){inspectFile(node.f);}});
+    }
+  }
+  render(rootN, wrap, 0);
+}
+
+/* ---------- shared helpers ---------- */
+function shorten(s,n){ s=String(s); return s.length>n? s.slice(0,n-1)+'…':s; }
+function label(x,y,txt){
+  ctx.font='600 12px Lexend, system-ui'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  const w=ctx.measureText(txt).width+12;
+  ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(x-w/2,y-20,w,18);
+  ctx.fillStyle='#fff'; ctx.fillText(txt,x,y-4);
+}
+
+/* ---------- inspector ---------- */
+function fmtDate(ts){ const d=new Date(ts*1000); return d.toISOString().slice(0,10); }
+function inspectFile(f){
+  if(!f) return;
+  const col=catColor(f.cat);
+  document.getElementById('insBody').innerHTML =
+    `<div class="k">file</div><div class="v mono">${f.p}</div>
+     <div class="k">category</div><div class="v"><span class="badge" style="background:${col}">${CAT[f.cat].label}</span>  <span class="mono">.${f.e}</span></div>
+     <div class="k">top-level</div><div class="v">${f.t}</div>`;
+}
+function inspectCommit(c){
+  if(!c) return;
+  const kind = c.p.length>1?'merge': (c.r.length?'tip/branch':'commit');
+  document.getElementById('insBody').innerHTML =
+    `<div class="k">${kind} · ${c.s}</div><div class="v">${c.m||'—'}</div>
+     <div class="k">date</div><div class="v mono">${fmtDate(c.t)}</div>
+     ${c.r.length?`<div class="k">refs</div><div class="v">${c.r.join(', ')}</div>`:''}
+     ${c.g.length?`<div class="k">tags</div><div class="v">${c.g.join(', ')}</div>`:''}
+     <div class="k">parents</div><div class="v mono">${c.p.map(p=>p.slice(0,7)).join('  ')||'root'}</div>`;
+}
+
+/* ---------- legend ---------- */
+function buildLegend(){
+  const box=document.getElementById('legItems'); box.innerHTML='';
+  const counts={}; DATA.files.forEach(f=>counts[f.cat]=(counts[f.cat]||0)+1);
+  Object.keys(CAT).forEach(cat=>{
+    if(!counts[cat]) return;
+    const el=document.createElement('div'); el.className='leg'; el.dataset.cat=cat;
+    el.setAttribute('role','button'); el.tabIndex=0;
+    el.innerHTML=`<span class="sw" style="background:${catColor(cat)}"></span>${CAT[cat].label}<span class="ct">${counts[cat]}</span>`;
+    const t=()=>{ map.off[cat]=!map.off[cat]; el.dataset.off=map.off[cat]?'1':''; draw(); };
+    el.addEventListener('click',t);
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();t();}});
+    box.append(el);
+  });
+}
+
+/* ---------- status ---------- */
+function setStatus(){
+  const v=VIEWS[curView];
+  let extra='';
+  if(curView==='dag'||curView==='weave') extra=` · ${DATA.commits.length} commits · ${DATA.refs.length} refs`;
+  else extra=` · ${DATA.files.length} files · ${map.clusters.length} dirs`;
+  document.getElementById('status').innerHTML =
+    `<b>${DATA.repo}</b> · ${v.label}${extra}`;
+}
+
+/* ---------- views registry ---------- */
+const VIEWS = {
+  map:   {label:'Spatial Map', g:'🜂', dock:false, canvas:true},
+  dag:   {label:'Git DAG',     g:'❖', dock:false, canvas:true},
+  weave: {label:'Weave',       g:'∿', dock:true,  canvas:true},
+  radial:{label:'Radial',      g:'◉', dock:false, canvas:true},
+  tree:  {label:'Tree',        g:'▤', dock:false, canvas:false},
+  dual:  {label:'Dual',        g:'⧉', dock:false, canvas:true},
+};
+let curView='map';
+let hoverNode=null, hoverCommit=null, hoverRad=null, searchHit=null;
+let playU=1, playing=false;
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  if(curView==='map') drawMap();
+  else if(curView==='dag') drawDag();
+  else if(curView==='weave') drawWeave();
+  else if(curView==='radial') drawRadial();
+  else if(curView==='dual') drawDual();
+}
+function drawDual(){
+  // left half = map, right half = dag, via clip
+  const splitX=W*0.52;
+  ctx.save(); ctx.beginPath(); ctx.rect(0,0,splitX,H); ctx.clip(); drawMap(); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(splitX,0,W-splitX,H); ctx.clip();
+    // shift dag into right pane
+    ctx.translate(splitX-40,0); drawDag(); ctx.restore();
+  ctx.strokeStyle='var(--line)'; ctx.beginPath(); ctx.moveTo(splitX,0);ctx.lineTo(splitX,H);
+  ctx.strokeStyle=getComputedStyle(root).getPropertyValue('--panel-b').trim(); ctx.lineWidth=1; ctx.stroke();
+}
+
+function setView(v){
+  curView=v;
+  document.querySelectorAll('.vbtn').forEach(b=>b.setAttribute('aria-pressed', b.dataset.v===v));
+  const isTree = v==='tree';
+  document.getElementById('treewrap').classList.toggle('show', isTree);
+  cv.style.display = isTree?'none':'block';
+  document.getElementById('dock').classList.toggle('show', VIEWS[v].dock);
+  document.getElementById('search').style.display = (v==='map'||v==='dual')?'block':'none';
+  document.getElementById('legend').style.display = (v==='dag'||v==='weave')?'none':'block';
+  cam.x=0;cam.y=0;cam.k=1;
+  if(isTree) buildTreeDom();
+  setStatus(); draw();
+}
+
+/* ---------- interaction ---------- */
+let dragging=false, lastX=0,lastY=0, moved=false;
+cv.addEventListener('mousedown',e=>{dragging=true;moved=false;lastX=e.clientX;lastY=e.clientY;});
+addEventListener('mouseup',()=>dragging=false);
+cv.addEventListener('mousemove',e=>{
+  if(dragging){ const dx=e.clientX-lastX, dy=e.clientY-lastY; if(Math.abs(dx)+Math.abs(dy)>2)moved=true;
+    cam.x+=dx;cam.y+=dy;lastX=e.clientX;lastY=e.clientY; draw(); return; }
+  const mx=e.clientX,my=e.clientY;
+  hoverNode=hoverCommit=hoverRad=null;
+  if(curView==='map'||curView==='dual'){ hoverNode=pickMap(mx,my); if(hoverNode)inspectFile(hoverNode.f); }
+  if(curView==='dag'){ hoverCommit=pickDag(mx,my); if(hoverCommit)inspectCommit(hoverCommit); }
+  if(curView==='weave'){ hoverCommit=pickWeave(mx,my); if(hoverCommit)inspectCommit(hoverCommit); }
+  if(curView==='radial'){ hoverRad=pickRadial(mx,my); if(hoverRad&&hoverRad.f)inspectFile(hoverRad.f); }
+  cv.style.cursor = (hoverNode||hoverCommit||hoverRad)?'pointer':(dragging?'grabbing':'grab');
+  draw();
+});
+cv.addEventListener('click',e=>{
+  if(moved) return;
+  if(curView==='radial'){ const n=pickRadial(e.clientX,e.clientY);
+    if(n){ if(n.isDir){ radial.focus=n; radial.crumbs=crumbsFor(n); } else inspectFile(n.f); draw(); }
+    return;
+  }
+  if(curView==='map'||curView==='dual'){ const n=pickMap(e.clientX,e.clientY); if(n)inspectFile(n.f); }
+  if(curView==='dag'){ const c=pickDag(e.clientX,e.clientY); if(c)inspectCommit(c); }
+  if(curView==='weave'){ const c=pickWeave(e.clientX,e.clientY); if(c)inspectCommit(c); }
+});
+function crumbsFor(n){ const arr=[]; let c=n; while(c){arr.unshift(c);c=c.parent;} return arr; }
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=Math.exp(-e.deltaY*0.0012);
+  const mx=e.clientX,my=e.clientY;
+  cam.x = mx-(mx-cam.x)*f; cam.y = my-(my-cam.y)*f; cam.k*=f;
+  cam.k=Math.max(0.3,Math.min(8,cam.k));
+  draw();
+},{passive:false});
+
+/* ---------- dock: scrub / play ---------- */
+const scrub=document.getElementById('scrub'), dockPill=document.getElementById('dockPill');
+function updDockPill(){ const cs=weave.chron; const cut=weave.t0+(weave.t1-weave.t0)*playU;
+  const shown=cs.filter(c=>c.t<= cut).length;
+  dockPill.textContent = `${shown}/${cs.length} commits · ${fmtDate(cut)}`; }
+scrub.addEventListener('input',()=>{ playU=scrub.value/1000; playing=false;
+  document.getElementById('playBtn').textContent='▶'; updDockPill(); draw(); });
+document.getElementById('playBtn').addEventListener('click',togglePlay);
+document.getElementById('resetBtn').addEventListener('click',()=>{ playU=1;scrub.value=1000;updDockPill();
+  cam.x=0;cam.y=0;cam.k=1; if(curView==='radial'){radial.focus=radial.tree;radial.crumbs=[radial.tree];} draw(); });
+function togglePlay(){ playing=!playing; document.getElementById('playBtn').textContent=playing?'⏸':'▶';
+  if(playing){ if(playU>=1)playU=0; step(); } }
+let rafT=0;
+function step(){ if(!playing)return;
+  playU=Math.min(1, playU + 0.006);
+  scrub.value=Math.round(playU*1000); updDockPill(); draw();
+  if(playU>=1){ playing=false; document.getElementById('playBtn').textContent='▶'; return; }
+  rafT=requestAnimationFrame(step);
+}
+
+/* ---------- search ---------- */
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{ const s=q.value.trim().toLowerCase();
+  if(!s){ searchHit=null; } else { searchHit=new Set(DATA.files.filter(f=>f.p.toLowerCase().includes(s)).map(f=>f.p)); }
+  draw();
+});
+
+/* ---------- theme + chrome toggles ---------- */
+// storage may be blocked in sandboxed iframes — never let it abort boot
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+const savedTheme = store.get('atlas-theme');
+if(savedTheme) root.dataset.theme=savedTheme;
+function toggleTheme(){ const t=root.dataset.theme==='paper'?'':'paper';
+  if(t) root.dataset.theme=t; else root.removeAttribute('data-theme');
+  store.set('atlas-theme',t); buildLegend(); draw(); }
+document.getElementById('themeBtn').addEventListener('click',toggleTheme);
+document.getElementById('helpBtn').addEventListener('click',()=>document.getElementById('help').classList.toggle('show'));
+
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') { if(e.key==='Escape')e.target.blur(); return; }
+  const k=e.key.toLowerCase();
+  if(k==='h'){ root.dataset.hide = root.dataset.hide==='1'?'':'1'; }
+  else if(k==='t') toggleTheme();
+  else if(k==='?'||k==='/'&&e.shiftKey) document.getElementById('help').classList.toggle('show');
+  else if(k==='/'){ e.preventDefault(); q.focus(); }
+  else if(k==='s'&&VIEWS[curView].dock) togglePlay();
+  else if(k==='r'){ document.getElementById('resetBtn').click(); }
+  else if(k==='escape'){ document.getElementById('help').classList.remove('show'); }
+  else if('123456'.includes(k)){ const order=['map','dag','weave','radial','tree','dual'];
+    setView(order[+k-1]); }
+});
+
+/* ---------- FS Access API: load another repo ---------- */
+document.getElementById('loadBtn').addEventListener('click',loadRepo);
+async function loadRepo(){
+  if(!window.showDirectoryPicker){ alert('File System Access API not available in this browser.\nUse Chrome/Edge over file:// or https.'); return; }
+  try{
+    const dir=await window.showDirectoryPicker();
+    const files=[]; const IGN=new Set(['.git','node_modules','.venv','__pycache__','dist','build','.idea','zig-out','zig-cache']);
+    async function walk(handle, prefix, depth){
+      if(depth>8) return;
+      for await(const [name,h] of handle.entries()){
+        if(IGN.has(name)) continue;
+        const p= prefix? prefix+'/'+name : name;
+        if(h.kind==='directory') await walk(h,p,depth+1);
+        else files.push(p);
+        if(files.length>6000) return;
+      }
+    }
+    await walk(dir,'',0);
+    DATA.repo=dir.name; DATA.commits=[]; DATA.refs=[];
+    DATA.files=files.map(p=>{ const base=p.split('/').pop(); const e=base.includes('.')?base.split('.').pop().toLowerCase():base.toLowerCase();
+      return {p, e, t: p.includes('/')?p.split('/')[0]:'·root', cat:catForExt(e)}; });
+    // rebuild everything
+    buildMap(); buildTree(); buildLegend();
+    // commits gone → disable dag/weave gracefully
+    if(curView==='dag'||curView==='weave'){ setView('map'); }
+    else { setStatus(); draw(); }
+    alert(`Loaded ${DATA.repo}: ${DATA.files.length} files.\n(Git DAG/Weave need the embedded sesefus data — client FS has no git history.)`);
+  }catch(err){ if(err.name!=='AbortError') alert('Load failed: '+err.message); }
+}
+
+/* ---------- boot ---------- */
+function buildViews(){
+  const box=document.getElementById('views');
+  const order=['map','dag','weave','radial','tree','dual'];
+  order.forEach((v,i)=>{
+    const b=document.createElement('button'); b.className='vbtn'; b.dataset.v=v;
+    b.setAttribute('aria-pressed', v===curView); b.title=VIEWS[v].label+'  ('+(i+1)+')';
+    b.innerHTML=`<span class="g">${VIEWS[v].g}</span>${VIEWS[v].label}`;
+    b.addEventListener('click',()=>setView(v));
+    box.append(b);
+  });
+}
+buildViews(); buildMap(); buildDag(); buildWeave(); buildTree(); buildLegend();
+resize(); updDockPill(); setView('map');
+// re-fit once layout settles (sandboxed/embedded frames size late)
+requestAnimationFrame(()=>{ resize(); });
+addEventListener('load', resize);
+</script>

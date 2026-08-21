@@ -1,0 +1,31 @@
+# Line-ending policy — repo stores LF; Windows scripts stay CRLF.
+# Prevents the CRLF/LF churn that pollutes diffs on a Windows dev box.
+* text=auto eol=lf
+
+# Native Windows scripts must be CRLF to run correctly.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Shell scripts must stay LF — they run under sh (incl. git hooks on Windows).
+*.sh   text eol=lf
+
+# Binary / non-diffable assets — never touched by eol normalization.
+*.db      binary
+*.db-journal binary
+*.sqlite  binary
+*.sqlite3 binary
+*.wav     binary
+*.mp3     binary
+*.7z      binary
+*.zip     binary
+*.gz      binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.ico     binary
+*.pdf     binary
+*.exe     binary
+*.dll     binary
+*.pdb     binary
+*.obj     binary

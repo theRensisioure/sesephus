@@ -1,0 +1,98 @@
+[
+  {
+    "id": "saturnnav",
+    "name": "SaturnNav",
+    "version": "0.1.0",
+    "status": "loading",
+    "featured": true,
+    "icon": "🎡",
+    "tagline": "Low-stimulus nav — short cues, long quiet, limited understanding on purpose",
+    "mission": "Bikers, gas, lithium ion, acoustic, hell even unicyclers. Especially unicyclers. The road is already a lot — SaturnNav doesn't pile on stimuli. Sparse voice, narrow scope, so you can process what's in front of you.",
+    "modalities": ["unicycle", "acoustic", "lithium_ion", "gas"],
+    "optimizers": ["altitude", "wind", "surface", "basins", "distance"],
+    "dependencies": ["host-daemon", "openmeteo", "osm-graph"],
+    "changelog": [
+      "v0.1.0 — Preferential routing, casual speaker layer, rider profiles, basin editor"
+    ],
+    "scope_in": ["Preflight processing bundle", "Offline in-ride edits", "Corridor-safe route patches", "Low-stimulus speaker layer", "Multi-modality rider profiles", "Preferential routing"],
+    "scope_out": ["Live cellular reroute", "Routing loss on edit failure", "Dense turn-by-turn", "Full voice assistant", "Android client"]
+  },
+  {
+    "id": "circadia",
+    "name": "Circadia",
+    "version": "2.4.0",
+    "status": "active",
+    "featured": false,
+    "icon": "⏰",
+    "tagline": "Mass alarm administration across multimedia endpoints",
+    "optimizers": [],
+    "dependencies": ["host-daemon"],
+    "changelog": ["v2.4.0 — CLI help, interval schedules, subgroup management"],
+    "scope_in": ["TCP alarm daemon", "Interval sequences", "Device subgroups"],
+    "scope_out": ["Bible verse curation"]
+  },
+  {
+    "id": "arcadium",
+    "name": "Arcadium",
+    "version": "1.2.0",
+    "status": "active",
+    "featured": false,
+    "icon": "🎙️",
+    "tagline": "Encrypted audio journaling and vault ingestion",
+    "optimizers": [],
+    "dependencies": ["host-daemon", "whisper"],
+    "changelog": ["v1.2.0 — Whisper transcription, vault schema extensions"],
+    "scope_in": ["WAV capture", "ChaCha20 vault", "Transcription"],
+    "scope_out": ["Semantic search UI"]
+  },
+  {
+    "id": "sieve",
+    "name": "Sieve",
+    "version": "0.2.0",
+    "status": "active",
+    "featured": true,
+    "icon": "✂️",
+    "tagline": "Artifact sieve — Gemini Takeout dumps → debris shards",
+    "optimizers": [],
+    "dependencies": ["dashboard-api"],
+    "changelog": [
+      "v0.2.0 — Artifact sieve: Gemini/Takeout scan + shred + scanner view",
+      "v0.1.0 — CLI shredder, debris shard export"
+    ],
+    "scope_in": [
+      "Gemini Takeout / My Activity JSON",
+      "Directory artifact scanner view",
+      "Conversation/turn shredding to debris_shards.jsonl",
+      "Paragraph/code shredding (text sieve)"
+    ],
+    "scope_out": ["Live Gemini API sync", "Cloud vision of dump screenshots"]
+  },
+  {
+    "id": "aytree",
+    "name": "AyTree",
+    "version": "0.2.0",
+    "status": "active",
+    "featured": true,
+    "icon": "🌳",
+    "tagline": "Dyslexia-first derivation map — how project folders relate",
+    "mission": "Track directory lineages (parent→child), attach notes, see structure spatially. Shell omniscience proposes edges; optional .aytree.json pins portable truth. Suite Version Control module — not full git VCS.",
+    "optimizers": [],
+    "dependencies": ["aytree-server"],
+    "changelog": [
+      "v0.2.0 — Derivation slice + Sesefus CLI/launcher integration",
+      "v0.1.0 — Repo map lenses harvested from Odyssey"
+    ],
+    "scope_in": [
+      "Directory derivation graph",
+      "Sanitized shell inference",
+      "Sidecar pin (.aytree.json)",
+      "Notes on directory nodes",
+      "Spatial DAG view"
+    ],
+    "scope_out": [
+      "Full git host / remotes manager",
+      "Hardcoded suite folder roster",
+      "LeadLogic employment domain"
+    ]
+  }
+]

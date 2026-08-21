@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "_how": "Copy a provider object into providers.json. Save. Press Reload. No code change.",
+  "providers": [
+    {
+      "id": "grok",
+      "label": "Grok",
+      "enabled": true,
+      "roots": [
+        {
+          "id": "user",
+          "label": "Grok skills",
+          "path": "~/.grok/skills",
+          "optional": false
+        },
+        {
+          "id": "bundled",
+          "label": "Grok bundled",
+          "path": "~/.grok/bundled/skills",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "enabled": true,
+      "roots": [
+        {
+          "id": "user",
+          "label": "Claude skills",
+          "path": "~/.claude/skills",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor",
+      "enabled": true,
+      "roots": [
+        {
+          "id": "user",
+          "label": "Cursor skills",
+          "path": "~/.cursor/skills",
+          "optional": true
+        }
+      ]
+    }
+  ]
+}

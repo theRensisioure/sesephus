@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Sesephus pre-commit guard chain. Fast, staged-only checks; any failure blocks
+# the commit. Enable once per clone:
+#
+#     git config core.hooksPath .githooks     (or run tools/install_guards.sh)
+#
+set -uo pipefail
+root="$(git rev-parse --show-toplevel)"
+rc=0
+
+echo "pre-commit:"
+echo "  - vault guard";      bash "$root/tools/guard_vaults.sh"  --staged || rc=1
+echo "  - secret scan";      bash "$root/tools/scan_secrets.sh"  --staged || rc=1
+echo "  - large-file guard"; bash "$root/tools/guard_bigfiles.sh" --staged || rc=1
+
+if [ "$rc" -ne 0 ]; then
+  echo "" >&2
+  echo "pre-commit blocked this commit — fix the above, or bypass once with --no-verify." >&2
+  exit 1
+fi
+echo "pre-commit: all guards clean"
+exit 0

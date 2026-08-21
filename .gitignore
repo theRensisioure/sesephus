@@ -1,0 +1,107 @@
+# ==============================================================================
+# Sesephus / Arcadium-Circadia Git Ignore Configuration
+# ==============================================================================
+
+# --- Zig Build outputs & Caches ---
+zig-cache/
+.zig-cache/
+zig-out/
+.zig-out/
+*.exe
+*.pdb
+*.dll
+*.lib
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+
+# --- Python Virtual Environment & Caches ---
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.poetry/
+pip-log.txt
+
+# --- Node / Frontend UI (Vite/React build assets) ---
+node_modules/
+dist/
+dist-ssr/
+.eslintcache
+.npm/
+
+# --- Local Environment & Secret Configuration Files ---
+.env
+.env.local
+.env.*.local
+*.local
+config.local.json
+
+# --- Local Daemons & External Tools ---
+nats-server/
+
+# --- Database & Log Files (Sesephus Suite Vault) ---
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+sesephus_vault.db
+*.log
+
+# --- Large Ingestion/Telemetry Shards & Datasets ---
+ingest/debris_shards.jsonl
+ingest/vector_shards.jsonl
+ingest/telemetry.jsonl
+*.jsonl
+
+# --- Synthesis & Generation Outputs (Thousands of text fragments) ---
+SYNTHESIS/
+
+# --- Media & Audio Recording Directories ---
+core/sesephus/recordings/
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.flac
+
+# --- IDEs, Editors & OS Files ---
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sln
+*.user
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Desktop archive / monolith recovery pollution (OneDrive/Windows FS damage) ---
+sesefus-dual-identity-archive-*/
+Desktop/sesefus-dual-identity-archive-*/
+# Per-user voice/alpha config (install.bat creates it)
+sesefus.config.json
+*.pid
+.serve.pid
+
+# Machine-local WizTree dumps (atlas uses git ls-files via tools/atlas/build.py)
+sesefus-dev-tree.csv
+aurgio/recordings/
+*.7z
+
+# --- Private product essay (health / self-disclosures) — NOT for public remote ---
+# Full capture: %USERPROFILE%\jwrangle\contexts\sesefus\
+docs/PRODUCT_ESSAY_QUESTIONS.md
+docs/PRODUCT_ESSAY_QUESTIONS.bak-*.md
+docs/PRODUCT_ESSAY_QUESTIONS.*.md
+!docs/PRODUCT_ESSAY_QUESTIONS.md.stub
+

@@ -1,0 +1,180 @@
+# Arcadiumandcircadia
+Alarm engine for audio Journaling and behavioral therapy management in zig
+# AuraEngine (Audio Journaling & Behavioral Therapy Alarm Engine)
+
+[![Zig Version](https://img.shields.io/badge/Zig-0.12.0--dev-orange.svg)](https://ziglang.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+
+**AuraEngine** is a high-performance, privacy-first background alarm and audio processing engine written in **Zig**. It is specifically designed to power offline-first audio journaling platforms and behavioral therapy management tools (e.g., CBT/DBT diary cards, scheduled emotional checkpoints, and ambient audio logging).
+
+By leveraging Zig's manual memory management, zero-allocation runtime design patterns, and seamless C interoperability, AuraEngine guarantees low-latency, glitch-free audio recording and highly predictable scheduling without garbage-collection pauses.
+
+---
+
+## Key Features
+
+- **Predictable Scheduling Engine**: A priority-queue-based scheduler that minimizes CPU wakeups and manages complex behavioral therapy intervals (e.g., randomized emotional sampling, habit cues).
+- **Zero-Allocation Audio Pipeline**: Low-latency audio recording/playback via cross-platform bindings (WASAPI, CoreAudio, ALSA, and AAudio), utilizing Zig's `FixedBufferAllocator` to prevent audio glitches.
+- **Behavioral FSM (Finite State Machine)**: A state-driven framework to model standard therapeutic protocols (e.g., prompting -> active breathing -> voice journal recording -> CBT thought labeling).
+- **Privacy-First Local Storage**: Out-of-the-box support for encrypted local SQLite database storage for journaling entries, audio metadata, and mood scores.
+- **Micro-kernel Design**: Easily compiled as a static library (`.a` / `.lib`) or shared library (`.so` / `.dll`) for integration into iOS, Android, macOS, and Windows client applications.
+
+---
+
+## System Architecture
+
+```mermaid
+graph TD
+    A[Therapeutic Scheduler] -->|Trigger Alarm| B[Behavioral FSM]
+    B -->|State: Prompting| C[Haptic & Audio Cues]
+    B -->|State: Recording| D[Audio Input Pipeline]
+    D -->|PCM Stream| E[Custom Ring Buffer]
+    E -->|Write File| F[Encrypted SQLite Storage]
+    B -->|State: CBT Labeling| G[Metadata Tagging]
+```
+
+### The Scheduler Pipeline
+The core scheduler maintains a priority queue of upcoming alarms. It uses OS-level wait conditions (`std.Thread.Condition`) to sleep efficiently, waking up only when an alarm fires or when the queue is modified.
+
+### Low-Latency Audio Pipeline
+Audio callbacks run on high-priority system threads where heap allocations are strictly forbidden to prevent dropouts:
+```mermaid
+graph LR
+    PCM[Hardware PCM Input] --> Callback[Audio Callback Thread]
+    Callback -->|Zero-Alloc Writes| RingBuf[Fixed Sized Ring Buffer]
+    RingBuf -->|Low Priority Thread| Encoder[Opus Encoder / Disk Writer]
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- **Zig compiler** (v0.11.x or v0.12.x)
+- System audio development headers (e.g., `pkg-config` for ALSA on Linux)
+
+### Building the Project
+Clone the repository and run the build:
+
+```bash
+# Build the native executable
+zig build -Doptimize=ReleaseSafe
+
+# Run the test suite (unit tests and mocks)
+zig build test
+```
+
+---
+
+## Code Examples
+
+### 1. Scheduling a Journaling Alarm
+The following Zig code showcases how to initialize the scheduler and queue up a behavioral therapy checkpoint:
+
+```zig
+const std = @import("std");
+const alarm = @import("aura_alarm.zig");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    // Initialize the scheduler
+    var scheduler = alarm.Scheduler.init(allocator);
+    defer scheduler.deinit();
+
+    // Schedule a CBT thought diary reminder for 1 hour from now
+    const now = std.time.timestamp();
+    const target_time = now + 3600; // +1 hour
+
+    try scheduler.scheduleAlarm(.{
+        .id = 101,
+        .timestamp = target_time,
+        .therapy_type = .cbt_thought_diary,
+        .voice_prompt_id = 42,
+    });
+
+    std.log.info("Therapeutic checkpoint scheduled successfully.", .{});
+}
+```
+
+### 2. Low-Latency Audio Recording Hook
+This callback implementation avoids dynamic heap allocations by using a pre-allocated ring buffer:
+
+```zig
+const std = @import("std");
+const AudioCallbackError = error{ BufferOverflow };
+
+pub const AudioEngine = struct {
+    ring_buffer: []f32,
+    write_idx: usize,
+    mutex: std.Thread.Mutex,
+
+    pub fn audioInputCallback(self: *AudioEngine, input_samples: []const f32) AudioCallbackError!void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+
+        if (self.write_idx + input_samples.len > self.ring_buffer.len) {
+            return AudioCallbackError.BufferOverflow;
+        }
+
+        // Copy incoming PCM samples directly to the pre-allocated ring buffer
+        @memcpy(self.ring_buffer[self.write_idx..][0..input_samples.len], input_samples);
+        self.write_idx += input_samples.len;
+    }
+};
+```
+
+---
+
+## State Machine for Therapy Sessions
+
+AuraEngine models journaling sessions as a Finite State Machine:
+
+| State | Description | Next State |
+| :--- | :--- | :--- |
+| `Idle` | System is waiting for the next scheduled cue. | `Prompting` |
+| `Prompting` | Plays auditory tone and displays therapeutic prompt. | `Breathing` / `Recording` |
+| `Breathing` | Guide user through paced breathing (ambient sounds). | `Recording` |
+| `Recording` | Captures spoken journal response (encodes to Opus/AAC). | `Reflecting` |
+| `Reflecting` | Prompts user to label emotions and self-assess mood. | `Saving` |
+| `Saving` | Writes compressed audio and metadata locally. | `Idle` |
+
+---
+
+## Project Structure
+
+- `src/main.zig`: Application entry point.
+- `src/alarm.zig`: Alarm priority queue and background thread scheduler.
+- `src/audio.zig`: Cross-platform audio API bindings and buffer management.
+- `src/fsm.zig`: Behavioral therapy finite state machine logic.
+- `src/storage.zig`: SQLite integration for secure journal metadata tracking.
+- `build.zig`: Build scripting for cross-compilation target setups.
+
+---
+
+# Sesephus Project: Session Analysis & Handoff (to Claude)
+
+This document distills the recent architectural work, tangents, and revelations regarding the Sesephus system integration.
+
+## 🎯 Accomplishments
+* **Unified Web Dashboard**: Successfully consolidated the disparate Sesephus modules (Circadia, Arcadium, SaturnNav, Sieve) into a single, cohesive Vite + React frontend located in `dashboard/ui`.
+* **Zero-Bloat Premium UI**: Implemented a "premium" dark-mode and glassmorphism design system using purely Vanilla CSS (`index.css`). Avoided all heavy CSS frameworks (like Tailwind) to keep the project lightweight and maintainable.
+* **Seamless API Proxying**: Configured the Vite development server to seamlessly proxy all frontend `/api` requests to the FastAPI Python sidecar running on port `3001`, completely avoiding CORS issues.
+* **Architectural Pruning (NATS Removal)**: Completely eradicated the NATS Message Broker from the ecosystem. Refactored the Python sidecar (`dashboard_server.py`) to drop the `nats-py` dependency and background listener, replacing it with direct, lightweight HTTP polling to the Zig Host's `/api/status` endpoint.
+
+## 🌀 Tangents & Troubleshooting
+* **Missing Python Dependencies**: Encountered `ModuleNotFoundError: No module named 'pydantic'` when attempting to boot the Python sidecar. This occurred because the required libraries (`fastapi`, `uvicorn`, `pydantic`, `nats-py`) were missing from the global Python environment. Resolved by executing a background `pip install`.
+* **NATS Connection Loop Traces**: Encountered massive `asyncio.exceptions.CancelledError` and `TimeoutError` stack traces flooding the terminal. This was caused by the FastAPI server aggressively attempting to connect to a local NATS broker that wasn't running. Initially tried to patch it with `max_reconnect_attempts=0`, but the underlying library still complained loudly.
+
+## 💡 Revelations
+* **Local-First vs. Enterprise Tech**: While NATS is an exceptional piece of technology for massive distributed clusters, it is severe overkill for a local-first, self-help desktop application. Requiring an end-user to manage a standalone message broker executable breaks the intended UX and the "zero external runtime dependencies" philosophy.
+* **The Necessity of Python (For AI)**: We realized we cannot drop the Python sidecar entirely because Sesephus relies on `whisper` for local audio transcription (and future LoRA fine-tuning). Porting AI inference pipelines directly into pure Zig is impractical. Thus, Python must remain the dedicated "AI Bridge".
+* **Zig as the Source of Truth**: The Zig Host daemon (`host.exe`) already manages its own lightweight HTTP server. We realized that the Python sidecar can simply fetch the live agent statuses directly from the Zig Host (`http://localhost:3000/api/status`), completely eliminating the need for NATS to synchronize state. This drastically simplified the architecture without losing any functionality.
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -1,0 +1,46 @@
+# Sesephus Suite Documentation Manifest
+
+```json
+{
+  "project": "Sesephus Suite",
+  "description": "Unified local-first self-help dashboard comprising Circadia, Arcadium, and SaturnNav modules.",
+  "modules": [
+    {
+      "name": "Circadia",
+      "path": "core/sesephus/circadia.zig",
+      "type": "Zig",
+      "description": "Alarm management daemon implementing priority-queue scheduler and TCP protocol frames."
+    },
+    {
+      "name": "Arcadium",
+      "path": "core/sesephus/arcadium.zig",
+      "type": "Zig",
+      "description": "Audio journaling engine that records WAV data and streams to host daemon."
+    },
+    {
+      "name": "Host Daemon",
+      "path": "core/sesephus/host.zig",
+      "type": "Zig",
+      "description": "Central daemon handling encrypted vault operations and client coordination."
+    },
+    {
+      "name": "Python AI Bridge",
+      "path": "dashboard/dashboard_server.py",
+      "type": "Python",
+      "description": "FastAPI server providing Whisper transcription and status polling for Zig host."
+    },
+    {
+      "name": "Web Dashboard",
+      "path": "dashboard/ui",
+      "type": "React+Vite",
+      "description": "Premium dark‑mode UI with glassmorphism styling for user interaction."
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "last_updated": "2026-06-10T23:39:15Z",
+    "license": "MIT",
+    "repo": "t:/sesephus-database"
+  }
+}
+```

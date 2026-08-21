@@ -1,0 +1,93 @@
+/*
+ * DyslexiUI — canonical reading-layer tokens.
+ *
+ * Source of truth for how Sesefus renders text a fragile reader must live
+ * with. Extracted verbatim from the DyslexiUI chat wrapper (the reference
+ * implementation); Dyslexistree, gui-dyslexia-encode, and the Grok reading
+ * layer are design sources that defer to these values. Any surface that
+ * shows vault text (Glass, embedded dashboard, future appliance display)
+ * should consume these variables rather than restating colors or spacing.
+ *
+ * Principles carried by the values:
+ *  - warm paper, never pure white (glare) or pure black (halation)
+ *  - blue/teal accent only — no red/green semantic pairs
+ *  - generous line/letter/word spacing; 65ch measure; 18px base
+ *  - no text justification; no motion for readers who opt out
+ */
+
+:root {
+  /* Warm paper tones — pure white causes glare and visual stress */
+  --bg-primary: #F5F2EB;
+  --bg-secondary: #EDE8DD;
+  --bg-tertiary: #E5DFD2;
+  --bg-input: #FAF8F3;
+
+  /* Soft dark tones — pure black causes halation */
+  --text-primary: #1E1B16;
+  --text-secondary: #4A453C;
+  --text-muted: #7A7568;
+
+  /* Accent: deep teal — blue/purple dyslexic-friendly, avoids red/green */
+  --accent: #2D6B6B;
+  --accent-hover: #235454;
+  --accent-light: #E8F0F0;
+
+  /* Dialogue bubbles: warm sepia instead of harsh blue */
+  --user-bg: #E6DDD0;
+  --ai-bg: #FFFFFF;
+
+  /* Spacing tokens */
+  --line-height: 1.8;
+  --letter-spacing: 0.04em;
+  --word-spacing: 0.08em;
+  --paragraph-spacing: 1.5em;
+  --border-radius: 8px;
+
+  /* Measure: optimal reading width */
+  --measure: 65ch;
+
+  /* Font */
+  --font-body: 'Lexend', 'OpenDyslexic', 'Comic Sans MS', 'Segoe UI', sans-serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+/* Dark mode: warm dark, not pure black */
+[data-theme="dark"] {
+  --bg-primary: #1C1A16;
+  --bg-secondary: #25231F;
+  --bg-tertiary: #2E2B26;
+  --bg-input: #25231F;
+  --text-primary: #E8E2D6;
+  --text-secondary: #B8B0A0;
+  --text-muted: #8A8276;
+  --accent: #5CA8A8;
+  --accent-hover: #7BC4C4;
+  --accent-light: #2A3A3A;
+  --user-bg: #3A3530;
+  --ai-bg: #25231F;
+}
+
+/* Reduced motion: always respect, never animate text */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Reading surface defaults for any element that opts in */
+.dyslexiui-reading {
+  font-family: var(--font-body);
+  font-size: 18px; /* larger than the standard 16px base */
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+  word-spacing: var(--word-spacing);
+  max-width: var(--measure);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  text-align: left !important; /* never justify */
+}
+
+.dyslexiui-reading p + p {
+  margin-top: var(--paragraph-spacing);
+}

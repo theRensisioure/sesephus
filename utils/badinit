@@ -1,0 +1,68 @@
+# arcadium-circadia/init.ps1
+$projectRoot = $PSScriptRoot
+
+Write-Host "🔧 Setting up Arcadium/Circadia prerequisites..." -ForegroundColor Cyan
+
+# 1. Docker GPU test
+Write-Host "`n📦 Testing Docker NVIDIA access..."
+if (docker run --gpus all nvidia/cuda:latest nvidia-smi) {
+    Write-Host "✅ NVIDIA GPU accessible via Docker"
+} else {
+    Write-Host "❌ NVIDIA passthrough failed — check Docker Desktop WSL2 settings"
+    exit 1
+}
+
+# 2. Rust toolchain
+Write-Host "`n🦀 Checking Rust..." -NoNewline; $null = rustc --version
+if ($LASTEXITCODE -eq 0) {
+    Write-Host " ✅ `$(rustc --version)"
+} else {
+    Write-Host " ❌ Rust not installed"
+    exit 1
+}
+
+# 3. Python dependencies
+Write-Host "`n🐍 Installing Python audio layer..."
+if (Get-Command python -ErrorAction SilentlyContinue) {
+    $venv = Join-Path $projectRoot ".venv"
+    & "$env:COMSPEC" /c venv\Scripts\activate  # PowerShell syntax for activate
+
+    if (!(Test-Path .venv)) {
+        Write-Host "Creating virtual environment..."
+        python -m venv .venv
+    }
+
+    pip install --upgrade pip >/dev/null
+    pip install sounddevice numpy pysqlcipher3 cryptography >/dev/null
+    pip list | findstr -i "sounddevice" | Out-Null
+}
+
+# 4. NATS server
+Write-Host "`n📡 Starting NATS server..." -NoNewline
+docker run --rm --name nats-dev -d `
+  -p 4222:4222 -p 8222:8222 `
+  -v "$projectRoot/nats/data:/data" `
+  nats/nats:latest >/dev/null
+
+Start-Sleep -Seconds 3
+
+if (curl http://localhost:8222/v1/server/info) {
+    Write-Host " ✅ NATS server running on ports 4222/8222"
+} else {
+    Write-Host " ❌ NATS failed to start — check Docker logs"
+    docker ps | findstr nats-dev
+    exit 1
+}
+
+# 5. Database initialization (Python)
+Write-Host "`n💾 Initializing Arcadium SQLite database..."
+python audio_input_layer.py --init-db >/dev/null
+
+if (Test-Path "$projectRoot\data\devices.db") {
+    Write-Host " ✅ devices.db created"
+} else {
+    Write-Host " ⚠️  Database not found — check SQLCipher installation"
+}
+
+Write-Host "`n✨ Prerequisites complete!" -ForegroundColor Green
+Write-Host "Next: cd aether-dashboard && cargo build --release"

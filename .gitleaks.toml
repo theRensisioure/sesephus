@@ -1,0 +1,19 @@
+# gitleaks config — extends the built-in ruleset, adds repo-specific allowlisting.
+# Used by the CI secret-scan job and by anyone running gitleaks locally.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Sesephus allowlist"
+# These files contain secret *patterns* (regexes), not real secrets.
+paths = [
+  '''tools/scan_secrets\.sh''',
+  '''\.gitleaks\.toml''',
+  '''\.secretsallow''',
+]
+# Known hardcoded default vault password (crypto.zig / host.zig) — tracked in
+# issue #63. Remove these once #63 lands.
+regexes = [
+  '''my_super_secret_password''',
+  '''sesephus_default_vault_secure_password_string_2026''',
+]

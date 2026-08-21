@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesephus Circadia Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-primary: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success-color: #10b981;
+            --fired-color: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success-color);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+        @media(max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-left: 3px solid var(--accent-primary);
+            padding-left: 0.75rem;
+        }
+        /* Form Styling */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        input, select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        button {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.875rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+        
+        /* List items styling */
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .item-row {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .item-title { font-weight: 600; font-size: 1rem; }
+        .item-subtitle { font-size: 0.875rem; color: var(--text-muted); }
+        
+        .badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-online { background: rgba(16, 185, 129, 0.15); color: var(--success-color); }
+        .badge-offline { background: rgba(156, 163, 175, 0.15); color: var(--text-muted); }
+        .badge-fired { background: rgba(239, 68, 68, 0.15); color: var(--fired-color); }
+        .badge-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Sesephus Circadia</h1>
+                <p style="color: var(--text-muted); margin-top: 0.25rem;">Alarm & System Administration Console</p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Host Online
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Sidebar: Schedule Form & Connected Clients -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <div class="card">
+                    <h2>Schedule Alarm</h2>
+                    <form id="alarmForm">
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="clientSelect">Target Device</label>
+                            <select id="clientSelect" required>
+                                <option value="" disabled selected>Select a client...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="secondsDelay">Trigger Delay (Seconds)</label>
+                            <input type="number" id="secondsDelay" min="1" value="5" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="alarmAction">Definable Action</label>
+                            <select id="alarmAction" required>
+                                <option value="record_audio">record_audio (Local Audio capture)</option>
+                                <option value="play_sound">play_sound (Win32 alert beep)</option>
+                                <option value="run_command">run_command (Defined local task execution)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="actionDuration">Duration (Seconds)</label>
+                            <input type="number" id="actionDuration" min="1" step="0.5" value="3.0" required>
+                        </div>
+                        <button type="submit" style="width: 100%;">Schedule Action</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Connected Devices</h2>
+                    <div class="list-section" id="clientsList">
+                        <div style="color: var(--text-muted); font-size: 0.875rem;">Loading devices...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main: Scheduled Alarms List -->
+            <div class="card">
+                <h2>Active Alarm Schedule</h2>
+                <div class="list-section" id="alarmsList" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: var(--text-muted); font-size: 0.875rem;">Loading scheduled alarms...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const clientsList = document.getElementById('clientsList');
+        const alarmsList = document.getElementById('alarmsList');
+        const clientSelect = document.getElementById('clientSelect');
+        const alarmForm = document.getElementById('alarmForm');
+
+        async function updateStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                // Update client selector and list
+                const currentSelection = clientSelect.value;
+                clientSelect.innerHTML = '<option value="" disabled>Select a client...</option>';
+                
+                if (data.clients.length === 0) {
+                    clientsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.875rem;">No devices connected</div>';
+                    clientSelect.innerHTML += '<option value="" disabled>No online devices</option>';
+                } else {
+                    clientsList.innerHTML = '';
+                    let hasActive = false;
+                    data.clients.forEach(c => {
+                        // Populate select options for active clients only
+                        if (c.active) {
+                            hasActive = true;
+                            const opt = document.createElement('option');
+                            opt.value = c.client_id;
+                            opt.textContent = `${c.friendly_name} (${c.client_id})`;
+                            clientSelect.appendChild(opt);
+                        }
+
+                        // Populate client card list
+                        const row = document.createElement('div');
+                        row.className = 'item-row';
+                        row.innerHTML = `
+                            <div class="item-info">
+                                <span class="item-title">${c.friendly_name}</span>
+                                <span class="item-subtitle">ID: ${c.client_id}</span>
+                            </div>
+                            <span class="badge ${c.active ? 'badge-online' : 'badge-offline'}">${c.active ? 'online' : 'offline'}</span>
+                        `;
+                        clientsList.appendChild(row);
+                    });
+                    
+                    if (!hasActive) {
+                        clientSelect.innerHTML += '<option value="" disabled>No online devices</option>';
+                    } else if (currentSelection && [...clientSelect.options].some(o => o.value === currentSelection)) {
+                        clientSelect.value = currentSelection;
+                    }
+                }
+
+                // Update Alarms list
+                if (data.alarms.length === 0) {
+                    alarmsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.875rem;">No alarms scheduled</div>';
+                } else {
+                    alarmsList.innerHTML = '';
+                    // Sort alarms: pending first, then trigger time descending
+                    const sortedAlarms = [...data.alarms].sort((a, b) => {
+                        if (a.fired !== b.fired) return a.fired ? 1 : -1;
+                        return b.trigger_time - a.trigger_time;
+                    });
+
+                    sortedAlarms.forEach(a => {
+                        const row = document.createElement('div');
+                        row.className = 'item-row';
+                        const timeDue = Math.round((a.trigger_time - Date.now()) / 1000);
+                        const dueStr = a.fired ? 'Fired' : (timeDue <= 0 ? 'Due now' : `Due in ${timeDue}s`);
+                        
+                        row.innerHTML = `
+                            <div class="item-info">
+                                <span class="item-title">Action: ${a.action} (${a.duration}s)</span>
+                                <span class="item-subtitle">Device: ${a.client_id} | ID: ${a.alarm_id}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">${dueStr}</span>
+                                <span class="badge ${a.fired ? 'badge-fired' : 'badge-pending'}">${a.fired ? 'fired' : 'pending'}</span>
+                            </div>
+                        `;
+                        alarmsList.appendChild(row);
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching status:", err);
+            }
+        }
+
+        alarmForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clientId = clientSelect.value;
+            const seconds = parseInt(document.getElementById('secondsDelay').value, 10);
+            const action = document.getElementById('alarmAction').value;
+            const duration = parseFloat(document.getElementById('actionDuration').value);
+
+            if (!clientId) {
+                alert("Please select an online device.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/alarm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: clientId, seconds, action, duration })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    updateStatus();
+                    // Reset form trigger offset/duration only
+                    document.getElementById('secondsDelay').value = 5;
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (err) {
+                alert("Failed to submit alarm: " + err);
+            }
+        });
+
+        // Initial fetch and start interval polling
+        updateStatus();
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>

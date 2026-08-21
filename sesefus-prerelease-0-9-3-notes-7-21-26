@@ -1,0 +1,235 @@
+## User
+
+review  state of sesefus, and  the  progress we had on prunization
+
+## Tools
+
+- Lifecycle event
+
+## Assistant
+
+I'll review the sesefus repo state and dig into prunization progress—starting with project layout, docs, and any prunization-related work.
+
+## Tools
+
+- ListDir: .
+- Read: /home/justavision/.claude/CLAUDE.md (1-3)
+- Search: prun
+- Execute: git log --oneline -30 && echo '---' && git branch -a && echo '---' && ls -la && echo '---' && find . -maxdepth 3 -type f \( -name '*.md' -o -name 'README*' -o -name '*prun*' -o -name '*PRUN*' \) 2>/dev/null | head -80 (Git history, branches, and key docs)
+- Read: /home/justavision/sesefus/ROADMAP.md
+- Read: /home/justavision/sesefus/README.md
+- Read: /home/justavision/sesefus/docs/DRIFT.md
+- Read: /home/justavision/sesefus/CHANGELOG.md (1-200)
+- Search: pruniz|pruni[sz]|Phase 0|stub honesty|extract-modules|hardening|archival
+- Read: /home/justavision/sesefus/docs/session-notes/2026-07-04.md
+- Read: /home/justavision/sesefus/docs/CANON.md (1-221)
+- Read: /home/justavision/sesefus/ARCHIVED-BRANCHES.md
+- Read: /home/justavision/sesefus/docs/INVENTORY.md (1-100)
+- Execute: cd /home/justavision/sesefus && git log --all --oneline --grep='prun' -i | head -20; echo '---'; git log --all --oneline --grep='stub\|extract\|hardeni\|purge\|DEAD\|covenant' -i | head -40; echo '---'; ls src/cli src/modules src/net core/sesephus/src/commands 2>/dev/null; echo '---'; wc -l core/sesephus/src/*.zig core/sesephus/src/commands/*.zig 2>/dev/null | tail -5; find . -name '*prun*' 2>/dev/null; ls -la /home/justavision/.claude/ 2>/dev/null | head -20; ls /home/justavision/.claude/*.md 2>/dev/null; ls /home/justavision/RTK.md /home/justavision/PEER.md /home/justavision/.claude/RTK.md /home/justavision/.claude/PEER.md 2>/dev/null; find /home/justavision -maxdepth 3 -iname '*prun*' 2>/dev/null | head -30 (Search prunization history and related paths)
+- Search: pruniz|pruni[sz]ation|End the stubs|Phase [0-9]|#6[6-9]|#7[0-4]|#84|#75
+- Read: /home/justavision/sesefus/src/modules/README.md
+- Read: /home/justavision/sesefus/CHANGELOG.md (201-345)
+- Execute: cd /home/justavision/sesefus && git log --oneline --since='2026-06-01' | wc -l; echo 'files tracked:'; git ls-files | wc -l; echo 'live vs archival:'; git ls-files | grep -c '^archival/' ; git ls-files | grep -vc '^archival/'; echo '--- host.zig lines ---'; wc -l core/sesephus/src/host.zig; ls -la core/sesephus/zig-out/bin/ 2>/dev/null; head -5 docs/PRODUCTION.md; echo '--- recent unreleased vs roadmap status ---'; rg -n 'WIRED|STUB|DEAD' docs/CANON.md | head -30; echo '--- check if extract modules actually used ---'; rg -n 'src/cli|src/modules|src/net|flags\.zig|wav_record|protocol\.zig' core/sesephus --glob '*.zig' | head -20; rg -n 'import|@import' src/cli/flags.zig src/modules/capture/wav_record.zig src/net/protocol.zig 2>/dev/null | head -20 (Repo metrics and extract-modules wiring status)
+- Search: @import|flags\.zig|wav_record|protocol
+- Read: /home/justavision/sesefus/src/cli/flags.zig (1-40)
+- Read: /home/justavision/sesefus/docs/CLI.md (1-50)
+- Execute: cd /home/justavision/sesefus && grep -n 'pruniz\|End the stubs\|Phase 0\|#66\|#67\|#68\|#74\|extract-modules\|repo-hardening' CHANGELOG.md ROADMAP.md README.md docs/*.md 2>/dev/null | head -40; echo '---'; ls core/sesephus/src/commands/; wc -l core/sesephus/src/commands/*.zig; echo '---'; head -30 core/sesephus/src/commands/dialogue.zig; echo '---'; head -25 core/sesephus/src/commands/journal.zig; head -25 core/sesephus/src/commands/rhythm.zig; echo '---'; git log --oneline --grep='security\|harden\|stub\|covenant\|extract' -i | head -25; echo '--- remote ---'; git remote -v; git status -sb (Stub status, commands, git remote state)
+- Execute: cd /home/justavision/sesefus && grep -n 'product form\|0\.15\|Sesephus CLI\|magnum\|host\.exe\|underscore\|handleVaultCommand' docs/CANON.md dashboard/ui/src/components/EtdiPanel.jsx README.md docs/DRIFT.md core/sesephus/src/host.zig 2>/dev/null | head -40; echo '---'; sed -n '250,290p' core/sesephus/src/host.zig; echo '---'; sed -n '50,60p' dashboard/ui/src/components/EtdiPanel.jsx; echo '---'; ls .github/workflows/ .githooks/ 2>/dev/null; echo '---'; cat docs/COVENANT.md | head -40; echo '---'; # check if modules are wired into build
+grep -n 'flags\|wav_record\|protocol\|modules' core/sesephus/build.zig src/modules/README.md 2>/dev/null; head -80 core/sesephus/build.zig (Verify stale spots vs CANON purge list)
+- Execute: grep -rni 'pruniz' /home/justavision/.claude /home/justavision/.grok/sessions 2>/dev/null | head -30; grep -rni 'prunization\|prunisation' /home/justavision --include='*.md' --include='*.txt' --include='*.json' 2>/dev/null | head -30; ls /home/justavision/.claude/projects 2>/dev/null | head -20; grep -rni 'pruniz\|pruni' /home/justavision/sesefus/docs /home/justavision/sesefus/toclaude.md /home/justavision/sesefus/overallreadmee.md 2>/dev/null | head -20 (Find prunization term in sessions/docs)
+- Read: /home/justavision/sesefus/toclaude.md
+- Read: /home/justavision/sesefus/overallreadmee.md (1-80)
+- Execute: cd /home/justavision/sesefus && git rev-parse HEAD; git log -1 --format='%H %ci %s'; echo '---'; # remaining stub surface
+grep -n 'print-only\|print only\|_ = allocator\|_ = io\|STUB\|canned' core/sesephus/src/commands/*.zig 2>/dev/null | head -20; echo '--- dead vault ---'; sed -n '2290,2320p' core/sesephus/src/host.zig; echo '--- vault password status ---'; grep -n 'default_vault\|password\|sesephus_default' core/sesephus/src/host.zig core/sesephus/src/crypto.zig .secretsallow 2>/dev/null | head -15; echo '--- alarm_engine ---'; head -20 core/alarm_engine.zig 2>/dev/null; wc -l core/alarm_engine.zig core/tcp_server.zig core/wav_db.zig client/recorder.zig scratch/*.py 2>/dev/null | tail -15; echo '--- fleet ---'; head -30 tools/fleet.ps1 2>/dev/null | head -25 (Dead code, password, leftover size check)
+
+## Assistant
+
+# Sesefus state + prunization progress
+
+**Branch:** `main` @ `ec46d6f5` (2026-07-20) — *Merge docs/stub-honesty into main (PR #75)*  
+**Working tree:** clean  
+**Tracked files:** ~267 (203 live / 64 frozen under `archival/`)  
+**Product thesis:** offline voice journal that measures **personal drift** (`docs/DRIFT.md`)
+
+---
+
+## What Sesefus is right now
+
+Three runtimes (“the Fleet”), one product surface:
+
+| Layer | Role | Status |
+|---|---|---|
+| **Engine** (Zig `sesefus`) | vault, alarms, TCP, REPL | Builds; real scheduler + vault ingest |
+| **Bridge** (Python FastAPI :3001) | Whisper, ETDI API | Real |
+| **Glass** (Vite/React :5173) | dashboard face | Real; some honesty fixes landed |
+
+**Two capture paths, one ships for testers:**
+
+- **Ships:** `voice.bat` → `tools/voice.py` (push-to-talk, local Whisper, ETDI)
+- **Vision (does not gate ship):** Zig client WinMM → TCP → vault
+
+**Canonical honesty layer:** `docs/CANON.md` (WIRED / STUB / DEAD). README now follows it after Phase 0.
+
+---
+
+## What’s solid (shipped)
+
+| Area | Evidence |
+|---|---|
+| SSFS storage contract | `ssfs/drive-mapping.json` + path resolvers (PR #26) |
+| ETDI v1 + norm formula | `√(v²+a²+s²)/(√3·min)`, flag **0.30** (PR #30) |
+| Voice journal loop | `voice.py` + tester packaging (PR #30) |
+| Image sieve | `shredder/image_sieve.py` (PR #30) |
+| Covenant spine | `dialogue start\|review`, `speech.zig`, prose-in-vault (PR #65) |
+| Stub honesty (Phase 0) | README/help/banner/UI no longer claim stubs work (PR #75 / #66) |
+| Repo hardening | CI, gitleaks, vault/bigfile guards, pre-commit/pre-push (PR #84) |
+| Fleet runner | `fleet.bat` / `tools/fleet.ps1` |
+| Architectural prune | NATS removed long ago → HTTP poll of Zig host |
+
+`host.zig` banner is honest space-separated WIRED commands only (`status`, `dialogue`, `alarm`, `group`, `lead qualify`, `vault ingest-archive`, `backup`, `exit`).
+
+---
+
+## Prunization — what it is, and how far it got
+
+There’s no single ticket named “prunization.” In this repo it’s the **stack of prune/cleanup moves**: kill bloat, stop lying about stubs, extract modules, delete dead code, harden what remains. Mapped to actual work:
+
+### Done
+
+1. **Architectural prune — NATS**  
+   Sidecar polls Zig `:3000/api/status`. Broker gone. Early, foundational.
+
+2. **Branch prune**  
+   Merged-behind branches archived (`ARCHIVED-BRANCHES.md`, tags `archive/*-20260613`). Local tree is only `main`.
+
+3. **Doc / surface prune — Phase 0 of “End the stubs” (#74 / #66)**  
+   - README leads with `voice.bat`  
+   - Honest stub table  
+   - REPL `help` + startup banner regenerated  
+   - Circadia no longer invents mock alarms when backend is down  
+   - EtdiPanel shows norm formula @ 0.30  
+   - Net: ~110 lines *removed* from that honesty pass  
+
+4. **Security prune / hardening — PR #84**  
+   Secret scan, bigfile guard, vault guard, CI audit, default vault password *allow-listed* (still hardcoded; tracked as #63).
+
+5. **Context pruners (tooling)**  
+   `utils/prune_chat.py`, `utils/spiffy_prune.py` — chat/noise pruners for agent workflows, not product path.
+
+### Half-done / misleading green
+
+6. **Module extraction (PR #49 merged, roadmap still ⬜ — correct)**  
+   Files exist but **are not on the build graph**:
+   - `src/cli/flags.zig`
+   - `src/modules/capture/wav_record.zig`
+   - `src/net/protocol.zig`  
+   `build.zig` only roots `core/sesephus/src/main.zig`. No `@import` of the extracted modules.  
+   `src/modules/README.md` still says alarms/capture/memos are **Planned**.  
+   So this was a **file landing**, not an extraction that thinned `host.zig` (~2447 lines still).
+
+### Not done (the real prune debt)
+
+7. **End the stubs — only Phase 0**  
+   Roadmap ladder:
+
+   | Phase | Issue | Status |
+   |---|---|---|
+   | 0 Honesty | #66 | **Done** (PR #75) |
+   | 1 Purge DEAD | #67 | Open — second `handleVaultCommand` in `host.zig` ~2298 still present, unreachable |
+   | 2 Redirect journal/rhythm | #68, #69 | Open — stubs still print canned lines |
+   | 3 Wire vault remainder | #70 | Open |
+   | 4 Defer rest honestly | #71–#73 | Open (`stoic`, `lead mine|feed`, …) |
+
+   Still pure stubs: `journal`, `rhythm`, `stoic`, most of `vault` except `ingest-archive`, `lead mine|feed`.
+
+8. **Dead / orphan code still in the live tree**  
+   - `core/alarm_engine.zig` (old SQLite APIs, unwired; real scheduler is in `host.zig`)  
+   - `core/tcp_server.zig`, `core/wav_db.zig`, `client/recorder.zig` — experiment shells  
+   - `scratch/` — ~3.8k lines of one-off refactor scripts  
+   - `archival/` — 64-file frozen snapshot (intentional, but still weight)  
+   - Dead vault handler block in `host.zig` (~#67 target)
+
+9. **CANON §8 purge checklist — partially stale after Phase 0**  
+   Several items **were fixed** but the checklist wasn’t re-ticked:
+   - ✅ EtdiPanel formula (now norm @ 0.30)  
+   - ✅ README brand / honesty  
+   - ✅ host banner underscore + DEAD vault ads  
+   - ⬜ `docs/DRIFT.md:84` still says flag **0.15** (v1 history line; should say 0.30 for current product)  
+   - ⬜ `overallreadmee.md` still pre-rebrand (“AuraEngine / Sesephus”, claims `host.exe`/`client.exe`)  
+   - ⬜ `docs/CLI.md` still stale body under a good banner  
+   - ⬜ Dead `handleVaultCommand` / `alarm_engine.zig`  
+   - ⬜ `docs/manifest.json` phantom paths  
+
+10. **Storage prune incomplete**  
+    SSFS is declared SSOT; Zig still hardcodes some `V:`/`E:` paths. Dashboard/vault resolver migration still open on the ladder.
+
+---
+
+## Ladder vs reality
+
+From `ROADMAP.md`:
+
+| Rung | Roadmap mark | Reality |
+|---|---|---|
+| SSFS config layer | ✅ | Shipped |
+| Module extraction | ⬜ | Merged as orphan files; not integrated |
+| Dashboard on path resolver | ⬜ | Open |
+| Vault resolver migration | ⬜ | Open |
+| Host storage integration | ⬜ | Autostart verifier deliberately paused |
+| End the stubs | ⬜ | **Phase 0 only** |
+| Prerelease hardening | ⬜ | Security stack landed; not a full prod pass |
+| Tag `prerelease` | 🏁 | Not cut |
+
+**Extra shipped outside the ladder:** voice/ETDI (PR #30), covenant spine (#65), fleet hardening (#64), repo hardening (#84).
+
+---
+
+## Wire vs stub map (today)
+
+**WIRED:** `status`, full `alarm *`, full `group *`, `lead qualify`, `vault ingest-archive`, `dialogue start|review`, `backup`, `exit`, `--read-vault` / `--extract`, `voice.bat` path, ETDI pipeline  
+
+**STUB:** `journal *`, `rhythm *`, `stoic *`, `lead mine|feed`, `vault status|backup|audit`  
+
+**DEAD:** `vault key-verify|profile|shuffle|refactor|distribute` (code exists, dispatcher never reaches it)  
+
+**PARTIAL:** covenant appliance profile (TTS out yes; voice-in not plumbed into dialogue loop)
+
+---
+
+## Git / ops notes
+
+- Only local branch: `main`. Tracking reports `origin/main [gone]` — upstream ref may be missing or remapped; remotes still point at `Zychs/sesefus` (+ bay-mirror). Worth a `git fetch` / tracking fix before the next push.
+- `gh issue list` returned empty from this environment (auth/network); issue numbers above are from docs/commits, not a live GH poll.
+- Default vault password still the hardcoded literal in `host.zig` (allow-listed in `.secretsallow`, issue #63).
+
+---
+
+## Progress scorecard (prunization)
+
+| Front | Progress | Notes |
+|---|---|---|
+| Kill NATS / simplify I/O | **Done** | Early win |
+| Stop lying about stubs | **~Phase 0 done** | Surfaces honest; code still stubs |
+| Delete DEAD code | **~0%** | Dead vault block + orphan Zig still live |
+| Real extract of host into modules | **Scaffold only** | PR #49 files idle |
+| Doc/canon hygiene | **~50%** | CANON good; DRIFT line, overallreadmee, CLI body lag |
+| Security/repo prune | **Strong** | PR #84 |
+| Path/hardcode prune | **Partial** | SSFS for JS/Python; Zig incomplete |
+| Toward `prerelease` | **Not close** | Stubs + resolver + dead code remain |
+
+---
+
+## Highest-value next prunes (in order)
+
+1. **#67 purge DEAD** — drop or mark unreachable `handleVaultCommand` in `host.zig`; delete or quarantine `core/alarm_engine.zig` + `scratch/` if you’re serious about tree weight.  
+2. **#68 / #69 redirect** — make `journal` / `rhythm` either fail loud with “use voice.bat / alarm” or thin wrappers; stop fake success prints.  
+3. **Finish extract for real** — either wire `src/cli|modules|net` into `build.zig` and cut code out of `host.zig`, or delete the orphan extracts so the roadmap stops lying.  
+4. **Canon refresh** — re-tick CANON §8; fix DRIFT threshold line; retire or rewrite `overallreadmee.md` claims of dual exes.  
+5. **Resolver completion** — dashboard + Zig vault paths off hardcodes.  
+6. Only then: prerelease checklist + tag.
+
+---
+
+**Bottom line:** Sesefus is a coherent product story with a real tester path (`voice.bat` + ETDI + vault + honest docs). Prunization **won the honesty and security layers**; it has **not** yet won the structural prune (dead code, stub elimination, real module extraction). Phase 0 of “End the stubs” is the high-water mark; Phases 1–4 and true extract are still the open prune work.
+
+If you want, next step can be a concrete Phase-1 prune PR plan (file-level delete list + what to keep as intentional archival).

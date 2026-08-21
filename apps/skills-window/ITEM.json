@@ -1,0 +1,18 @@
+{
+  "kind": "sesefus-marketplace-item",
+  "id": "skills-window",
+  "name": "Skills window",
+  "one_job": "See agent skills. Open their folders. One click.",
+  "platform": "sesefus",
+  "pitch": "user-derived accessibility",
+  "window": true,
+  "port": 8788,
+  "launch": "host.py",
+  "wired": ["grok"],
+  "add_provider": "providers.json — one object, then Reload",
+  "not": [
+    "the marketplace store",
+    "artifact-scanner companion",
+    "suite glue"
+  ]
+}

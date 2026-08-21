@@ -1,0 +1,63 @@
+{
+  "name": "Sesefus (Zig + Python + React)",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspaces/sesefus",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "containerUser": "vscode",
+  "overrideCommand": true,
+  "shutdownAction": "stopCompose",
+  "initializeCommand": "bash .devcontainer/wsl-precheck.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "forwardPorts": [3000, 3001, 5173, 4222, 8222],
+  "portsAttributes": {
+    "3000": { "label": "Zig host / Aether API", "onAutoForward": "notify" },
+    "3001": { "label": "FastAPI sidecar", "onAutoForward": "notify" },
+    "5173": { "label": "Vite React UI", "onAutoForward": "openBrowser" },
+    "4222": { "label": "NATS client (optional)", "onAutoForward": "silent" },
+    "8222": { "label": "NATS monitoring (optional)", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ziglang.vscode-zig",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/sesefus/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "zig.path": "zig",
+        "zig.zls.enabled": true,
+        "editor.formatOnSave": true,
+        "files.eol": "\n",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "PATH": "/workspaces/sesefus/.venv/bin:/home/vscode/.cargo/bin:${containerEnv:PATH}"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": false,
+      "username": "vscode",
+      "upgradePackages": false
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  }
+}

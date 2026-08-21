@@ -1,0 +1,91 @@
+name: CI
+
+# Runs on every push and PR. These are the push-time backstops that survive a
+# fresh clone — the checks the local hooks also run, but here they can't be
+# skipped with --no-verify.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secret scan (working tree)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          VER=8.21.2
+          mkdir -p "$HOME/.local/bin"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz" \
+            | tar -xz -C "$HOME/.local/bin" gitleaks
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Scan current files
+        # --no-git = scan the working tree, not history (history is covered weekly
+        # in audit.yml, so a pre-existing historical finding can't wedge every push).
+        run: gitleaks detect --no-git --redact --no-banner --source .
+
+  vault-guard:
+    name: Vault guard (tree)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No vault data in the tree
+        run: bash tools/guard_vaults.sh --tree
+
+  python:
+    name: Python checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt || pip install -r requirements.txt || true
+          pip install bandit
+      - name: Byte-compile (syntax gate — blocking)
+        # Exclude built/vendored trees so a stray non-py3 file there can't red CI.
+        run: python -m compileall -q -x '(^|/)(dist|node_modules|venv|archival|aether-dashboard-v2)(/|$)' core shredder tools ingest utils dashboard
+      - name: Security lint (bandit — advisory)
+        run: bandit -r . -ll -x ./venv,./node_modules,./archival,./simulator,./scratch || true
+
+  web:
+    name: Dashboard UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        working-directory: dashboard/ui
+        run: npm install --no-audit --no-fund
+      - name: Dependency audit (high+ — advisory)
+        working-directory: dashboard/ui
+        run: npm audit --audit-level=high || true
+
+  zig:
+    name: Zig build + format (Windows — the app's target)
+    runs-on: windows-latest       # sesefus is Windows-first; build on its real target
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2   # v1 can't fetch zig >=0.15.2 (new tarball naming)
+        with:
+          version: "0.16.0"
+      - name: zig build (blocking — verified to pass locally)
+        working-directory: core/sesephus
+        run: zig build
+      - name: zig fmt --check (advisory)
+        working-directory: core/sesephus
+        run: zig fmt --check . || true

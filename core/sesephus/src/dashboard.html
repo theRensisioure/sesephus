@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesephus Circadia Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-primary: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #60a5fa, #3b82f6);
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success-color: #10b981;
+            --fired-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.02) 0%, transparent 40%);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success-color);
+        }
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+        @media(max-width: 900px) {
+            .layout-grid { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-left: 3px solid var(--accent-primary);
+            padding-left: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Tab Navigation */
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        input, select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        
+        /* Multiple Selection list */
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.1);
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        .checkbox-item input {
+            cursor: pointer;
+        }
+
+        .btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover { opacity: 0.93; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); }
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); box-shadow: none; }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        .btn-danger:hover { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); }
+
+        /* Lists and grids */
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .item-row {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .item-title { font-weight: 600; font-size: 0.95rem; }
+        .item-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-online { background: rgba(16, 185, 129, 0.15); color: var(--success-color); }
+        .badge-offline { background: rgba(156, 163, 175, 0.15); color: var(--text-muted); }
+        .badge-fired { background: rgba(239, 68, 68, 0.15); color: var(--fired-color); }
+        .badge-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .badge-disabled { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+
+        /* Bulk Actions Toolbar */
+        .bulk-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Table / Schedule Styles */
+        .schedule-table-container {
+            overflow-x: auto;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .schedule-table th {
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .schedule-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        
+        .row-checkbox {
+            cursor: pointer;
+        }
+        
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 20px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .3s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        .scrollable {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+        .scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .scrollable::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Sesephus Circadia</h1>
+                <p style="color: var(--text-muted); margin-top: 0.25rem;">Mass Alarm Engine & Device Administration</p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Host Online
+            </div>
+        </header>
+
+        <div class="layout-grid">
+            <!-- Sidebar: Controls & Devices -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Setup Panel with Tabs -->
+                <div class="card">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" onclick="switchTab('single')">Single Alarm</button>
+                        <button class="tab-btn" onclick="switchTab('interval')">Interval Alarm</button>
+                        <button class="tab-btn" onclick="switchTab('group')">Subgroups</button>
+                    </div>
+                    
+                    <!-- Single Alarm Tab -->
+                    <div id="tab-single" class="tab-content active">
+                        <form id="singleAlarmForm">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label>Target Device(s)</label>
+                                <div class="checkbox-list" id="singleDevicesList">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="singleDelay">Trigger Offset (Seconds)</label>
+                                <input type="number" id="singleDelay" min="1" value="5" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="singleAction">Action</label>
+                                <select id="singleAction" required>
+                                    <option value="record_audio">record_audio (Capture local audio)</option>
+                                    <option value="play_sound">play_sound (Win32 Beep)</option>
+                                    <option value="run_command">run_command (Task script)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="singleDuration">Action Duration (Sec)</label>
+                                <input type="number" id="singleDuration" min="1" step="0.5" value="3.0" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1.25rem;">
+                                <label for="singleGroupSelect">Assign to Group (Optional)</label>
+                                <select id="singleGroupSelect">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%;">Schedule Alarm</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Interval Alarm Tab -->
+                    <div id="tab-interval" class="tab-content">
+                        <form id="intervalAlarmForm">
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label>Target Device(s)</label>
+                                <div class="checkbox-list" id="intervalDevicesList">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="intTotalDuration">Total Duration (Seconds)</label>
+                                <input type="number" id="intTotalDuration" min="10" value="60" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="intCount">Number of Alarms</label>
+                                <input type="number" id="intCount" min="2" value="5" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="intAction">Action</label>
+                                <select id="intAction" required>
+                                    <option value="play_sound">play_sound (Beep)</option>
+                                    <option value="record_audio">record_audio (Record)</option>
+                                    <option value="run_command">run_command (Script)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="intDuration">Action Duration (Sec)</label>
+                                <input type="number" id="intDuration" min="1" step="0.5" value="3.0" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1.25rem;">
+                                <label for="intGroupSelect">Assign to Group (Optional)</label>
+                                <select id="intGroupSelect">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%;">Schedule Sequence</button>
+                        </form>
+                    </div>
+
+                    <!-- Subgroups Tab -->
+                    <div id="tab-group" class="tab-content">
+                        <form id="groupCreateForm">
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="groupName">Group Name</label>
+                                <input type="text" id="groupName" placeholder="e.g. Living Room" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label>Assign Clients</label>
+                                <div class="checkbox-list" id="groupClientsList">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%; margin-bottom: 1rem;">Create Subgroup</button>
+                        </form>
+                        
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                            <label style="margin-bottom: 0.5rem; display: block;">Active Subgroups</label>
+                            <div class="list-section scrollable" id="activeGroupsList" style="max-height: 200px;">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connected Devices Card -->
+                <div class="card">
+                    <h2>Connected Devices</h2>
+                    <div class="list-section scrollable" id="devicesList">
+                        <div style="color: var(--text-muted); font-size: 0.875rem;">Loading devices...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Panel: Schedule & Precision Tuning -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Active Schedule Card -->
+                <div class="card" style="flex: 1;">
+                    <h2>
+                        Active Alarm Schedule
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">Toggle All</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggleAllCheckbox" checked onchange="toggleAllAlarms(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </h2>
+                    
+                    <!-- Bulk Actions Bar -->
+                    <div class="bulk-bar">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;" id="checkedCount">0 Selected</span>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="bulkEditEnabled(true)">Enable</button>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="bulkEditEnabled(false)">Disable</button>
+                        <select id="bulkActionSelect" style="padding: 0.4rem; font-size: 0.85rem;" onchange="bulkEditAction(this.value)">
+                            <option value="" disabled selected>Change Action...</option>
+                            <option value="record_audio">record_audio</option>
+                            <option value="play_sound">play_sound</option>
+                            <option value="run_command">run_command</option>
+                        </select>
+                        <select id="bulkGroupSelect" style="padding: 0.4rem; font-size: 0.85rem;" onchange="bulkEditGroup(this.value)">
+                            <option value="" disabled selected>Assign Group...</option>
+                            <option value="null">Unassign Group</option>
+                        </select>
+                    </div>
+
+                    <div class="schedule-table-container scrollable" style="max-height: 450px;">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onchange="selectAllAlarms(this.checked)"></th>
+                                    <th>ID</th>
+                                    <th>Target Clients</th>
+                                    <th>Group</th>
+                                    <th>Action</th>
+                                    <th>Trigger time</th>
+                                    <th>Status</th>
+                                    <th>Enable</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alarmsTableBody">
+                                <tr>
+                                    <td colspan="8" style="color: var(--text-muted); text-align: center;">Loading scheduled alarms...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Precision Timing Controller -->
+                <div class="card">
+                    <h2>Interval Precision Tuning</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label for="tuneIntervalSelect">Select Interval Parent ID</label>
+                            <select id="tuneIntervalSelect">
+                                <option value="" disabled selected>No active intervals</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tuneSpacing">Respace Intervals (Seconds)</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="number" id="tuneSpacing" min="1" step="0.5" value="10.0" style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="adjustIntervalSpacing()">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label for="tuneJitter">Introduce Micro-Timing Jitter (ms)</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="number" id="tuneJitter" min="0" step="50" value="200" style="flex: 1;">
+                                <button class="btn btn-danger" onclick="applyJitter()">Inject Jitter</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+                            Injecting timing jitter shifts each pending alarm randomly within the bounds to verify client-side timing tolerances.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedTab = 'single';
+        let clientsCache = [];
+        let subgroupsCache = [];
+        let alarmsCache = [];
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            selectedTab = tab;
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                clientsCache = data.clients || [];
+                subgroupsCache = data.subgroups || [];
+                alarmsCache = data.alarms || [];
+                
+                renderClients();
+                renderSubgroups();
+                renderAlarms();
+                updateIntervalSelectors();
+            } catch (err) {
+                console.error("Error fetching status:", err);
+            }
+        }
+        
+        function renderClients() {
+            // Devices List Card
+            const devList = document.getElementById('devicesList');
+            devList.innerHTML = '';
+            
+            // Populate lists in form panels
+            const singleDevList = document.getElementById('singleDevicesList');
+            const intDevList = document.getElementById('intervalDevicesList');
+            const groupClientsList = document.getElementById('groupClientsList');
+            
+            // Cache checkbox selections
+            const checkedSingle = getCheckedValues('single-dev');
+            const checkedInt = getCheckedValues('int-dev');
+            const checkedGroup = getCheckedValues('group-dev');
+            
+            singleDevList.innerHTML = '';
+            intDevList.innerHTML = '';
+            groupClientsList.innerHTML = '';
+            
+            if (clientsCache.length === 0) {
+                devList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.875rem;">No devices connected</div>';
+                singleDevList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No online devices</div>';
+                intDevList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No online devices</div>';
+                groupClientsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No online devices</div>';
+                return;
+            }
+            
+            clientsCache.forEach(c => {
+                // Main list
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-title">${c.friendly_name}</span>
+                        <span class="item-subtitle">ID: ${c.client_id}</span>
+                    </div>
+                    <span class="badge ${c.active ? 'badge-online' : 'badge-offline'}">${c.active ? 'online' : 'offline'}</span>
+                `;
+                devList.appendChild(row);
+                
+                if (c.active) {
+                    // Single alarm options
+                    const labelSingle = createCheckboxLabel(c.client_id, 'single-dev', checkedSingle.includes(c.client_id));
+                    singleDevList.appendChild(labelSingle);
+                    
+                    // Interval alarm options
+                    const labelInt = createCheckboxLabel(c.client_id, 'int-dev', checkedInt.includes(c.client_id));
+                    intDevList.appendChild(labelInt);
+                    
+                    // Subgroup clients options
+                    const labelGroup = createCheckboxLabel(c.client_id, 'group-dev', checkedGroup.includes(c.client_id));
+                    groupClientsList.appendChild(labelGroup);
+                }
+            });
+        }
+        
+        function createCheckboxLabel(val, className, checked) {
+            const label = document.createElement('label');
+            label.className = 'checkbox-item';
+            label.innerHTML = `<input type="checkbox" class="${className}" value="${val}" ${checked ? 'checked' : ''}> ${val}`;
+            return label;
+        }
+        
+        function getCheckedValues(className) {
+            return [...document.querySelectorAll(`.${className}:checked`)].map(el => el.value);
+        }
+        
+        function renderSubgroups() {
+            const listEl = document.getElementById('activeGroupsList');
+            listEl.innerHTML = '';
+            
+            const singleSelect = document.getElementById('singleGroupSelect');
+            const intSelect = document.getElementById('intGroupSelect');
+            const bulkSelect = document.getElementById('bulkGroupSelect');
+            
+            const prevSingleVal = singleSelect.value;
+            const prevIntVal = intSelect.value;
+            
+            singleSelect.innerHTML = '<option value="">None</option>';
+            intSelect.innerHTML = '<option value="">None</option>';
+            bulkSelect.innerHTML = '<option value="" disabled selected>Assign Group...</option><option value="null">Unassign Group</option>';
+            
+            if (subgroupsCache.length === 0) {
+                listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No subgroups defined</div>';
+                return;
+            }
+            
+            subgroupsCache.forEach(g => {
+                // Card list item
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.style.padding = '0.5rem 0.75rem';
+                row.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-title" style="font-size:0.9rem;">${g.name}</span>
+                        <span class="item-subtitle" style="font-size:0.75rem;">Clients: ${g.client_ids.join(', ')}</span>
+                    </div>
+                    <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteSubgroup('${g.group_id}')">Delete</button>
+                `;
+                listEl.appendChild(row);
+                
+                // Form dropdowns
+                const opt = document.createElement('option');
+                opt.value = g.group_id;
+                opt.textContent = g.name;
+                
+                singleSelect.appendChild(opt.cloneNode(true));
+                intSelect.appendChild(opt.cloneNode(true));
+                bulkSelect.appendChild(opt.cloneNode(true));
+            });
+            
+            // Restore selections
+            singleSelect.value = prevSingleVal;
+            intSelect.value = prevIntVal;
+        }
+        
+        function renderAlarms() {
+            const tbody = document.getElementById('alarmsTableBody');
+            const selectedIds = getCheckedAlarms();
+            
+            tbody.innerHTML = '';
+            
+            if (alarmsCache.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="color: var(--text-muted); text-align: center;">No alarms scheduled</td></tr>';
+                return;
+            }
+            
+            // Sort: pending first, then trigger time descending
+            const sortedAlarms = [...alarmsCache].sort((a, b) => {
+                if (a.fired !== b.fired) return a.fired ? 1 : -1;
+                return b.trigger_time - a.trigger_time;
+            });
+            
+            sortedAlarms.forEach(a => {
+                const tr = document.createElement('tr');
+                const timeDue = Math.round((a.trigger_time - Date.now()) / 1000);
+                const dueStr = a.fired ? 'Fired' : (timeDue <= 0 ? 'Due now' : `In ${timeDue}s`);
+                
+                const groupName = a.group_id ? (subgroupsCache.find(g => g.group_id === a.group_id)?.name || a.group_id) : 'None';
+                
+                let badgeClass = 'badge-pending';
+                if (a.fired) badgeClass = 'badge-fired';
+                else if (!a.enabled) badgeClass = 'badge-disabled';
+                
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="row-checkbox" value="${a.alarm_id}" ${selectedIds.includes(a.alarm_id) ? 'checked' : ''} onchange="updateCheckedCount()"></td>
+                    <td style="font-family: monospace; font-weight: 600;">${a.alarm_id}</td>
+                    <td>${a.client_ids.join(', ')}</td>
+                    <td><span style="font-weight: 500;">${groupName}</span></td>
+                    <td><span style="font-family: monospace; background:rgba(255,255,255,0.05); padding: 2px 6px; border-radius:4px;">${a.action} (${a.duration}s)</span></td>
+                    <td>${dueStr}</td>
+                    <td><span class="badge ${badgeClass}">${a.fired ? 'fired' : (a.enabled ? 'pending' : 'disabled')}</span></td>
+                    <td>
+                        <label class="switch" style="transform: scale(0.85);">
+                            <input type="checkbox" ${a.enabled ? 'checked' : ''} ${a.fired ? 'disabled' : ''} onchange="toggleSingleAlarm('${a.alarm_id}', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            updateCheckedCount();
+        }
+        
+        function updateIntervalSelectors() {
+            const select = document.getElementById('tuneIntervalSelect');
+            const prevVal = select.value;
+            
+            select.innerHTML = '<option value="" disabled>Select interval ID...</option>';
+            
+            // Extract unique parent_ids from alarms that are not fired yet
+            const activeParents = [...new Set(
+                alarmsCache
+                    .filter(a => a.parent_id && !a.fired)
+                    .map(a => a.parent_id)
+            )];
+            
+            if (activeParents.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>No active intervals</option>';
+                return;
+            }
+            
+            activeParents.forEach(pid => {
+                const count = alarmsCache.filter(a => a.parent_id === pid && !a.fired).length;
+                const opt = document.createElement('option');
+                opt.value = pid;
+                opt.textContent = `Interval Sequence ${pid} (${count} pending)`;
+                select.appendChild(opt);
+            });
+            
+            if (prevVal && activeParents.includes(prevVal)) {
+                select.value = prevVal;
+            } else {
+                select.selectedIndex = 1;
+            }
+        }
+        
+        function getCheckedAlarms() {
+            return [...document.querySelectorAll('.row-checkbox:checked')].map(el => el.value);
+        }
+        
+        function updateCheckedCount() {
+            const count = getCheckedAlarms().length;
+            document.getElementById('checkedCount').textContent = `${count} Selected`;
+            document.getElementById('selectAllCheckbox').checked = count === alarmsCache.length && alarmsCache.length > 0;
+        }
+        
+        function selectAllAlarms(checked) {
+            document.querySelectorAll('.row-checkbox').forEach(el => el.checked = checked);
+            updateCheckedCount();
+        }
+
+        // --- API Action functions ---
+
+        // Single alarm submit
+        document.getElementById('singleAlarmForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clientsSelected = getCheckedValues('single-dev');
+            const seconds = parseInt(document.getElementById('singleDelay').value, 10);
+            const action = document.getElementById('singleAction').value;
+            const duration = parseFloat(document.getElementById('singleDuration').value);
+            const groupId = document.getElementById('singleGroupSelect').value;
+            
+            if (clientsSelected.length === 0) {
+                alert("Please select at least one online device.");
+                return;
+            }
+            
+            const payload = {
+                client_ids: clientsSelected,
+                seconds: seconds,
+                action: action,
+                duration: duration
+            };
+            if (groupId) payload.group_id = groupId;
+            
+            const res = await fetch('/api/alarm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                fetchStatus();
+                document.getElementById('singleDelay').value = 5;
+            } else {
+                alert("Error: " + result.message);
+            }
+        });
+        
+        // Interval alarm submit
+        document.getElementById('intervalAlarmForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clientsSelected = getCheckedValues('int-dev');
+            const durationSec = parseInt(document.getElementById('intTotalDuration').value, 10);
+            const count = parseInt(document.getElementById('intCount').value, 10);
+            const action = document.getElementById('intAction').value;
+            const actionDuration = parseFloat(document.getElementById('intDuration').value);
+            const groupId = document.getElementById('intGroupSelect').value;
+            
+            if (clientsSelected.length === 0) {
+                alert("Please select at least one online device.");
+                return;
+            }
+            
+            const payload = {
+                client_ids: clientsSelected,
+                duration_sec: durationSec,
+                count: count,
+                action: action,
+                action_duration: actionDuration
+            };
+            if (groupId) payload.group_id = groupId;
+            
+            const res = await fetch('/api/alarm/create_interval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                fetchStatus();
+                alert(`Successfully created sequence under parent ID: ${result.parent_id}`);
+            } else {
+                alert("Error: " + result.message);
+            }
+        });
+        
+        // Subgroup create submit
+        document.getElementById('groupCreateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('groupName').value;
+            const clientIds = getCheckedValues('group-dev');
+            
+            const res = await fetch('/api/group', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, client_ids: clientIds })
+            });
+            const result = await res.json();
+            if (result.success) {
+                document.getElementById('groupName').value = '';
+                document.querySelectorAll('.group-dev').forEach(el => el.checked = false);
+                fetchStatus();
+            } else {
+                alert("Error: " + result.message);
+            }
+        });
+        
+        async function deleteSubgroup(groupId) {
+            const res = await fetch('/api/group/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_id: groupId })
+            });
+            const result = await res.json();
+            if (result.success) {
+                fetchStatus();
+            } else {
+                alert("Error: " + result.message);
+            }
+        }
+        
+        // Bulk Edits
+        async function bulkEditEnabled(enabled) {
+            const selectedIds = getCheckedAlarms();
+            if (selectedIds.length === 0) {
+                alert("Please select at least one alarm.");
+                return;
+            }
+            const res = await fetch('/api/alarm/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alarm_ids: selectedIds, enabled })
+            });
+            const result = await res.json();
+            if (result.success) fetchStatus();
+        }
+        
+        async function bulkEditAction(action) {
+            const selectedIds = getCheckedAlarms();
+            if (selectedIds.length === 0) {
+                alert("Please select at least one alarm.");
+                document.getElementById('bulkActionSelect').selectedIndex = 0;
+                return;
+            }
+            const res = await fetch('/api/alarm/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alarm_ids: selectedIds, action })
+            });
+            const result = await res.json();
+            if (result.success) fetchStatus();
+            document.getElementById('bulkActionSelect').selectedIndex = 0;
+        }
+        
+        async function bulkEditGroup(groupId) {
+            const selectedIds = getCheckedAlarms();
+            if (selectedIds.length === 0) {
+                alert("Please select at least one alarm.");
+                document.getElementById('bulkGroupSelect').selectedIndex = 0;
+                return;
+            }
+            const res = await fetch('/api/alarm/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alarm_ids: selectedIds, group_id: groupId })
+            });
+            const result = await res.json();
+            if (result.success) fetchStatus();
+            document.getElementById('bulkGroupSelect').selectedIndex = 0;
+        }
+        
+        async function toggleSingleAlarm(alarmId, enabled) {
+            const res = await fetch('/api/alarm/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alarm_ids: [alarmId], enabled })
+            });
+            const result = await res.json();
+            if (result.success) fetchStatus();
+        }
+        
+        async function toggleAllAlarms(enabled) {
+            const res = await fetch('/api/alarm/toggle_all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled })
+            });
+            const result = await res.json();
+            if (result.success) fetchStatus();
+        }
+        
+        // Interval Timing Adjustments
+        async function adjustIntervalSpacing() {
+            const parentId = document.getElementById('tuneIntervalSelect').value;
+            const spacing = parseFloat(document.getElementById('tuneSpacing').value);
+            if (!parentId) {
+                alert("Please select a sequence ID first.");
+                return;
+            }
+            
+            const res = await fetch('/api/alarm/adjust_interval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parent_id: parentId, spacing_sec: spacing })
+            });
+            const result = await res.json();
+            if (result.success) {
+                fetchStatus();
+                alert("Successfully respaced interval sequence alarms.");
+            } else {
+                alert("Error: " + result.message);
+            }
+        }
+        
+        async function applyJitter() {
+            const parentId = document.getElementById('tuneIntervalSelect').value;
+            const jitterMs = parseInt(document.getElementById('tuneJitter').value, 10);
+            if (!parentId) {
+                alert("Please select a sequence ID first.");
+                return;
+            }
+            
+            const res = await fetch('/api/alarm/adjust_interval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parent_id: parentId, jitter_ms: jitterMs })
+            });
+            const result = await res.json();
+            if (result.success) {
+                fetchStatus();
+                alert("Successfully injected timing jitter to pending interval alarms.");
+            } else {
+                alert("Error: " + result.message);
+            }
+        }
+
+        // Initialize polling
+        fetchStatus();
+        setInterval(fetchStatus, 1000);
+    </script>
+</body>
+</html>

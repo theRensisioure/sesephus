@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sesefus · Assay Bench</title>
+<style>
+:root, :root[data-theme="light"], :root[data-theme="dark"] {
+  --bg:#060608; --panel:#101018; --line:#272739; --line-soft:#1f1f2c;
+  --ink:#f5f5ff; --ink-soft:#8e8eaa; --ink-mute:#6c6c83; --ink-faint:#5a5a70;
+  --cyan:#7cf7ff; --cyan-soft:#9fe9f1; --amber:#e2a24a; --amber-soft:#efc27e;
+  --danger:#ff6b81; --good:#10b981; --field:#0a0a12; --inset:rgba(16,16,24,0.6);
+  --mono:'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --body:'Outfit','Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
+  --read:'Lexend','Atkinson Hyperlegible',system-ui,'Segoe UI',sans-serif;
+  --lane-a:#7cf7ff; --lane-b:#e2a24a;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:var(--mono);font-weight:400;font-size:12px;line-height:1;
+  font-variant-numeric:tabular-nums;
+  background-image:radial-gradient(circle at top,#17172a 0%,transparent 55%),linear-gradient(180deg,#050509 0%,#000 100%)}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+.bench{height:100vh;box-sizing:border-box;display:grid;padding:8px;column-gap:12px;row-gap:10px;
+  grid-template-columns:216px 560px minmax(0,1fr) 980px 700px 868px;
+  grid-template-rows:44px minmax(0,1fr) minmax(0,1fr) 218px;animation:fadeIn .5s ease both}
+.bench>*{min-width:0;min-height:0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rail{grid-column:1;grid-row:1/-1;background:var(--bg);border-right:1px solid var(--line);
+  padding:12px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.eyebrow{grid-row:1;display:flex;align-items:flex-end;padding:0 4px 8px;border-bottom:1px solid var(--line);
+  font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute)}
+.eyebrow-1{grid-column:2}.eyebrow-2{grid-column:3}.eyebrow-3{grid-column:4}.eyebrow-4{grid-column:5}
+.eyebrow-5{grid-column:6;justify-content:space-between;gap:8px}
+.eyebrow-5 .verify{font-size:9.5px;font-weight:400;letter-spacing:0.04em;text-transform:none;color:var(--ink-faint);margin-left:auto}
+.panel{background:var(--panel);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;min-width:0;min-height:0}
+.lane-a{--lane:var(--lane-a);--lane-soft:var(--cyan-soft)}
+.lane-b{--lane:var(--lane-b);--lane-soft:var(--amber-soft)}
+.a-open{grid-column:2;grid-row:2}.a-inv{grid-column:3;grid-row:2}.a-assay{grid-column:4;grid-row:2}.a-ship{grid-column:5;grid-row:2}
+.b-open{grid-column:2;grid-row:3}.b-inv{grid-column:3;grid-row:3}.b-assay{grid-column:4;grid-row:3}.b-ship{grid-column:5;grid-row:3}
+.fleet{grid-column:6;grid-row:2/4;background:var(--panel);border:1px solid var(--line);padding:12px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.confluence{grid-column:2/-1;grid-row:4;background:var(--panel);border:1px solid var(--line);padding:10px 12px;
+  display:grid;grid-template-columns:560px minmax(0,1fr) 980px 700px 868px;column-gap:12px}
+.confluence>*{min-width:0;min-height:0}
+.lane-a.panel::after,.lane-b.panel::after{content:"";position:absolute;left:50%;bottom:-10px;width:2px;height:10px;background:var(--lane);opacity:.55;transform:translateX(-50%);pointer-events:none}
+.lane-a.panel::after{bottom:auto;top:-10px}
+.mast{font-size:10px;letter-spacing:0.08em;color:var(--cyan-soft);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mast .sep{color:#2e2e3e}
+.chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;border:1px solid var(--line);
+  font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mute);line-height:1.4}
+.chip.wired{border-color:color-mix(in srgb,var(--good) 45%,var(--line));color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.chip.dead,.chip.absent,.chip.legacy,.chip.unreachable,.chip.no-ep{color:var(--ink-mute);border-color:var(--line)}
+.chip.lane{border-color:color-mix(in srgb,var(--lane) 45%,var(--line));color:var(--lane-soft);background:color-mix(in srgb,var(--lane) 10%,transparent)}
+.chip.live{border-color:color-mix(in srgb,var(--cyan) 40%,var(--line));color:var(--cyan-soft);cursor:pointer}
+.chip.live:hover{background:color-mix(in srgb,var(--cyan) 12%,transparent)}
+.chip.amber-live{border-color:color-mix(in srgb,var(--amber) 40%,var(--line));color:var(--amber-soft);cursor:pointer}
+.chip.amber-live:hover{background:color-mix(in srgb,var(--amber) 12%,transparent)}
+.chip.fixture{border-color:color-mix(in srgb,var(--cyan) 50%,var(--line));color:var(--cyan);cursor:pointer}
+.lane-title{font-size:15px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--lane-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kicker{font-size:10px;color:var(--ink-faint);letter-spacing:0.14em;text-transform:uppercase}
+.field{width:100%;background:var(--field);border:1px solid var(--line);border-left:2px solid var(--lane);border-radius:0;padding:8px 10px;font-size:13px;outline:none}
+.field:focus{border-color:var(--lane);box-shadow:0 0 0 1px color-mix(in srgb,var(--lane) 35%,transparent)}
+.btn{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink)}
+.btn:hover{border-color:var(--lane);box-shadow:0 0 12px color-mix(in srgb,var(--lane) 20%,transparent)}
+.btn-primary{border-color:color-mix(in srgb,var(--lane) 40%,var(--line));background:radial-gradient(circle at top left,color-mix(in srgb,var(--lane) 22%,transparent),rgba(10,10,18,.98))}
+.row-ops{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--ink-mute)}.faint{color:var(--ink-faint)}.danger{color:var(--danger)}.soft{color:var(--ink-soft)}
+.label{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute)}
+.roots{display:flex;flex-wrap:wrap;gap:6px}
+.problems{font-size:11px;color:var(--danger);max-height:72px;overflow:auto}
+.inv-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.filters{display:flex;gap:4px;height:24px;align-items:center}
+.filters button{padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mute)}
+.filters button[aria-pressed="true"]{color:var(--lane-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lane) 35%,transparent);border-color:color-mix(in srgb,var(--lane) 40%,var(--line))}
+.tbl-wrap{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+.tbl-wrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none;z-index:2}
+table.inv{table-layout:fixed;width:100%;border-collapse:collapse}
+table.inv thead,table.inv tbody{display:block}
+table.inv tbody{overflow-y:auto;height:446px;scrollbar-gutter:stable}
+table.inv thead{padding-right:8px}
+table.inv th,table.inv td{padding:5px 4px;height:22px;line-height:1;border-top:1px solid var(--line-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+table.inv th{height:26px;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-mute);border-top:none;border-bottom:1px solid var(--line);text-align:left}
+table.inv tr.row{cursor:pointer;opacity:1;transition:opacity 80ms linear}
+table.inv tr.row.sel{background:color-mix(in srgb,var(--lane) 8%,transparent);box-shadow:inset 2px 0 0 var(--lane)}
+table.inv tr.row.unread{opacity:.55}
+table.inv tr.row.dim{opacity:.45}
+table.inv tr.row.caliper-hit{opacity:1}
+table.inv .rank{width:28px;color:var(--lane-soft);font-weight:600;cursor:crosshair;user-select:none}
+table.inv .num{text-align:right;font-variant-numeric:tabular-nums}
+.a-inv col.c-rank{width:28px}.a-inv col.c-name{width:512px}.a-inv col.c-parent{width:300px}
+.a-inv col.c-format{width:190px}.a-inv col.c-size{width:96px}.a-inv col.c-mtime{width:168px}
+.a-inv col.c-cc{width:76px}.a-inv col.c-mc{width:84px}.a-inv col.c-sieve{width:68px}.a-inv col.c-spark{width:178px}
+.b-inv col.c-rank{width:28px}.b-inv col.c-name{width:432px}.b-inv col.c-app{width:300px}
+.b-inv col.c-ext{width:78px}.b-inv col.c-size{width:96px}.b-inv col.c-mtime{width:168px}
+.b-inv col.c-sha{width:128px}.b-inv col.c-backend{width:110px}.b-inv col.c-conf{width:150px}
+.b-inv col.c-concepts{width:190px}.b-inv col.c-state{width:20px}
+.fchip{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--lane-soft);background:color-mix(in srgb,var(--lane) 8%,transparent);text-transform:lowercase}
+.sq{display:inline-block;width:10px;height:10px;border:1px solid var(--ink-soft);vertical-align:middle}
+.sq.filled{background:var(--good);border-color:var(--good)}
+.spark{display:flex;gap:1px;align-items:center}.spark .tick{width:1px;height:12px;background:var(--lane);opacity:.55}
+.meter{display:inline-block;width:96px;height:6px;border:1px solid var(--ink-mute);vertical-align:middle;margin-right:6px;position:relative}
+.meter i{display:block;height:100%;background:var(--amber);opacity:.85}
+.conf-zero .meter{border-color:var(--ink-mute)}.conf-zero .meter i{width:0 !important;background:transparent}
+.conf-low{box-shadow:inset 2px 0 0 var(--danger)}.cnum{font-size:11px;color:var(--ink-soft)}
+.mchip{display:inline-block;padding:1px 5px;margin-right:2px;border:1px solid var(--line);border-radius:4px;font-size:10px;color:var(--amber-soft);background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.mchip.dim{color:var(--ink-mute)}.glyph{color:var(--lane);opacity:.7;margin-right:4px}
+.inv-foot{height:22px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--ink-mute);border-top:1px solid var(--line);padding-top:4px}
+.kv{display:grid;gap:6px;font-size:13px}.kv .k{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute)}
+.kv .v{color:var(--ink);word-break:break-all;line-height:1.35}
+.preview{flex:1;min-height:0;max-height:180px;overflow:auto;background:var(--inset);border:1px solid var(--line);padding:10px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.synth{border-left:2px solid var(--lane);padding-left:10px;line-height:1.45;font-size:13px;max-height:180px;overflow-y:auto}
+.callout{border-left:2px solid var(--ink-mute);padding:6px 10px;font-size:11px;color:var(--ink-soft);line-height:1.4;font-family:var(--body)}
+.ruler{font-size:10px;color:var(--ink-faint);margin-top:4px}
+.ship-cols{display:grid;grid-template-columns:1fr 1px 1fr;gap:0;min-height:56px;border:1px solid var(--line)}
+.ship-cols .col{padding:10px}.ship-cols .rule{background:var(--line)}
+.ship-cols .dead{color:var(--ink-faint);text-decoration:line-through}
+.ship-cols .n{font-size:22px;font-weight:500;color:var(--lane-soft)}
+.cli{background:var(--inset);border:1px solid var(--line);padding:8px 10px;font-size:12px;line-height:1.4;overflow-x:auto;min-width:0;cursor:copy;white-space:pre;max-height:72px}
+.cli.flash{border-color:var(--lane)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mute)}
+.seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--lane) 18%,transparent);color:var(--lane-soft)}
+.toggle{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft)}
+.toggle input{accent-color:var(--lane)}
+.gate{position:absolute;left:-7px;top:12px;bottom:12px;width:2px;background:var(--amber);opacity:.7}
+.b-assay{position:relative}.cost{font-size:10px;color:var(--amber-soft);letter-spacing:0.08em;text-transform:uppercase}
+.dimmed{opacity:.35;pointer-events:none}
+.spine{position:relative;padding-left:18px;display:flex;flex-direction:column;gap:10px}
+.spine::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:linear-gradient(var(--cyan),transparent)}
+.station{display:grid;grid-template-columns:1fr auto;gap:2px 6px;font-size:11px;position:relative}
+.station::before{content:"";position:absolute;left:-15px;top:3px;width:10px;height:10px;border-radius:50%;border:1px solid var(--cyan);background:var(--bg);box-shadow:0 0 0 2px var(--bg)}
+.station.touched-a::before{background:var(--cyan);box-shadow:0 0 8px color-mix(in srgb,var(--cyan) 50%,transparent)}
+.station.touched-b::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 8px color-mix(in srgb,var(--amber) 50%,transparent)}
+.station .name{color:var(--ink-soft)}
+.block-title{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:4px}
+.rail-list{font-size:10px;color:var(--ink-mute);line-height:1.5}
+.routes{display:flex;flex-direction:column;gap:4px}
+.routes .r{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mute);padding:3px 6px;border:1px solid transparent}
+.routes .r.here{border-color:var(--cyan);color:var(--cyan-soft);border-radius:6px}
+.rail-foot{margin-top:auto;font-size:9.5px;color:var(--ink-faint);display:flex;flex-direction:column;gap:4px}
+.fleet h3{margin:0;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute);font-weight:600}
+.frow{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:11px;cursor:pointer;min-height:34px}
+.frow:hover{border-color:color-mix(in srgb,var(--cyan) 40%,var(--line))}
+.frow .ic{font-size:11px;width:16px;text-align:center}
+.frow .meta{margin-left:auto;color:var(--ink-mute);font-size:10px}
+.frow.ship{min-height:46px}
+.frow .tag{font-family:var(--read);font-size:11px;color:var(--ink-soft);line-height:1.3;max-width:52%}
+.subsys{display:flex;gap:12px;align-items:center;font-size:10px;color:var(--ink-mute)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px color-mix(in srgb,var(--cyan) 60%,transparent)}
+.dot.off{background:var(--ink-mute);box-shadow:none;opacity:.5}
+.etdi{display:flex;align-items:flex-end;gap:4px;height:60px;padding:4px 0}
+.etdi i{flex:1;background:color-mix(in srgb,var(--cyan) 55%,transparent);border-radius:2px 2px 0 0;min-width:8px}
+.cfg{font-size:10px;color:var(--ink-mute);line-height:1.55;background:var(--inset);border:1px solid var(--line);padding:8px}
+.czone{display:flex;flex-direction:column;gap:6px;min-height:0}
+.czone .eyebrow-c{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute)}
+.big-n{font-size:26px;font-weight:500;color:var(--cyan)}
+.matrix{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px}
+.matrix .cell{border:1px solid var(--line);background:transparent}
+.debris{display:flex;flex-direction:column;gap:0;font-size:11px}
+.debris .d{display:grid;grid-template-columns:92px 110px 1fr;gap:8px;height:18px;align-items:center;overflow:hidden}
+.debris .d.a{box-shadow:inset 3px 0 0 var(--cyan)}.debris .d.b{box-shadow:inset 3px 0 0 var(--amber)}
+.debris .sn{color:var(--ink-soft)}.debris .ct{color:var(--ink-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.forge-bars{display:flex;flex-direction:column;gap:4px}
+.forge-bars .bar{height:14px;background:color-mix(in srgb,var(--cyan) 25%,transparent);border:1px solid var(--line);display:flex;align-items:center;padding:0 6px;font-size:10px}
+.drop{color:var(--danger);font-size:11px;margin-top:4px}
+.interlock{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.il-sq{width:44px;height:44px;border:1px solid var(--line);background:#0a0a12;display:flex;align-items:center;justify-content:center;
+  font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mute);transition:background 200ms,box-shadow 200ms,border-color 200ms}
+.il-sq.held-a{background:color-mix(in srgb,var(--cyan) 22%,#0a0a12);border-color:var(--cyan);box-shadow:0 0 18px color-mix(in srgb,var(--cyan) 45%,transparent),0 8px 24px rgba(0,0,0,.6);color:var(--cyan-soft)}
+.il-sq.held-b{background:color-mix(in srgb,var(--amber) 22%,#0a0a12);border-color:var(--amber);box-shadow:0 0 18px color-mix(in srgb,var(--amber) 45%,transparent),0 8px 24px rgba(0,0,0,.6);color:var(--amber-soft)}
+.elog{flex:1;min-height:0;overflow-y:auto;font-size:11px;display:flex;flex-direction:column;gap:2px}
+.elog .e{padding:2px 0 2px 6px;border-left:3px solid var(--line);color:var(--ink-soft);line-height:1.35}
+.elog .e.a{border-left-color:var(--cyan)}.elog .e.b{border-left-color:var(--amber)}.elog .e.lock{border-left-color:var(--ink-mute)}
+.keel{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:10px;padding:6px 12px;
+  background:rgba(10,10,16,.92);border:1px solid var(--line);border-radius:999px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink-mute);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+.keel button{border:0;background:transparent;color:var(--ink-mute);padding:2px 6px;letter-spacing:0.1em;text-transform:uppercase;font-size:10px}
+.keel button.on{color:var(--cyan-soft)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:100}
+.modal.open{display:flex}
+.modal .box{width:min(560px,90vw);background:var(--panel);border:1px solid var(--line);padding:20px;font-size:12px;line-height:1.6}
+.modal .box kbd{border:1px solid var(--line);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--cyan-soft)}
+.bench.hide-chrome .rail,.bench.hide-chrome .fleet,.bench.hide-chrome .eyebrow{opacity:0;pointer-events:none}
+.note-jxr{font-size:10px;color:var(--danger);line-height:1.4}
+.ladder{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--ink-mute)}
+.ladder .on{color:var(--lane-soft);border-left:2px solid var(--lane);padding-left:6px}
+.titles{font-size:12px;line-height:1.5}.titles .t{color:var(--ink-soft)}
+.caliper-tick{position:absolute;left:0;width:6px;height:22px;background:var(--lane);opacity:0;pointer-events:none;z-index:3;transition:opacity 80ms linear}
+.caliper-tick.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.il-sq{transition:none !important}}
+@media (max-width:3439px){
+  .bench{grid-template-columns:216px 480px minmax(0,1fr) 760px 560px}
+  .fleet,.eyebrow-5{display:none}
+  .confluence{grid-template-columns:480px minmax(0,1fr) 760px 560px}
+  .confluence .c-fleet{display:none}
+}
+@media (max-width:1919px){
+  .bench{padding:8px 6px;grid-template-columns:56px minmax(0,1fr) 336px;grid-template-rows:40px minmax(0,1fr) 60px}
+  .rail{padding:6px;overflow:hidden}
+  .rail .mast span:not(:first-child),.rail .spine .name,.rail .block-title,.rail .rail-list,.rail .routes,.rail-foot span{display:none}
+  .eyebrow{display:none}
+  .a-open,.a-assay,.a-ship,.b-open,.b-assay,.b-ship{display:none}
+  .a-inv{grid-column:2;grid-row:2}.b-inv{grid-column:3;grid-row:2}
+  .fleet{display:none}
+  .confluence{grid-column:2/-1;grid-row:3;grid-template-columns:1fr;overflow:hidden}
+  .confluence .c-synth,.confluence .c-forge,.confluence .c-il,.confluence .c-fleet{display:none}
+}
+</style>
+</head>
+<body>
+<div class="keel" id="keel" title="Shared sort key — both inventory gutters obey this">
+  <span>SORT ▸</span>
+  <button type="button" class="on" data-sort="size">size ▾</button>
+  <button type="button" data-sort="mtime">mtime</button>
+  <button type="button" data-sort="units">units</button>
+  <button type="button" data-sort="format">format</button>
+  <button type="button" data-sort="name">name</button>
+  <span class="faint">· caliper hover ranks · Esc unpins</span>
+</div>
+
+<div class="bench" id="bench">
+  <aside class="rail" id="rail">
+    <div class="mast">
+      <span>⬡</span><span class="sep">/</span><span>Sesefus</span><span class="sep">/</span><span>ASSAY BENCH</span>
+      <span class="chip legacy">sesephus·ph legacy</span>
+    </div>
+    <div class="block-title">Spine</div>
+    <div class="spine">
+      <div class="station touched-a" id="st-roots"><span class="name">roots</span><span class="chip">2 live</span></div>
+      <div class="station touched-a" id="st-scan"><span class="name">scan</span><span class="chip">1+20</span></div>
+      <div class="station" id="st-shred"><span class="name">shred</span><span class="chip muted">idle</span></div>
+      <div class="station" id="st-debris"><span class="name">ingest/debris_shards.jsonl</span><span class="chip absent">absent</span></div>
+      <div class="station" id="st-forge"><span class="name">utils/forge.py</span><span class="chip">ready</span></div>
+      <div class="station" id="st-vector"><span class="name">ingest/vector_shards.jsonl</span><span class="chip absent">absent</span></div>
+      <div class="station" id="st-synth"><span class="name">SYNTHESIS/</span><span class="chip absent">absent</span></div>
+    </div>
+    <div class="block-title">Allow-list</div>
+    <div class="rail-list">
+      default_roots() · ~ · repo root · SESEFUS_SIEVE_ROOTS<br/>
+      <span class="danger">root is outside the allowed sieve roots: D:\archive\Takeout. Add it to artifact_roots in sesefus.config.json, or set SESEFUS_SIEVE_ROOTS.</span>
+    </div>
+    <div class="block-title">Unreachable corpora</div>
+    <div class="rail-list">
+      <span class="chip unreachable">unreachable</span> C:\Users\bardw\.claude\projects <span class="faint">(12 dirs)</span><br/>
+      <span class="chip unreachable">unreachable</span> C:\Users\bardw\.grok\sessions <span class="faint">(14 dirs)</span><br/>
+      <span class="faint">artifact_sieve.py prunes dirs starting with “.” — ~ on the allow-list does not help.</span>
+    </div>
+    <div class="block-title">Routes</div>
+    <div class="routes">
+      <div class="r">/</div><div class="r">/system</div><div class="r">/machine</div><div class="r">/etdi</div>
+      <div class="r here">/shipments/sieve</div>
+    </div>
+    <div class="rail-foot">
+      <span>? keys · h hide chrome · f fleet @3440</span>
+      <span>single theme · dark · negentropic-blue</span>
+    </div>
+  </aside>
+
+  <div class="eyebrow eyebrow-1">① OPEN</div>
+  <div class="eyebrow eyebrow-2">② INVENTORY</div>
+  <div class="eyebrow eyebrow-3">③ ASSAY</div>
+  <div class="eyebrow eyebrow-4">④ SHIP</div>
+  <div class="eyebrow eyebrow-5"><span>FLEET</span><span class="verify">verified against files on main @ 82108039 · 2026-08-03</span></div>
+
+  <section class="panel lane-a a-open" id="a-open">
+    <div class="lane-title">ARTIFACT BAY <span class="chip wired">wired</span> <span class="chip lane">GeminiTakeout</span></div>
+    <div class="kicker">shredder/artifact_sieve.py · POST /api/sieve/* :3001</div>
+    <input class="field" id="a-root" spellcheck="false" value="C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini"
+      placeholder="V:\exports\Takeout\Gemini  or  C:\Users\…\Downloads\takeout-…"/>
+    <div class="label">Quick roots</div>
+    <div class="roots" id="a-roots">
+      <button type="button" class="chip live" data-path="C:\Users\bardw\Downloads">C:\Users\bardw\Downloads</button>
+      <button type="button" class="chip fixture" data-path="C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini">fixture · gemini</button>
+      <span class="chip absent" title="not present">Documents\Takeout</span>
+      <span class="chip absent" title="not present">Documents\Gemini</span>
+      <span class="chip absent" title="not present">export\gemini</span>
+    </div>
+    <label class="toggle"><input type="checkbox" id="a-shallow"/> --shallow <span class="faint" id="a-shallow-note"></span></label>
+    <div class="row-ops"><button type="button" class="btn btn-primary" id="a-scan">Scan directory</button></div>
+    <div class="problems" id="a-problems"></div>
+  </section>
+
+  <section class="panel lane-a a-inv" id="a-inv">
+    <div class="inv-head">
+      <span class="label">Inventory · artifact schema</span>
+      <div class="filters" id="a-filters">
+        <button type="button" aria-pressed="true" data-f="all">all</button>
+        <button type="button" aria-pressed="false" data-f="sievable">sievable</button>
+        <button type="button" aria-pressed="false" data-f="unknown">unknown</button>
+        <button type="button" aria-pressed="false" data-f="errors">errors</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="caliper-tick" id="a-tick"></div>
+      <table class="inv a-inv" id="a-table">
+        <colgroup>
+          <col class="c-rank"/><col class="c-name"/><col class="c-parent"/><col class="c-format"/>
+          <col class="c-size"/><col class="c-mtime"/><col class="c-cc"/><col class="c-mc"/><col class="c-sieve"/><col class="c-spark"/>
+        </colgroup>
+        <thead><tr>
+          <th style="width:28px">#</th><th style="width:512px">name</th><th style="width:300px">parent</th>
+          <th style="width:190px">format</th><th style="width:96px">size</th><th style="width:168px">mtime</th>
+          <th style="width:76px">chats</th><th style="width:84px">msgs</th><th style="width:68px">sieve</th><th style="width:178px">spark</th>
+        </tr></thead>
+        <tbody id="a-tbody"><tr class="row sel" data-lane="a" data-rank="0" data-idx="0" data-format="conversations" data-size="1083" data-mtime="2026-07-30T10:41:49.787461+00:00" data-name="conversations.json" data-sievable="yes">
+<td class="rank" data-rank="0">01</td>
+<td class="name" title="C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini\conversations.json">conversations.json</td>
+<td class="parent" title="C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini">fus\export\gemini-fixture\Takeout\Gemini</td>
+<td class="format"><span class="fchip">conversations</span></td>
+<td class="num">1083</td>
+<td class="mtime">2026-07-30T10:41:49</td>
+<td class="num">2</td>
+<td class="num">4</td>
+<td class="sieve yes" title="sievable"><span class="sq filled"></span></td>
+<td class="spark" title="Artifact sieve smoke test · Flat message list chat"><span class="tick"></span><span class="tick"></span></td>
+</tr></tbody>
+      </table>
+    </div>
+    <div class="inv-foot">
+      <span>file_count 1 · conversation_count 2 · message_count 4 · scanned_at fixture</span>
+      <span>showing 1 of 1</span>
+    </div>
+  </section>
+
+  <section class="panel lane-a a-assay" id="a-assay">
+    <div class="label">Assay · selected artifact</div>
+    <div class="kv">
+      <div><div class="k">path</div><div class="v">C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini\conversations.json</div></div>
+      <div><div class="k">parent</div><div class="v">C:\dev\sesefus\export\gemini-fixture\Takeout\Gemini</div></div>
+      <div><div class="k">format</div><div class="v">conversations</div></div>
+      <div><div class="k">mtime</div><div class="v">2026-07-30T10:41:49.787461+00:00</div></div>
+      <div><div class="k">size_bytes</div><div class="v">1083</div></div>
+    </div>
+    <div class="label">Sample titles</div>
+    <div class="titles">
+      <div class="t">▹ Artifact sieve smoke test</div>
+      <div class="t">▹ Flat message list chat</div>
+    </div>
+    <div class="label">Linearization preview · unit-bound</div>
+    <div class="preview" id="a-preview"></div>
+    <div class="ruler">30 000-char ruler · document parses cap 100 000 then 30 000</div>
+  </section>
+
+  <section class="panel lane-a a-ship" id="a-ship">
+    <div class="label">Ship · artifact shred</div>
+    <div class="row-ops">
+      <select id="a-unit" class="field" style="width:auto;min-width:240px;border-left-width:2px">
+        <option value="conversation" selected>conversation (1 chunk / chat)</option>
+        <option value="turn">turn (1 chunk / message)</option>
+      </select>
+    </div>
+    <div class="row-ops">
+      <label class="toggle"><input type="checkbox" id="a-force"/> force re-shred</label>
+      <label class="toggle"><input type="checkbox" id="a-dry" checked/> dry-run</label>
+    </div>
+    <button type="button" class="btn btn-primary" id="a-shred">Shred through sieve</button>
+    <div class="ship-cols" id="a-result">
+      <div class="col"><div class="label">would_shred / would_ship</div><div class="n" id="a-would">— / —</div></div>
+      <div class="rule"></div>
+      <div class="col dead"><div class="label">files_shredded / chunks_shipped</div><div class="n" id="a-real">— / —</div></div>
+    </div>
+    <div class="soft" style="font-size:11px" id="a-meta">files_seen — · output ingest/debris_shards.jsonl · dry_run true</div>
+    <div class="label">CLI mirror · click to copy</div>
+    <div class="cli" id="a-cli" tabindex="0"></div>
+    <div class="faint" id="a-next" style="display:none">Next: python utils/forge.py</div>
+  </section>
+
+  <section class="panel lane-b b-open" id="b-open">
+    <div class="lane-title">VISION BAY <span class="chip wired">wired</span> <span class="chip no-ep">no endpoint</span> <span class="chip lane">VisionOxide</span></div>
+    <div class="kicker">shredder/image_sieve.py · CLI only · no HTTP bridge</div>
+    <input class="field" id="b-root" spellcheck="false" value="C:\Users\bardw\Pictures\Screenshots" placeholder="path/to/screenshots"/>
+    <div class="label">screenshot_roots [] · measured fallbacks</div>
+    <div class="roots">
+      <button type="button" class="chip amber-live" data-path="C:\Users\bardw\Pictures\Screenshots">Screenshots · 806 / 793 png</button>
+      <span class="chip absent">OneDrive\Pictures\Screenshots</span>
+      <span class="chip absent">OneDrive\Desktop</span>
+      <button type="button" class="chip amber-live" data-path="C:\Users\bardw\Desktop">Desktop · 60</button>
+    </div>
+    <div class="seg" id="b-backend" role="group" aria-label="backend">
+      <button type="button" data-b="ollama">ollama</button>
+      <button type="button" data-b="grok">grok</button>
+      <button type="button" data-b="stub" aria-pressed="true">stub</button>
+    </div>
+    <div class="faint" style="font-size:10px;line-height:1.35">No-model smoke test: filename/size only, clearly zero-confidence.</div>
+    <div class="row-ops">
+      <input class="field" id="b-model" style="flex:1;min-width:120px" placeholder="--model override"/>
+      <input class="field" id="b-limit" style="width:90px" type="number" min="0" value="20" title="--limit"/>
+    </div>
+    <div class="row-ops">
+      <label class="toggle"><input type="checkbox" id="b-force"/> --force</label>
+      <label class="toggle"><input type="checkbox" id="b-dry" checked/> --dry-run</label>
+    </div>
+    <button type="button" class="btn btn-primary" id="b-walk">Walk screenshot roots</button>
+    <div class="note-jxr">✕ .jxr × 12 in corpus — outside IMAGE_EXT {.png,.jpg,.jpeg,.webp,.bmp}; vision sieve silently skips.</div>
+    <div class="cli" id="b-cli" tabindex="0"></div>
+  </section>
+
+  <section class="panel lane-b b-inv" id="b-inv">
+    <div class="inv-head">
+      <span class="label">Inventory · vision schema · no preview — CSP blocks local file reads</span>
+      <div class="filters" id="b-filters">
+        <button type="button" aria-pressed="true" data-f="all">all</button>
+        <button type="button" aria-pressed="false" data-f="sievable">sievable</button>
+        <button type="button" aria-pressed="false" data-f="unknown">unread</button>
+        <button type="button" aria-pressed="false" data-f="errors">jxr/errors</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="caliper-tick" id="b-tick"></div>
+      <table class="inv b-inv" id="b-table">
+        <colgroup>
+          <col class="c-rank"/><col class="c-name"/><col class="c-app"/><col class="c-ext"/><col class="c-size"/>
+          <col class="c-mtime"/><col class="c-sha"/><col class="c-backend"/><col class="c-conf"/><col class="c-concepts"/><col class="c-state"/>
+        </colgroup>
+        <thead><tr>
+          <th style="width:28px">#</th><th style="width:432px">name</th><th style="width:300px">app_context</th>
+          <th style="width:78px">ext</th><th style="width:96px">size</th><th style="width:168px">mtime</th>
+          <th style="width:128px">sha12</th><th style="width:110px">backend</th><th style="width:150px">confidence</th>
+          <th style="width:190px">concepts</th><th style="width:20px">·</th>
+        </tr></thead>
+        <tbody id="b-tbody"><tr class="row" data-lane="b" data-rank="0" data-idx="0" data-ext=".png" data-size="13210855" data-mtime="2026-05-09T08:46:29+00:00" data-name="C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_46_28 AM.png" data-sievable="yes">
+<td class="rank" data-rank="0">01</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_46_28 AM.png"><span class="glyph">◈</span> C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​…</td>
+<td class="app" title="VS Code · sesefus shredder/image_sieve.py">VS Code · sesefus shredder/image_sie…</td>
+<td class="ext">.png</td>
+<td class="num">12.6 MB</td>
+<td class="mtime">2026-05-09T08:46:29</td>
+<td class="sha">9ce1297de3d6</td>
+<td class="backend">ollama</td>
+<td class="conf conf-high"><span class="meter"><i style="width:82px"></i></span><span class="cnum">0.86</span></td>
+<td class="concepts"><span class="mchip">sieve</span><span class="mchip">vision</span><span class="mchip">debris</span><span class="mchip dim">+3</span></td>
+<td class="state">●</td>
+</tr>
+<tr class="row" data-lane="b" data-rank="1" data-idx="1" data-ext=".png" data-size="7707325" data-mtime="2026-06-14T13:11:06+00:00" data-name="S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.png" data-sievable="yes">
+<td class="rank" data-rank="1">02</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.png"><span class="glyph">◈</span> S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026…</td>
+<td class="app" title="Discord · @sato DM thread">Discord · @sato DM thread</td>
+<td class="ext">.png</td>
+<td class="num">7.4 MB</td>
+<td class="mtime">2026-06-14T13:11:06</td>
+<td class="sha">a41f90bb12ce</td>
+<td class="backend">ollama</td>
+<td class="conf conf-high"><span class="meter"><i style="width:69px"></i></span><span class="cnum">0.72</span></td>
+<td class="concepts"><span class="mchip">discord</span><span class="mchip">lead</span><span class="mchip">chat</span><span class="mchip dim">+1</span></td>
+<td class="state">●</td>
+</tr>
+<tr class="row" data-lane="b" data-rank="2" data-idx="2" data-ext=".png" data-size="7357244" data-mtime="2026-05-09T08:36:41+00:00" data-name="C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_36_41 AM.png" data-sievable="yes">
+<td class="rank" data-rank="2">03</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_36_41 AM.png"><span class="glyph">◈</span> C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​…</td>
+<td class="app" title="Game overlay · Call of Duty Black Ops 6">Game overlay · Call of Duty Black Op…</td>
+<td class="ext">.png</td>
+<td class="num">7.0 MB</td>
+<td class="mtime">2026-05-09T08:36:41</td>
+<td class="sha">bb0011223344</td>
+<td class="backend">grok</td>
+<td class="conf"><span class="meter"><i style="width:39px"></i></span><span class="cnum">0.41</span></td>
+<td class="concepts"><span class="mchip">game</span><span class="mchip">capture</span><span class="mchip">session</span><span class="mchip dim">+1</span></td>
+<td class="state">●</td>
+</tr>
+<tr class="row" data-lane="b" data-rank="3" data-idx="3" data-ext=".png" data-size="5607958" data-mtime="2026-03-17T21:00:18+00:00" data-name="C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​M​o​d​e​r​n​ ​W​a​r​f​a​r​e​®​ ​I​I​I​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 3_17_2026 4_00_18 PM.png" data-sievable="yes">
+<td class="rank" data-rank="3">04</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​M​o​d​e​r​n​ ​W​a​r​f​a​r​e​®​ ​I​I​I​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 3_17_2026 4_00_18 PM.png"><span class="glyph">◈</span> C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​M​o​d​e​r​n​ ​W​a​…</td>
+<td class="app" title="Claude Code terminal · sesefus workflow">Claude Code terminal · sesefus workf…</td>
+<td class="ext">.png</td>
+<td class="num">5.3 MB</td>
+<td class="mtime">2026-03-17T21:00:18</td>
+<td class="sha">cc9988776655</td>
+<td class="backend">ollama</td>
+<td class="conf conf-high"><span class="meter"><i style="width:87px"></i></span><span class="cnum">0.91</span></td>
+<td class="concepts"><span class="mchip">claude</span><span class="mchip">workflow</span><span class="mchip">layout</span><span class="mchip dim">+2</span></td>
+<td class="state">●</td>
+</tr>
+<tr class="row" data-lane="b" data-rank="4" data-idx="4" data-ext=".png" data-size="4249680" data-mtime="2026-03-28T11:14:40+00:00" data-name="@sato - Discord 3_28_2026 6_14_39 AM.png" data-sievable="yes">
+<td class="rank" data-rank="4">05</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\@sato - Discord 3_28_2026 6_14_39 AM.png"><span class="glyph">◈</span> @sato - Discord 3_28_2026 6_14_39 AM.png</td>
+<td class="app" title="browser · unknown tab">browser · unknown tab</td>
+<td class="ext">.png</td>
+<td class="num">4.1 MB</td>
+<td class="mtime">2026-03-28T11:14:40</td>
+<td class="sha">dd0000000000</td>
+<td class="backend">stub</td>
+<td class="conf conf-zero"><span class="meter"><i style="width:0px"></i></span><span class="cnum">0.00</span></td>
+<td class="concepts"><span class="mchip">unscored</span></td>
+<td class="state">○</td>
+</tr>
+<tr class="row" data-lane="b" data-rank="5" data-idx="5" data-ext=".png" data-size="3301993" data-mtime="2026-07-11T20:12:00+00:00" data-name="Screenshot 2026-07-11 151159.png" data-sievable="yes">
+<td class="rank" data-rank="5">06</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-07-11 151159.png"><span class="glyph">◈</span> Screenshot 2026-07-11 151159.png</td>
+<td class="app" title="S.T.A.L.K.E.R. 2 · game capture">S.T.A.L.K.E.R. 2 · game capture</td>
+<td class="ext">.png</td>
+<td class="num">3.1 MB</td>
+<td class="mtime">2026-07-11T20:12:00</td>
+<td class="sha">ee1122334455</td>
+<td class="backend">ollama</td>
+<td class="conf"><span class="meter"><i style="width:52px"></i></span><span class="cnum">0.55</span></td>
+<td class="concepts"><span class="mchip">game</span><span class="mchip">stalker</span><span class="mchip">capture</span></td>
+<td class="state">●</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="6" data-idx="6" data-ext=".png" data-size="3102548" data-mtime="2026-06-19T08:17:11+00:00" data-name="S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.png" data-sievable="yes">
+<td class="rank" data-rank="6">07</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.png"><span class="glyph">◈</span> S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026…</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">3.0 MB</td>
+<td class="mtime">2026-06-19T08:17:11</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="7" data-idx="7" data-ext=".png" data-size="2840298" data-mtime="2026-03-23T00:10:10+00:00" data-name="Screenshot 2026-03-22 191009.png" data-sievable="yes">
+<td class="rank" data-rank="7">08</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-03-22 191009.png"><span class="glyph">◈</span> Screenshot 2026-03-22 191009.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.7 MB</td>
+<td class="mtime">2026-03-23T00:10:10</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="8" data-idx="8" data-ext=".png" data-size="2775200" data-mtime="2026-07-30T13:57:49+00:00" data-name="Screenshot 2026-07-30 085749.png" data-sievable="yes">
+<td class="rank" data-rank="8">09</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-07-30 085749.png"><span class="glyph">◈</span> Screenshot 2026-07-30 085749.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.6 MB</td>
+<td class="mtime">2026-07-30T13:57:49</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="9" data-idx="9" data-ext=".png" data-size="2553866" data-mtime="2026-03-08T00:43:52+00:00" data-name="➢ 8 _ ChillZone _ Social • Egirls • Active VC • Gaming • Emotes • Call • Voice Chat • Anime • Nitro - Discord 3_7_2026 6_43_52 PM.png" data-sievable="yes">
+<td class="rank" data-rank="9">10</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\➢ 8 _ ChillZone _ Social • Egirls • Active VC • Gaming • Emotes • Call • Voice Chat • Anime • Nitro - Discord 3_7_2026 6_43_52 PM.png"><span class="glyph">◈</span> ➢ 8 _ ChillZone _ Social • Egirls • Active VC • …</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.4 MB</td>
+<td class="mtime">2026-03-08T00:43:52</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="10" data-idx="10" data-ext=".png" data-size="2520805" data-mtime="2026-04-12T14:28:28+00:00" data-name="Screenshot 2026-04-12 092828.png" data-sievable="yes">
+<td class="rank" data-rank="10">11</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-04-12 092828.png"><span class="glyph">◈</span> Screenshot 2026-04-12 092828.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.4 MB</td>
+<td class="mtime">2026-04-12T14:28:28</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="11" data-idx="11" data-ext=".png" data-size="2506087" data-mtime="2026-05-29T07:05:36+00:00" data-name="Screenshot 2026-05-29 020536.png" data-sievable="yes">
+<td class="rank" data-rank="11">12</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-05-29 020536.png"><span class="glyph">◈</span> Screenshot 2026-05-29 020536.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.4 MB</td>
+<td class="mtime">2026-05-29T07:05:36</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="12" data-idx="12" data-ext=".png" data-size="2419435" data-mtime="2026-07-29T12:07:53+00:00" data-name="Screenshot 2026-07-29 070753.png" data-sievable="yes">
+<td class="rank" data-rank="12">13</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-07-29 070753.png"><span class="glyph">◈</span> Screenshot 2026-07-29 070753.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.3 MB</td>
+<td class="mtime">2026-07-29T12:07:53</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="13" data-idx="13" data-ext=".png" data-size="2355294" data-mtime="2026-03-23T05:06:03+00:00" data-name="Screenshot 2026-03-23 000603.png" data-sievable="yes">
+<td class="rank" data-rank="13">14</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-03-23 000603.png"><span class="glyph">◈</span> Screenshot 2026-03-23 000603.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.2 MB</td>
+<td class="mtime">2026-03-23T05:06:03</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="14" data-idx="14" data-ext=".png" data-size="2264098" data-mtime="2026-08-02T20:53:31+00:00" data-name="Screenshot 2026-08-02 155330.png" data-sievable="yes">
+<td class="rank" data-rank="14">15</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-08-02 155330.png"><span class="glyph">◈</span> Screenshot 2026-08-02 155330.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.2 MB</td>
+<td class="mtime">2026-08-02T20:53:31</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="15" data-idx="15" data-ext=".png" data-size="2196145" data-mtime="2026-07-28T09:19:59+00:00" data-name="Screenshot 2026-07-28 041959.png" data-sievable="yes">
+<td class="rank" data-rank="15">16</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Screenshot 2026-07-28 041959.png"><span class="glyph">◈</span> Screenshot 2026-07-28 041959.png</td>
+<td class="app" title=""></td>
+<td class="ext">.png</td>
+<td class="num">2.1 MB</td>
+<td class="mtime">2026-07-28T09:19:59</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"></td>
+<td class="state">·</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="16" data-idx="16" data-ext=".jxr" data-size="24433438" data-mtime="2026-06-14T13:11:07+00:00" data-name="S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.jxr" data-sievable="no">
+<td class="rank" data-rank="16">17</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.jxr"><span class="glyph">◈</span> S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026…</td>
+<td class="app" title="outside IMAGE_EXT — sieve skips">outside IMAGE_EXT — sieve skips</td>
+<td class="ext">.jxr</td>
+<td class="num">23.3 MB</td>
+<td class="mtime">2026-06-14T13:11:07</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"><span class="mchip dim">jxr</span></td>
+<td class="state">✕</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="17" data-idx="17" data-ext=".jxr" data-size="16990318" data-mtime="2026-03-28T11:14:40+00:00" data-name="@sato - Discord 3_28_2026 6_14_39 AM.jxr" data-sievable="no">
+<td class="rank" data-rank="17">18</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\@sato - Discord 3_28_2026 6_14_39 AM.jxr"><span class="glyph">◈</span> @sato - Discord 3_28_2026 6_14_39 AM.jxr</td>
+<td class="app" title="outside IMAGE_EXT — sieve skips">outside IMAGE_EXT — sieve skips</td>
+<td class="ext">.jxr</td>
+<td class="num">16.2 MB</td>
+<td class="mtime">2026-03-28T11:14:40</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"><span class="mchip dim">jxr</span></td>
+<td class="state">✕</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="18" data-idx="18" data-ext=".jxr" data-size="15034807" data-mtime="2026-03-07T20:56:50+00:00" data-name="Call of Duty® 3_7_2026 2_56_49 PM.jxr" data-sievable="no">
+<td class="rank" data-rank="18">19</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\Call of Duty® 3_7_2026 2_56_49 PM.jxr"><span class="glyph">◈</span> Call of Duty® 3_7_2026 2_56_49 PM.jxr</td>
+<td class="app" title="outside IMAGE_EXT — sieve skips">outside IMAGE_EXT — sieve skips</td>
+<td class="ext">.jxr</td>
+<td class="num">14.3 MB</td>
+<td class="mtime">2026-03-07T20:56:50</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"><span class="mchip dim">jxr</span></td>
+<td class="state">✕</td>
+</tr>
+<tr class="row unread" data-lane="b" data-rank="19" data-idx="19" data-ext=".jxr" data-size="13306971" data-mtime="2026-06-19T08:17:11+00:00" data-name="S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.jxr" data-sievable="no">
+<td class="rank" data-rank="19">20</td>
+<td class="name" title="C:\Users\bardw\Pictures\Screenshots\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.jxr"><span class="glyph">◈</span> S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026…</td>
+<td class="app" title="outside IMAGE_EXT — sieve skips">outside IMAGE_EXT — sieve skips</td>
+<td class="ext">.jxr</td>
+<td class="num">12.7 MB</td>
+<td class="mtime">2026-06-19T08:17:11</td>
+<td class="sha"><span class="mute">—</span></td>
+<td class="backend"><span class="mute">—</span></td>
+<td class="conf"><span class="meter"><i style="width:0px"></i></span><span class="cnum">—</span></td>
+<td class="concepts"><span class="mchip dim">jxr</span></td>
+<td class="state">✕</td>
+</tr></tbody>
+      </table>
+    </div>
+    <div class="inv-foot">
+      <span>read=5 of 20 sample · dry_run=true · corpus 806 (793 png · 12 jxr · 1 other)</span>
+      <span>showing 20 of 806</span>
+    </div>
+  </section>
+
+  <section class="panel lane-b b-assay" id="b-assay">
+    <div class="gate" title="cost boundary — no scan-only"></div>
+    <div class="label">Assay / reading · validate_reading caps</div>
+    <div class="cost">②→③ is a cost boundary · vision call per image</div>
+    <div class="kv">
+      <div><div class="k">app_context ≤120</div><div class="v" id="b-app">—</div></div>
+      <div><div class="k">visible_text_summary ≤400</div><div class="v" id="b-vis">—</div></div>
+      <div><div class="k">abstract_notion ≤200</div><div class="v" id="b-notion">—</div></div>
+      <div><div class="k">concepts ≤6</div><div class="v" id="b-concepts">—</div></div>
+      <div><div class="k">confidence 0.0–1.0</div><div class="v" id="b-conf">—</div></div>
+    </div>
+    <div class="label">synthesis ≤900 · becomes chunk content</div>
+    <div class="synth" id="b-synth">Select a read row. Unread rows have no synthesis until a backend runs.</div>
+    <div class="callout">A literal transcript of on-screen text is cheap but shallow — it tells you what the pixels say, not what you were doing.</div>
+  </section>
+
+  <section class="panel lane-b b-ship" id="b-ship">
+    <div class="label">Ship · vision chunk metadata</div>
+    <div class="soft" style="font-size:11px">output <span class="chip absent">absent</span> ingest/debris_shards.jsonl · state <span class="chip absent">absent</span> ingest/image_sieve_state.json</div>
+    <div class="label">Backend ladder</div>
+    <div class="ladder" id="b-ladder">
+      <div data-l="ollama">ollama → llama3.2-vision → http://localhost:11434/api/chat</div>
+      <div data-l="grok">grok → grok-2-vision-1212 → https://api.x.ai/v1/chat/completions</div>
+      <div data-l="stub" class="on">stub → none → no model</div>
+    </div>
+    <div class="soft" style="font-size:10px">Env: SESEFUS_OLLAMA_VISION_MODEL · SESEFUS_XAI_VISION_MODEL · XAI_API_KEY <span class="chip absent">unknown</span></div>
+    <div class="label">Chunk metadata preview</div>
+    <div class="preview" id="b-meta-preview" style="max-height:120px">shred_method: vision-abstract-notion
+(select a reading)</div>
+    <button type="button" class="btn btn-primary" id="b-shred">Compose ship (CLI only)</button>
+  </section>
+
+  <aside class="fleet" id="fleet">
+    <h3>FLEET · 4 DOCK · 5 SHIPMENTS</h3>
+    <div class="label">Dock</div>
+    <div class="frow" data-route="/"><span>Shipment Dock</span><span class="meta">/</span></div>
+    <div class="frow" data-route="/system"><span>System</span><span class="meta">/system · 2000ms</span></div>
+    <div class="frow" data-route="/machine"><span>Machine State</span><span class="meta">/machine · 2000ms</span></div>
+    <div class="frow" data-route="/etdi"><span>ETDI</span><span class="meta">/etdi · once</span></div>
+    <div class="label">Shipments</div>
+    <div class="frow ship" data-ship="saturnnav" title="Low-stimulus nav — short cues, long quiet, limited understanding on purpose">
+  <span class="ic">🎡</span>
+  <span><b>SaturnNav</b> <span class="muted">v0.1.0</span> <span class="chip loading">loading</span></span>
+  <span class="tag">Low-stimulus nav — short cues, long quiet, limited understanding on purpose</span>
+</div><div class="frow ship" data-ship="circadia" title="Mass alarm administration across multimedia endpoints">
+  <span class="ic">⏰</span>
+  <span><b>Circadia</b> <span class="muted">v2.4.0</span> <span class="chip active">active</span></span>
+  <span class="tag">Mass alarm administration across multimedia endpoints</span>
+</div><div class="frow ship" data-ship="arcadium" title="Encrypted audio journaling and vault ingestion">
+  <span class="ic">🎙️</span>
+  <span><b>Arcadium</b> <span class="muted">v1.2.0</span> <span class="chip active">active</span></span>
+  <span class="tag">Encrypted audio journaling and vault ingestion</span>
+</div><div class="frow ship" data-ship="sieve" title="Artifact sieve — Gemini Takeout dumps → debris shards">
+  <span class="ic">✂️</span>
+  <span><b>Sieve</b> <span class="muted">v0.2.0</span> <span class="chip active">active</span> ← lane A</span>
+  <span class="tag">Artifact sieve — Gemini Takeout dumps → debris shards</span>
+</div><div class="frow ship" data-ship="aytree" title="Dyslexia-first derivation map — how project folders relate">
+  <span class="ic">🌳</span>
+  <span><b>AyTree</b> <span class="muted">v0.2.0</span> <span class="chip dead">dead</span></span>
+  <span class="tag">Dyslexia-first derivation map — how project folders relate</span>
+</div>
+    <div class="label">Subsystems</div>
+    <div class="subsys">
+      <span class="dot"></span> dashboard_api
+      <span class="dot"></span> zig_host
+      <span class="dot off"></span> etdi_store
+    </div>
+    <div class="label">ETDI 7-day · h=60 · cyan</div>
+    <div class="etdi" aria-hidden="true">
+      <i style="height:35%"></i><i style="height:55%"></i><i style="height:40%"></i><i style="height:85%"></i>
+      <i style="height:60%"></i><i style="height:45%"></i><i style="height:70%"></i>
+    </div>
+    <div class="label">Config readout</div>
+    <div class="cfg">
+      artifact_roots [] · screenshot_roots [] · memo_roots []<br/>
+      state key form &lt;file_sha256&gt;:&lt;unit&gt;<br/>
+      measured key 77fea5ccc931…:conversation<br/>
+      quarantine ingest/artifact_sieve_state.corrupt-*.json<br/>
+      atomic temp ingest/artifact_sieve_state.json.tmp
+    </div>
+    <div class="label">Shared CLI</div>
+    <div class="cli" style="min-height:48px">python utils/forge.py
+# Next after either lane ships to debris_shards.jsonl</div>
+  </aside>
+
+  <footer class="confluence" id="confluence">
+    <div class="czone c-synth">
+      <div class="eyebrow-c">Synthesis · PCA bins</div>
+      <div class="matrix" title="F0/F1/F2 × High/Mid/Low — absent until tapestry runs">
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+      <span class="chip absent">absent</span>
+    </div>
+    <div class="czone c-debris">
+      <div class="eyebrow-c">Debris tail · ingest/debris_shards.jsonl · <span class="big-n" style="font-size:18px">6</span> mock braid</div>
+      <div class="debris"><div class="d b"><span>9ce1297de3d6</span><span class="sn">VisionOxide</span><span class="ct">Operator is editing the image sieve: screenshots become DebrisChunks…</span></div><div class="d a"><span>77fea5ccc931</span><span class="sn">GeminiTakeout</span><span class="ct"># Artifact sieve smoke test — How do I sieve Gemini Takeout dumps?</span></div><div class="d b"><span>a41f90bb12ce</span><span class="sn">VisionOxide</span><span class="ct">Discord conversation used for lead or systems-peer coordination…</span></div><div class="d b"><span>bb0011223344</span><span class="sn">VisionOxide</span><span class="ct">Full-frame game capture from Call of Duty Black Ops 6…</span></div><div class="d a"><span>c-demo-flat01</span><span class="sn">GeminiTakeout</span><span class="ct"># Flat message list chat — hello / hi from gemini export</span></div><div class="d b"><span>cc9988776655</span><span class="sn">VisionOxide</span><span class="ct">Dual-scanner layout design pass for Sesefus on a 49-inch ultrawide…</span></div></div>
+      <div class="faint" style="font-size:10px">id = sha256(content only) — identical text from two corpora collides</div>
+    </div>
+    <div class="czone c-forge">
+      <div class="eyebrow-c">Forge · nomic-embed-text · 768d</div>
+      <div class="soft" style="font-size:10px">http://127.0.0.1:11434/api/embed · batch 10 · friction 1.0s</div>
+      <div class="forge-bars">
+        <div class="bar" style="width:70%">lane 0 · GeminiTakeout 2</div>
+        <div class="bar" style="width:90%;background:color-mix(in srgb,var(--amber) 25%,transparent)">lane 1 · VisionOxide 4</div>
+        <div class="bar" style="width:30%">lane 2 · —</div>
+      </div>
+      <div class="drop">✕ DROP · source_path contains .pyc | Windows | AppData | Program Files — co-residency payoff</div>
+    </div>
+    <div class="czone c-il">
+      <div class="eyebrow-c">Interlock · shred lock</div>
+      <div class="interlock">
+        <div class="il-sq" id="il-sq">free</div>
+        <div class="faint" id="il-elapsed">elapsed —</div>
+        <div class="soft" style="font-size:10px">artifact_sieve_state.json <span class="chip absent">absent</span><br/>image_sieve_state.json <span class="chip absent">absent</span></div>
+      </div>
+    </div>
+    <div class="czone c-fleet">
+      <div class="eyebrow-c">Event log</div>
+      <div class="elog" id="elog"></div>
+    </div>
+  </footer>
+</div>
+
+<div class="modal" id="keys-modal" role="dialog" aria-label="Keyboard shortcuts">
+  <div class="box">
+    <div class="label" style="margin-bottom:10px">Keys</div>
+    <div><kbd>a</kbd>/<kbd>b</kbd> focus lane · <kbd>1</kbd>–<kbd>4</kbd> stage · <kbd>/</kbd> root field</div>
+    <div><kbd>j</kbd>/<kbd>k</kbd> selection · <kbd>Enter</kbd> scan · <kbd>Shift+Enter</kbd> dry shred</div>
+    <div><kbd>s</kbd> cycle sort · <kbd>e</kbd> event log · <kbd>h</kbd> hide chrome · <kbd>Esc</kbd> unpin caliper</div>
+    <div style="margin-top:12px"><button type="button" class="btn" id="keys-close">Close</button></div>
+  </div>
+</div>
+
+<script>
+const VIS = [{"name": "C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_46_28 AM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_46_28 AM.png", "ext": ".png", "size": 13210855, "mtime": "2026-05-09T08:46:29+00:00", "sievable": true, "reading": {"app_context": "VS Code · sesefus shredder/image_sieve.py", "visible_text_summary": "Python editor, IMAGE_EXT set, validate_reading clamps", "abstract_notion": "wiring vision sieve for screenshot knowledge graph", "concepts": ["sieve", "vision", "debris", "forge", "screenshot", "sesefus"], "synthesis": "Operator is editing the image sieve: screenshots become DebrisChunks via vision abstract-notion, not OCR, so they share the text/code forge path.", "confidence": 0.86, "backend": "ollama", "sha": "9ce1297de3d6a1b2c3d4e5f6"}}, {"name": "S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.png", "ext": ".png", "size": 7707325, "mtime": "2026-06-14T13:11:06+00:00", "sievable": true, "reading": {"app_context": "Discord · @sato DM thread", "visible_text_summary": "chat scroll, media embeds, sidebar guilds", "abstract_notion": "coordinating a systems peer over chat", "concepts": ["discord", "lead", "chat", "coordination"], "synthesis": "Screen shows a Discord conversation used for lead or systems-peer coordination, with long scroll history and embedded media.", "confidence": 0.72, "backend": "ollama", "sha": "a41f90bb12ce998811223344"}}, {"name": "C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_36_41 AM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​B​l​a​c​k​ ​O​p​s​ ​6​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 5_9_2026 3_36_41 AM.png", "ext": ".png", "size": 7357244, "mtime": "2026-05-09T08:36:41+00:00", "sievable": true, "reading": {"app_context": "Game overlay · Call of Duty Black Ops 6", "visible_text_summary": "HUD, minimap, killfeed partial", "abstract_notion": "session capture of a multiplayer match", "concepts": ["game", "capture", "session", "overlay"], "synthesis": "A full-frame game capture from Call of Duty Black Ops 6. Low archival value for the knowledge graph unless tagged as leisure or UI study.", "confidence": 0.41, "backend": "grok", "sha": "bb00112233445566778899aa"}}, {"name": "C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​M​o​d​e​r​n​ ​W​a​r​f​a​r​e​®​ ​I​I​I​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 3_17_2026 4_00_18 PM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\C​a​l​l​ ​o​f​ ​D​u​t​y​®​_​ ​M​o​d​e​r​n​ ​W​a​r​f​a​r​e​®​ ​I​I​I​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ 3_17_2026 4_00_18 PM.png", "ext": ".png", "size": 5607958, "mtime": "2026-03-17T21:00:18+00:00", "sievable": true, "reading": {"app_context": "Claude Code terminal · sesefus workflow", "visible_text_summary": "dynamic workflow agents, dual-scanner cockpit", "abstract_notion": "reimagining sieve as dual-bay assay bench", "concepts": ["claude", "workflow", "layout", "ultrawide", "sieve"], "synthesis": "Terminal and agent UI show a dual-scanner layout design pass for Sesefus on a 49-inch ultrawide, ending in Assay Bench with caliper and interlock.", "confidence": 0.91, "backend": "ollama", "sha": "cc99887766554433221100ff"}}, {"name": "@sato - Discord 3_28_2026 6_14_39 AM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\@sato - Discord 3_28_2026 6_14_39 AM.png", "ext": ".png", "size": 4249680, "mtime": "2026-03-28T11:14:40+00:00", "sievable": true, "reading": {"app_context": "browser · unknown tab", "visible_text_summary": "", "abstract_notion": "unscored screenshot", "concepts": ["unscored"], "synthesis": "Queued but not read by a vision model — run with --backend ollama or --backend grok for a real reading.", "confidence": 0.0, "backend": "stub", "sha": "dd0000000000000000000000"}}, {"name": "Screenshot 2026-07-11 151159.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-07-11 151159.png", "ext": ".png", "size": 3301993, "mtime": "2026-07-11T20:12:00+00:00", "sievable": true, "reading": {"app_context": "S.T.A.L.K.E.R. 2 · game capture", "visible_text_summary": "first-person view, inventory HUD partial", "abstract_notion": "leisure capture, not knowledge work", "concepts": ["game", "stalker", "capture"], "synthesis": "First-person game capture from S.T.A.L.K.E.R. 2. Treat as leisure debris unless operator tags it for UI research.", "confidence": 0.55, "backend": "ollama", "sha": "ee112233445566778899aabb"}}, {"name": "S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.png", "ext": ".png", "size": 3102548, "mtime": "2026-06-19T08:17:11+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-03-22 191009.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-03-22 191009.png", "ext": ".png", "size": 2840298, "mtime": "2026-03-23T00:10:10+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-07-30 085749.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-07-30 085749.png", "ext": ".png", "size": 2775200, "mtime": "2026-07-30T13:57:49+00:00", "sievable": true, "reading": null}, {"name": "➢ 8 _ ChillZone _ Social • Egirls • Active VC • Gaming • Emotes • Call • Voice Chat • Anime • Nitro - Discord 3_7_2026 6_43_52 PM.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\➢ 8 _ ChillZone _ Social • Egirls • Active VC • Gaming • Emotes • Call • Voice Chat • Anime • Nitro - Discord 3_7_2026 6_43_52 PM.png", "ext": ".png", "size": 2553866, "mtime": "2026-03-08T00:43:52+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-04-12 092828.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-04-12 092828.png", "ext": ".png", "size": 2520805, "mtime": "2026-04-12T14:28:28+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-05-29 020536.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-05-29 020536.png", "ext": ".png", "size": 2506087, "mtime": "2026-05-29T07:05:36+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-07-29 070753.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-07-29 070753.png", "ext": ".png", "size": 2419435, "mtime": "2026-07-29T12:07:53+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-03-23 000603.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-03-23 000603.png", "ext": ".png", "size": 2355294, "mtime": "2026-03-23T05:06:03+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-08-02 155330.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-08-02 155330.png", "ext": ".png", "size": 2264098, "mtime": "2026-08-02T20:53:31+00:00", "sievable": true, "reading": null}, {"name": "Screenshot 2026-07-28 041959.png", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Screenshot 2026-07-28 041959.png", "ext": ".png", "size": 2196145, "mtime": "2026-07-28T09:19:59+00:00", "sievable": true, "reading": null}, {"name": "S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.jxr", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_14_2026 8_11_06 AM.jxr", "ext": ".jxr", "size": 24433438, "mtime": "2026-06-14T13:11:07+00:00", "sievable": false, "reading": null}, {"name": "@sato - Discord 3_28_2026 6_14_39 AM.jxr", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\@sato - Discord 3_28_2026 6_14_39 AM.jxr", "ext": ".jxr", "size": 16990318, "mtime": "2026-03-28T11:14:40+00:00", "sievable": false, "reading": null}, {"name": "Call of Duty® 3_7_2026 2_56_49 PM.jxr", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\Call of Duty® 3_7_2026 2_56_49 PM.jxr", "ext": ".jxr", "size": 15034807, "mtime": "2026-03-07T20:56:50+00:00", "sievable": false, "reading": null}, {"name": "S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.jxr", "path": "C:\\Users\\bardw\\Pictures\\Screenshots\\S.T.A.L.K.E.R. 2_ Heart of Chornobyl   6_19_2026 3_17_10 AM.jxr", "ext": ".jxr", "size": 13306971, "mtime": "2026-06-19T08:17:11+00:00", "sievable": false, "reading": null}];
+const state = {
+  focusLane: 'a', sort: 'size', sortDir: -1,
+  caliper: null, caliperHover: null,
+  interlock: null, interlockSince: null,
+  aSel: 0, bSel: 0, bBackend: 'stub'
+};
+const elog = document.getElementById('elog');
+function log(lane, msg) {
+  const t = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const el = document.createElement('div');
+  el.className = 'e ' + (lane==='lock'||lane==='·'?'lock':lane);
+  el.textContent = pad(t.getHours())+':'+pad(t.getMinutes())+':'+pad(t.getSeconds())+' ▍'+(lane==='lock'||lane==='·'?'·':lane.toUpperCase())+'  '+msg;
+  elog.appendChild(el); elog.scrollTop = elog.scrollHeight;
+}
+function copyCli(el) {
+  navigator.clipboard?.writeText(el.textContent);
+  el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'), 120);
+}
+function aCli() {
+  const root = document.getElementById('a-root').value.trim();
+  const unit = document.getElementById('a-unit').value;
+  const dry = document.getElementById('a-dry').checked;
+  const force = document.getElementById('a-force').checked;
+  let cmd = 'python shredder/artifact_sieve.py --root "'+(root||'…')+'" --unit '+unit+' --limit 50 --source-node GeminiTakeout --output ingest/debris_shards.jsonl --state ingest/artifact_sieve_state.json';
+  if (dry) cmd += ' --dry-run';
+  if (force) cmd += ' --force';
+  if (!root) cmd += '\nNo --root given: defaulting to a dry run over the fallback roots. Re-run with --yes (or an explicit --root) to actually ship.';
+  document.getElementById('a-cli').textContent = cmd;
+}
+function bCli() {
+  const root = document.getElementById('b-root').value.trim() || 'path/to/screenshots';
+  const model = document.getElementById('b-model').value.trim();
+  const limit = document.getElementById('b-limit').value;
+  const dry = document.getElementById('b-dry').checked;
+  const force = document.getElementById('b-force').checked;
+  let cmd = 'python shredder/image_sieve.py --backend '+state.bBackend+' --root "'+root+'"';
+  if (model) cmd += ' --model '+model;
+  if (limit) cmd += ' --limit '+limit;
+  if (dry) cmd += ' --dry-run';
+  if (force) cmd += ' --force';
+  document.getElementById('b-cli').textContent = cmd;
+}
+function aPreview() {
+  const unit = document.getElementById('a-unit').value;
+  document.getElementById('a-preview').textContent = unit === 'conversation'
+    ? '# Artifact sieve smoke test\n(created: 1710000000)\n\n--- USER ---\nHow do I sieve Gemini Takeout dumps?\n\n--- MODEL ---\nUse artifact_sieve.py against the unzipped Takeout/Gemini folder.'
+    : 'USER: How do I sieve Gemini Takeout dumps?';
+}
+function selectB(idx) {
+  state.bSel = idx;
+  document.querySelectorAll('#b-tbody tr').forEach((tr,i)=>tr.classList.toggle('sel', i===idx));
+  const r = VIS[idx]; if (!r) return;
+  if (!r.sievable) {
+    document.getElementById('b-app').textContent = 'unsupported extension ' + r.ext;
+    document.getElementById('b-vis').textContent = '—';
+    document.getElementById('b-notion').textContent = 'outside IMAGE_EXT — vision sieve skips';
+    document.getElementById('b-concepts').textContent = '—';
+    document.getElementById('b-conf').textContent = '—';
+    document.getElementById('b-synth').textContent = '[skip] '+r.name+': extension '+r.ext+' not in IMAGE_EXT. Measured gap: 12 .jxr in Screenshots.';
+    document.getElementById('b-meta-preview').textContent = 'no chunk — unsievable';
+    return;
+  }
+  if (!r.reading) {
+    document.getElementById('b-app').textContent = 'unread';
+    document.getElementById('b-vis').textContent = '—';
+    document.getElementById('b-notion').textContent = '—';
+    document.getElementById('b-concepts').textContent = '—';
+    document.getElementById('b-conf').textContent = '—';
+    document.getElementById('b-synth').textContent = 'Unread — no inventory-without-reading path on Lane B. Walking roots costs a vision call per image (or stub).';
+    document.getElementById('b-meta-preview').textContent = 'pending read';
+    return;
+  }
+  const rd = r.reading;
+  document.getElementById('b-app').textContent = rd.app_context;
+  document.getElementById('b-vis').textContent = rd.visible_text_summary || '—';
+  document.getElementById('b-notion').textContent = rd.abstract_notion;
+  document.getElementById('b-concepts').textContent = (rd.concepts||[]).join(', ');
+  document.getElementById('b-conf').textContent = rd.confidence.toFixed(2);
+  document.getElementById('b-synth').textContent = rd.synthesis;
+  document.getElementById('b-meta-preview').textContent =
+'shred_method: vision-abstract-notion\nbackend: '+rd.backend+'\nmodel: '+(rd.backend==='stub'?'none':(rd.backend==='grok'?'grok-2-vision-1212':'llama3.2-vision'))+
+'\nimage_sha256: '+rd.sha+'…\napp_context: '+rd.app_context+'\nabstract_notion: '+rd.abstract_notion+
+'\nconcepts: '+(rd.concepts||[]).join(', ')+'\nconfidence: '+rd.confidence.toFixed(2);
+}
+function applyCaliper() {
+  const rank = state.caliper ?? state.caliperHover;
+  document.querySelectorAll('#a-tbody tr, #b-tbody tr').forEach(tr => {
+    tr.classList.remove('dim','caliper-hit');
+    if (rank == null) return;
+    if (Number(tr.dataset.rank) === rank) tr.classList.add('caliper-hit');
+    else tr.classList.add('dim');
+  });
+  ['a','b'].forEach(lane => {
+    const tick = document.getElementById(lane+'-tick');
+    const row = document.querySelector('#'+lane+'-tbody tr[data-rank="'+rank+'"]');
+    if (rank == null || !row) { tick.classList.remove('on'); return; }
+    const wrap = tick.parentElement.getBoundingClientRect();
+    const rr = row.getBoundingClientRect();
+    tick.style.top = (rr.top - wrap.top) + 'px';
+    tick.classList.add('on');
+  });
+}
+function setInterlock(holder) {
+  state.interlock = holder;
+  state.interlockSince = holder ? Date.now() : null;
+  const sq = document.getElementById('il-sq');
+  sq.className = 'il-sq' + (holder==='a'?' held-a': holder==='b'?' held-b':'');
+  sq.textContent = holder==='a'?'held by A': holder==='b'?'held by B':'free';
+  document.getElementById('a-ship').classList.toggle('dimmed', holder==='b');
+  document.getElementById('b-ship').classList.toggle('dimmed', holder==='a');
+  document.getElementById('a-shred').textContent = holder==='b' ? 'a shred is already running' : 'Shred through sieve';
+  document.getElementById('b-shred').textContent = holder==='a' ? 'a shred is already running' : 'Compose ship (CLI only)';
+  if (holder) log('lock', 'interlock held by ' + holder.toUpperCase());
+}
+setInterval(() => {
+  const el = document.getElementById('il-elapsed');
+  if (!state.interlockSince) { el.textContent = 'elapsed —'; return; }
+  el.textContent = 'elapsed ' + Math.floor((Date.now()-state.interlockSince)/1000) + 's';
+}, 500);
+
+document.getElementById('a-cli').addEventListener('click', e => copyCli(e.currentTarget));
+document.getElementById('b-cli').addEventListener('click', e => copyCli(e.currentTarget));
+['a-root','a-unit','a-dry','a-force'].forEach(id => {
+  document.getElementById(id).addEventListener('input', aCli);
+  document.getElementById(id).addEventListener('change', () => { aCli(); aPreview(); });
+});
+['b-root','b-model','b-limit','b-dry','b-force'].forEach(id => {
+  document.getElementById(id).addEventListener('input', bCli);
+  document.getElementById(id).addEventListener('change', bCli);
+});
+document.querySelectorAll('#a-roots [data-path]').forEach(btn => btn.addEventListener('click', () => {
+  document.getElementById('a-root').value = btn.dataset.path; aCli();
+}));
+document.querySelectorAll('#b-open [data-path]').forEach(btn => btn.addEventListener('click', () => {
+  document.getElementById('b-root').value = btn.dataset.path; bCli();
+}));
+document.querySelectorAll('#b-backend button').forEach(btn => btn.addEventListener('click', () => {
+  state.bBackend = btn.dataset.b;
+  document.querySelectorAll('#b-backend button').forEach(b => b.setAttribute('aria-pressed', b===btn?'true':'false'));
+  document.querySelectorAll('#b-ladder div').forEach(d => d.classList.toggle('on', d.dataset.l===state.bBackend));
+  bCli();
+}));
+document.getElementById('a-shallow').addEventListener('change', e => {
+  const on = e.target.checked;
+  document.getElementById('a-shallow-note').textContent = on ? 'every sievable becomes ?' : '';
+  document.getElementById('a-assay').style.opacity = on ? .4 : 1;
+  document.getElementById('a-ship').style.opacity = on ? .4 : 1;
+});
+document.getElementById('a-scan').addEventListener('click', () => {
+  const btn = document.getElementById('a-scan');
+  btn.textContent = 'Scanning…';
+  setTimeout(() => {
+    btn.textContent = 'Scan directory';
+    log('a', 'scan  Scan: 1 file(s), 2 conversation(s), 4 message(s)');
+    document.getElementById('st-scan').classList.add('touched-a');
+  }, 280);
+});
+document.getElementById('b-walk').addEventListener('click', () => {
+  const btn = document.getElementById('b-walk');
+  btn.textContent = 'Walking…';
+  setTimeout(() => {
+    btn.textContent = 'Walk screenshot roots';
+    log('b', 'walk  sample 20 of 806 · sievable IMAGE_EXT=793 · jxr skip=12');
+    document.getElementById('st-scan').classList.add('touched-b');
+  }, 280);
+});
+document.getElementById('a-shred').addEventListener('click', () => {
+  if (state.interlock && state.interlock !== 'a') { log('lock', 'a shred is already running'); return; }
+  setInterlock('a');
+  const dry = document.getElementById('a-dry').checked;
+  const btn = document.getElementById('a-shred');
+  btn.textContent = 'Shredding…';
+  setTimeout(() => {
+    if (dry) {
+      document.getElementById('a-would').textContent = '1 / 2';
+      document.getElementById('a-would').parentElement.classList.remove('dead');
+      document.getElementById('a-real').textContent = '— / —';
+      document.getElementById('a-real').parentElement.classList.add('dead');
+      document.getElementById('a-meta').textContent = 'files_seen 1 · output ingest/debris_shards.jsonl · dry_run true';
+      log('a', 'shred [dry-run] would shred conversations.json (2 conversation(s)) via unit='+document.getElementById('a-unit').value);
+      log('a', 'Done (dry run). files_seen=1 would_shred=1 would_ship=2 chunk(s)');
+    } else {
+      document.getElementById('a-real').textContent = '1 / 2';
+      document.getElementById('a-real').parentElement.classList.remove('dead');
+      document.getElementById('a-would').textContent = '— / —';
+      document.getElementById('a-would').parentElement.classList.add('dead');
+      document.getElementById('a-meta').textContent = 'files_seen 1 · output ingest/debris_shards.jsonl · dry_run false';
+      document.getElementById('a-next').style.display = 'block';
+      log('a', '[shred] conversations.json -> 2 chunk(s)');
+      log('a', 'Done. files_seen=1 shredded=1 chunks=2');
+    }
+    btn.textContent = 'Shred through sieve';
+    document.getElementById('st-shred').classList.add('touched-a');
+    setTimeout(()=>setInterlock(null), 600);
+  }, 500);
+});
+document.getElementById('b-shred').addEventListener('click', () => {
+  if (state.interlock && state.interlock !== 'b') { log('lock', 'a shred is already running'); return; }
+  setInterlock('b');
+  log('b', 'compose CLI only — no HTTP endpoint for image_sieve');
+  copyCli(document.getElementById('b-cli'));
+  setTimeout(()=>setInterlock(null), 400);
+});
+function wireTable(lane) {
+  const tbody = document.getElementById(lane+'-tbody');
+  tbody.addEventListener('mouseover', e => {
+    const rankEl = e.target.closest('.rank');
+    if (!rankEl) return;
+    state.caliperHover = Number(rankEl.dataset.rank);
+    applyCaliper();
+  });
+  tbody.addEventListener('mouseleave', () => { state.caliperHover = null; applyCaliper(); });
+  tbody.addEventListener('click', e => {
+    const rankEl = e.target.closest('.rank');
+    if (rankEl) {
+      const r = Number(rankEl.dataset.rank);
+      state.caliper = (state.caliper === r) ? null : r;
+      applyCaliper(); e.stopPropagation(); return;
+    }
+    const tr = e.target.closest('tr.row'); if (!tr) return;
+    const idx = Number(tr.dataset.idx);
+    if (lane==='a') {
+      state.aSel = idx;
+      tbody.querySelectorAll('tr').forEach((t,i)=>t.classList.toggle('sel', i===idx));
+    } else selectB(idx);
+    state.focusLane = lane;
+  });
+}
+wireTable('a'); wireTable('b');
+document.querySelectorAll('#keel button[data-sort]').forEach(btn => btn.addEventListener('click', () => {
+  const key = btn.dataset.sort;
+  if (state.sort === key) state.sortDir *= -1; else { state.sort = key; state.sortDir = key==='name'?1:-1; }
+  document.querySelectorAll('#keel button[data-sort]').forEach(b => {
+    b.classList.toggle('on', b.dataset.sort===state.sort);
+    b.textContent = b.dataset.sort + (b.dataset.sort===state.sort ? (state.sortDir<0?' ▾':' ▴') : '');
+  });
+  ['a','b'].forEach(lane => {
+    const rows = [...document.querySelectorAll('#'+lane+'-tbody tr')];
+    rows.sort((x,y) => {
+      let vx, vy;
+      if (state.sort==='size') { vx=+x.dataset.size; vy=+y.dataset.size; }
+      else if (state.sort==='mtime') { vx=x.dataset.mtime; vy=y.dataset.mtime; }
+      else if (state.sort==='name') { vx=x.dataset.name; vy=y.dataset.name; }
+      else { vx=x.dataset.format||x.dataset.ext||''; vy=y.dataset.format||y.dataset.ext||''; }
+      if (vx<vy) return -1*state.sortDir; if (vx>vy) return 1*state.sortDir; return 0;
+    });
+    const tb = document.getElementById(lane+'-tbody');
+    rows.forEach((tr,i) => {
+      tr.dataset.rank = i;
+      tr.querySelector('.rank').dataset.rank = i;
+      tr.querySelector('.rank').textContent = String(i+1).padStart(2,'0');
+      tb.appendChild(tr);
+    });
+  });
+  applyCaliper();
+}));
+function wireFilters(lane) {
+  document.querySelectorAll('#'+lane+'-filters button').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('#'+lane+'-filters button').forEach(b => b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    const f = btn.dataset.f;
+    document.querySelectorAll('#'+lane+'-tbody tr').forEach(tr => {
+      let show = true;
+      if (f==='sievable') show = tr.dataset.sievable==='yes';
+      if (f==='unknown') show = tr.classList.contains('unread');
+      if (f==='errors') show = tr.dataset.sievable==='no' || tr.dataset.ext==='.jxr';
+      tr.style.display = show ? '' : 'none';
+    });
+  }));
+}
+wireFilters('a'); wireFilters('b');
+document.querySelectorAll('#fleet .frow').forEach(row => row.addEventListener('click', () => {
+  const near = state.focusLane === 'b' ? 'b' : 'a';
+  log(near, 'fleet load → ' + row.textContent.trim().replace(/\s+/g,' ').slice(0,80));
+}));
+document.getElementById('keys-close').addEventListener('click', () => document.getElementById('keys-modal').classList.remove('open'));
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea,select')) {
+    if (e.key==='Enter' && !e.shiftKey && e.target.id==='a-root') { document.getElementById('a-scan').click(); e.preventDefault(); }
+    if (e.key==='Enter' && !e.shiftKey && e.target.id==='b-root') { document.getElementById('b-walk').click(); e.preventDefault(); }
+    return;
+  }
+  if (e.key==='?') document.getElementById('keys-modal').classList.add('open');
+  if (e.key==='Escape') { state.caliper=null; applyCaliper(); document.getElementById('keys-modal').classList.remove('open'); }
+  if (e.key==='h') document.getElementById('bench').classList.toggle('hide-chrome');
+  if (e.key==='a') state.focusLane='a';
+  if (e.key==='b') state.focusLane='b';
+  if (e.key==='/') { e.preventDefault(); document.getElementById(state.focusLane+'-root').focus(); }
+  if (e.key==='e') elog.scrollTop = elog.scrollHeight;
+  if (e.key==='s') {
+    const order=['size','mtime','units','format','name'];
+    const i = order.indexOf(state.sort);
+    document.querySelector('#keel button[data-sort="'+order[(i+1)%order.length]+'"]').click();
+  }
+  if (e.key==='Enter' && e.shiftKey) {
+    document.getElementById('a-dry').checked = !e.ctrlKey;
+    aCli(); document.getElementById('a-shred').click();
+  } else if (e.key==='Enter') {
+    if (state.focusLane==='a') document.getElementById('a-scan').click();
+    else document.getElementById('b-walk').click();
+  }
+  if (e.key==='j' || e.key==='k') {
+    const lane = state.focusLane;
+    const rows = [...document.querySelectorAll('#'+lane+'-tbody tr')].filter(r=>r.style.display!=='none');
+    if (!rows.length) return;
+    let idx = lane==='a'?state.aSel:state.bSel;
+    idx = e.key==='j' ? Math.min(rows.length-1, idx+1) : Math.max(0, idx-1);
+    if (lane==='a') { state.aSel=idx; rows.forEach((tr,i)=>tr.classList.toggle('sel', i===idx)); }
+    else selectB(idx);
+  }
+});
+aCli(); bCli(); aPreview(); selectB(0);
+log('a', 'scan  Scan: 1 file(s), 2 conversation(s), 4 message(s) [fixture]');
+log('b', 'ready  Screenshots corpus 806 files · IMAGE_EXT sievable=793 · jxr=12 skipped');
+log('·', 'interlock free · debris_shards.jsonl absent · forge drop counter armed');
+</script>
+</body>
+</html>

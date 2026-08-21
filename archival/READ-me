@@ -1,0 +1,97 @@
+Arcadium & Circadia (AuraEngine / Sesephus Suite)
+An offline-first, high-performance background alarm engine and audio processing daemon written in Zig (v0.16.0), bridged with a Python FastAPI AI transcription layer and a premium React + Vite web dashboard.
+
+Arcadium & Circadia (historically envisioned as AuraEngine or the Sesephus Suite) is designed for local-first audio journaling and behavioral therapy management (e.g., CBT/DBT diary cards, scheduled checkpoints, habit cues, and ambient logging).
+
+🌌 System Architecture & Modernized Design
+Our architecture enforces a clean separation of concerns by utilizing Zig for low-level systems execution and network reliability, Python for local AI inference (transcription), and React/Vite for a premium web user interface.
+
+Mermaid diagram
+1. 🕰️ Circadia & Arcadium: The Zig Daemons (core/sesephus/)
+The native core of the engine is written in pure Zig (v0.16.0), requiring zero external runtime dependencies and utilizing Win32 multimedia APIs (winmm.dll waveIn interface):
+
+Circadia (The Alarm Engine): A priority-queue-based scheduler managing alarms across client devices. Communicates over a custom TCP client/host architecture using length-prefixed protocol frames.
+Arcadium (Audio Journaling Engine): Captures audio on client devices using low-latency APIs (or a synthetic sine-wave generator fallback for headless hosts) and pipes WAV data over TCP.
+Encrypted Vault: The Zig Host daemon ingests incoming WAV data into an encrypted local database vault (sesephus_vault.db) using ChaCha20-Poly1305 authenticated encryption (AEAD) with key derivation via PBKDF2-HMAC-SHA256.
+2. 🎙️ Python AI Bridge (dashboard/dashboard_server.py)
+AI inference pipelines (such as whisper) are complex to run in pure Zig. Python acts as our dedicated AI bridge:
+
+Runs a lightweight FastAPI server on port 3001.
+Manages local transcription of uploaded WAV journals using OpenAI's Whisper.
+Updates local task lists and telemetry stores.
+Polls the Zig Host (http://localhost:3000/api/status) dynamically to track connected client state, completely eliminating the need for a heavy NATS message broker.
+3. 🎨 Unified Web Dashboard (dashboard/ui/)
+A unified Vite + React dashboard that presents a premium, zero-bloat dark-mode and glassmorphism interface:
+
+Styled using pure Vanilla CSS (index.css) for high performance and zero framework overhead.
+Uses Vite's development proxy to forward frontend /api requests to the Python sidecar on port 3001, avoiding CORS issues entirely.
+📁 Workspace Directory Guide
+The workspace is organized into domain-specific modules:
+
+core/sesephus/: Low-level Zig system daemons (Host & Client). Handles TCP networking, the encrypted vault (sesephus_vault.db), and raw alarm triggers.
+dashboard/: User interfaces and sidecar servers. Contains the FastAPI sidecar (dashboard_server.py) and the unified Vite + React frontend (dashboard/ui).
+ingest/: Active database and ingestion shards storing raw code/text chunks (debris_shards.jsonl) and 768-dimensional mathematical coordinates (vector_shards.jsonl).
+aurgio/: Local voice journals, transcript metadata, and raw audio files.
+audio/: Edge capturing scripts, FFT analyzers, and audio processing tools.
+shredder/: Sieve text-shredding and redaction modules.
+simulator/: Agentic conversation emulators and broker simulators for testing logic.
+client/: Standalone audio capturer experiments (recorder.zig).
+tools/: Support utilities and system scripts (e.g., compress_archive.zig).
+utils/: Chat pruners, latent space noise filters (spiffy_prune.py), and prompt compression scripts.
+venv/: Local Python virtual environment housing FastAPI, Uvicorn, Pydantic, and Whisper dependencies.
+docs/: Reference guides, backups, and CLI log archives.
+⚙️ Getting Started
+1. Build the Zig Core
+Navigate to the core directory and build the binaries:
+
+bash
+
+cd core/sesephus
+zig build -Doptimize=ReleaseSafe
+This generates host.exe and client.exe in zig-out/bin/.
+
+2. Start the Python AI Sidecar
+Set up dependencies (FastAPI, Uvicorn, Pydantic, Whisper) and launch the sidecar server:
+
+bash
+
+# In the repository root
+venv\Scripts\python.exe dashboard/dashboard_server.py
+The FastAPI sidecar will start on http://127.0.0.1:3001.
+
+3. Run the React Web Dashboard
+Navigate to the UI directory, install dependencies, and run the Vite dev server:
+
+bash
+
+cd dashboard/ui
+npm install
+npm run dev
+Open http://localhost:5173 to interact with the premium unified dashboard.
+
+4. Running the Complete System Demo
+You can run the interactive demo using the automated script:
+
+cmd
+
+core\sesephus\run_demo.bat
+This builds the Zig binaries, spawns the Host Daemon and Client Device in separate windows, and prompts you to schedule and trigger interactive alarms.
+
+🚴 Therapeutic Finite State Machine (FSM)
+AuraEngine models journaling sessions as a state-driven FSM to guide users through therapeutic protocols:
+
+State	Description	Next State
+Idle	System is waiting for the next scheduled cue.	Prompting
+Prompting	Plays auditory tone and displays therapeutic prompt.	Breathing / Recording
+Breathing	Guide user through paced breathing (ambient sounds).	Recording
+Recording	Captures spoken journal response (encodes to WAV/Opus).	Reflecting
+Reflecting	Prompts user to label emotions and self-assess mood.	Saving
+Saving	Writes compressed audio and metadata locally.	Idle
+📜 Key Architectural Revelations
+Local-First Simplicity: Removing enterprise technologies like NATS streamlined the system footprint. Standard HTTP API polling from FastAPI to the Zig Host is faster, less error-prone, and runs locally out-of-the-box.
+Zig as the Source of Truth: The Zig Host Daemon manages the active socket state and databases directly, acting as the system's central authority, while Python acts purely as a stateless utility bridge for AI inference.
+Low-Latency and Memory Safety: High-priority audio threads on the edge clients use strict zero-allocation patterns to guarantee glitch-free captures.
+License
+This project is licensed under the MIT License. See 
+LICENSE
+ for details.

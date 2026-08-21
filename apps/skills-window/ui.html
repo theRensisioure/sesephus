@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Skills</title>
+<style>
+  @font-face {
+    font-family: "OpenDyslexic3";
+    src: url("/fonts/OpenDyslexic3-Regular.ttf") format("truetype");
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: "OpenDyslexic3";
+    src: url("/fonts/OpenDyslexic3-Bold.ttf") format("truetype");
+    font-weight: 700;
+  }
+  :root {
+    --bg: #070b12;
+    --panel: #101820;
+    --line: #243040;
+    --ink: #e8eef6;
+    --dim: #93a3b5;
+    --accent: #7cf7ff;
+    --ok: #6dcea0;
+    --hot: #ffb070;
+    --err: #ff8a8a;
+    --tap: 44px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  html[data-type="compact"] body { zoom: 0.88; }
+  html[data-type="dense"] body { zoom: 0.94; }
+  html[data-type="large"] body { zoom: 1.16; }
+  html[data-type="huge"] body { zoom: 1.3; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "OpenDyslexic3", "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    letter-spacing: 0.02em;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    flex: none;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--line);
+    background: #0a1018;
+  }
+  h1 { margin: 0; font-size: 20px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--dim); font-size: 13px; margin-top: 2px; }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  button, .chip {
+    appearance: none;
+    min-height: var(--tap);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled), .chip:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  button:disabled, .chip:disabled { opacity: 0.45; cursor: default; }
+  button.primary { border-color: #2a5a7a; color: var(--accent); }
+  .chip.missing { color: var(--hot); border-color: #5a3a20; }
+  .bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  #q {
+    flex: 1 1 180px;
+    min-width: 140px;
+    min-height: var(--tap);
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font: inherit;
+  }
+  #q:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #msg { color: var(--dim); font-size: 13px; }
+  #msg.ok { color: var(--ok); }
+  #msg.err { color: var(--err); }
+  main { flex: 1; overflow: auto; padding: 8px 10px 28px; }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    margin: 0 0 6px;
+    min-height: 56px;
+  }
+  .row .who { font-weight: 700; font-size: 17px; }
+  .row .why { color: var(--dim); font-size: 14px; }
+  .row .meta { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .empty { color: var(--dim); padding: 20px 8px; }
+  footer {
+    flex: none;
+    padding: 8px 14px 12px;
+    color: var(--dim);
+    font-size: 13px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Skills</span> · dirs</h1>
+  <div class="sub">Grok is wired. One click opens the folder.</div>
+  <div class="links" id="links"></div>
+</header>
+<div class="bar">
+  <input id="q" type="search" placeholder="find a skill" autocomplete="off" />
+  <button type="button" id="reload">Reload</button>
+  <span id="msg"></span>
+</div>
+<main id="list"></main>
+<footer>Add another provider: paste a block into providers.json · Reload. Claude and Cursor sit in providers.example.json.</footer>
+<script>
+(function () {
+  var catalog = { providers: [], total: 0 };
+  var msg = document.getElementById("msg");
+  var list = document.getElementById("list");
+  var links = document.getElementById("links");
+  var q = document.getElementById("q");
+
+  function say(text, kind) {
+    msg.textContent = text || "";
+    msg.className = kind || "";
+  }
+
+  function allSkills() {
+    var out = [];
+    (catalog.providers || []).forEach(function (p) {
+      (p.skills || []).forEach(function (s) { out.push(s); });
+    });
+    return out;
+  }
+
+  function openPath(path) {
+    fetch("/api/open", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: path })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      say(d.ok ? "opened folder" : (d.error || "could not open"), d.ok ? "ok" : "err");
+    }).catch(function () { say("open failed", "err"); });
+  }
+
+  function paintLinks() {
+    links.innerHTML = "";
+    (catalog.providers || []).forEach(function (p) {
+      (p.roots || []).forEach(function (r) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip" + (r.exists ? "" : " missing");
+        b.textContent = r.exists
+          ? (r.label + " · " + r.count)
+          : (r.label + " · missing");
+        b.disabled = !r.exists;
+        b.title = r.resolved || r.path;
+        if (r.exists) b.addEventListener("click", function () { openPath(r.resolved); });
+        links.appendChild(b);
+      });
+    });
+    var wire = document.createElement("button");
+    wire.type = "button";
+    wire.textContent = "providers.json";
+    wire.title = "Open this app folder — edit providers.json there";
+    wire.addEventListener("click", function () {
+      openPath(catalog.app || "");
+    });
+    links.appendChild(wire);
+  }
+
+  function paintList() {
+    var needle = (q.value || "").trim().toLowerCase();
+    var rows = allSkills().filter(function (s) {
+      if (!needle) return true;
+      var blob = (s.name + " " + s.id + " " + (s.description || "")).toLowerCase();
+      return blob.indexOf(needle) !== -1;
+    });
+    list.innerHTML = "";
+    if (!rows.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = catalog.total ? "nothing matches" : "no skills on disk yet";
+      list.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (s) {
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "row";
+      var left = document.createElement("div");
+      var who = document.createElement("div");
+      who.className = "who";
+      who.textContent = s.name;
+      var why = document.createElement("div");
+      why.className = "why";
+      why.textContent = s.description || "skill folder";
+      var meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = s.provider + (s.has_scripts ? " · scripts" : "");
+      left.appendChild(who);
+      left.appendChild(why);
+      left.appendChild(meta);
+      var go = document.createElement("span");
+      go.textContent = "open";
+      row.appendChild(left);
+      row.appendChild(go);
+      row.addEventListener("click", function () { openPath(s.path); });
+      list.appendChild(row);
+    });
+  }
+
+  function load() {
+    say("loading…");
+    fetch("/api/catalog").then(function (r) { return r.json(); }).then(function (d) {
+      catalog = d || {};
+      say((d.total || 0) + " skills", "ok");
+      paintLinks();
+      paintList();
+    }).catch(function () {
+      say("catalog failed — is serve up?", "err");
+    });
+  }
+
+  q.addEventListener("input", paintList);
+  document.getElementById("reload").addEventListener("click", load);
+
+  var steps = ["compact", "dense", "comfort", "large", "huge"];
+  function applyType(name) {
+    if (name === "comfort") document.documentElement.removeAttribute("data-type");
+    else document.documentElement.setAttribute("data-type", name);
+    try { localStorage.setItem("skills-type", name); } catch (e) {}
+  }
+  try {
+    var saved = localStorage.getItem("skills-type");
+    if (saved) applyType(saved);
+  } catch (e) {}
+  document.addEventListener("keydown", function (e) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (e.key === "/" || e.key === "-" || e.key === "=" || e.key === "+" || e.key === "0") {
+      e.preventDefault();
+      var cur = "comfort";
+      try { cur = localStorage.getItem("skills-type") || "comfort"; } catch (err) {}
+      var i = steps.indexOf(cur);
+      if (i < 0) i = 2;
+      if (e.key === "0") applyType("comfort");
+      else if (e.key === "-" || e.key === "/") applyType(steps[Math.max(0, i - 1)]);
+      else applyType(steps[Math.min(steps.length - 1, i + 1)]);
+    }
+  });
+
+  load();
+  q.focus();
+})();
+</script>
+</body>
+</html>
