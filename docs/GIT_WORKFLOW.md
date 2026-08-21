@@ -143,7 +143,7 @@ GitHub CLI installs to `C:\Program Files\GitHub CLI\gh.exe`. Use the wrapper:
 ```powershell
 pwsh tools/gh.ps1 --version
 pwsh tools/gh.ps1 auth login
-pwsh tools/gh.ps1 repo clone Zychs/sesefus
+pwsh tools/gh.ps1 repo clone theRensisioure/sesephus
 ```
 
 Or add to your PowerShell profile:

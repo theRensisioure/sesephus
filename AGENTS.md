@@ -2,7 +2,8 @@
 
 ## Cursor Cloud specific instructions
 
-Sesefus is a **Windows-first** project, but a Linux dev setup works. The
+**Sesephus** (`theRensisioure/sesephus`) is a **Windows-first** public prerelease.
+A Linux dev setup still works. The
 `.bat` / `.ps1` wrappers (`install.bat`, `voice.bat`, `ssfs.bat`, `fleet.bat`,
 `run_demo.bat`) do **not** run on Linux — invoke the underlying commands
 directly, as `.devcontainer/post-create.sh` does. Canonical service/port map:

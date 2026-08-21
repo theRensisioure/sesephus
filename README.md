@@ -1,14 +1,21 @@
 # Sesephus — a voice journal that notices drift
 
-**Version 0.1.0 (prerelease)** · public repo [`theRensisioure/sesephus`](https://github.com/theRensisioure/sesephus).
+**Version 0.1.0 (prerelease)** · [`theRensisioure/sesephus`](https://github.com/theRensisioure/sesephus)
+
+```bash
+git clone https://github.com/theRensisioure/sesephus.git
+cd sesephus
+```
 
 **Sesephus** is an offline-first voice journal that notices when you're drifting —
 from your sleep, your mood, your own baseline — before you do. You talk to it;
 it transcribes locally, scores the entry (ETDI), and keeps everything on your
 machine.
 
-The Windows binary is still named `sesefus.exe`. Some docs still say Sesefus.
-That is the private-tree spelling. This public cut is **Sesephus**.
+The Windows binary is still named `sesefus.exe`. Some older files still say
+Sesefus. That is leftover private-tree spelling. This public cut is **Sesephus**.
+Do not clone `Zychs/sesefus`. Do not confuse this repo with lighthouse
+[`theRensisioure/sesefus`](https://github.com/theRensisioure/sesefus) (not the journal).
 
 Command status in this README follows [docs/CANON.md](docs/CANON.md) §2 — the
 single source of truth for what is **WIRED** (works today) versus **STUB**
@@ -106,8 +113,8 @@ workflows on them; each has a real alternative or a deferral (CANON §2, and the
 Voice data is ingested into an encrypted local database (`sesephus_vault.db`,
 ChaCha20-Poly1305). Default location `V:\sesephus_vault.db`, falling back to
 `./sesephus_vault.db`; override with `--vault <path>`. Known caveat: the vault
-password is currently a hardcoded default (issue #63) — operator-set passwords
-are a to-do, not a feature.
+password is currently a hardcoded default — operator-set passwords are a
+to-do, not a feature.
 
 ---
 

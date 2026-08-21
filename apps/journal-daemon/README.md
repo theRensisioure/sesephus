@@ -1,4 +1,4 @@
-# Sesefus · alarm daemon (draft)
+# Sesephus · alarm daemon (draft)
 
 **Not Circadia.** This is a Python dogfood stand-in. The Zig daemon is `core/sesephus/` and is **not done**. See that README.
 
@@ -24,7 +24,7 @@
 ## Quick start
 
 ```bat
-cd C:\dev\sesefus\apps\journal-daemon
+cd apps\journal-daemon
 python record_launch.py --dry-run
 python daemon.py --once --dry-run-launch
 python daemon.py --force-due morning --dry-run-launch

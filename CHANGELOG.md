@@ -4,20 +4,26 @@ History of what actually shipped, newest first. Public tree starts at **0.1.0
 (prerelease)** on 2026-08-21. Earlier bullets were reconstructed from the
 private `Zychs/sesefus` line and are marked as such.
 
+## [Unreleased]
+
+### Docs
+- **Public mouth (2026-08-21):** clone door is `theRensisioure/sesephus`. Tester
+  guide no longer points at `Zychs/sesefus`. CANON §1 names **Sesephus** as this
+  repo's product; `sesefus.exe` stays the binary. Not lighthouse
+  `theRensisioure/sesefus`.
+
 ## [0.1.0] - 2026-08-21
 
 Prerelease. First public cut of **Sesephus**.
 
 ### Added
 - Public GitHub repo `theRensisioure/sesephus` with a fresh git history.
-- Local working copy at `C:\dev\sesephus` (this machine).
 - Python journal face under `apps/` (daemon, clip, hop, skills window, tangent analyzer, goal minter) as it stood on the private tree.
 
 ### Notes
 - Not a freeze of private `Zychs/sesefus`. That remote stays the private product.
-- Vault default password is still the documented caveat (issue #63 on the private repo). Do not treat it as a secret.
-
-## [Unreleased]
+- Vault default password is still a documented caveat. Do not treat it as a secret.
+- Bullets below were reconstructed from the private line. They already live in this 0.1.0 tree (not future work).
 
 ### Docs
 - **Circadia honesty (2026-08-12):** `core/sesephus/README.md` is now a WIP door

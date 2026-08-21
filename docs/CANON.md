@@ -1,42 +1,40 @@
-# Sesefus — Canonical Reference (One Language)
+# Sesephus — Canonical Reference (One Language)
 
-> The single source of truth for **how the project describes itself**: names, what
-> actually ships vs. what's staged, the ETDI metric, ports, and the storage model.
-> Every doc, cheat sheet, showcase artifact, and dashboard string should conform to
-> this file. Where a claim here and a claim elsewhere disagree, **this file wins** —
-> or this file is wrong and should be fixed first, then the rest re-derived from it.
+> The single source of truth for **how this public repo describes itself**: names,
+> what actually ships vs. what's staged, the ETDI metric, ports, and the storage
+> model. Every doc, cheat sheet, showcase artifact, and dashboard string should
+> conform to this file. Where a claim here and a claim elsewhere disagree, **this
+> file wins** — or this file is wrong and should be fixed first, then the rest
+> re-derived from it.
 >
-> Scope note: this is a *terminology + status* canon, verified against code on
-> `negentropic-blue` (2026-07-07). It is not API docs — see `docs/CLI.md`,
-> `docs/ETDI.md`, `docs/DRIFT.md` for depth. When those disagree with this file on a
-> *fact*, fix them.
+> This tree is the **public** 0.1.0 prerelease (`theRensisioure/sesephus`).
+> Command-status rows below were verified against code. It is not API docs —
+> see `docs/CLI.md`, `docs/ETDI.md`, `docs/DRIFT.md` for depth.
 
 ---
 
 ## 1 · The name map
 
-Three generations of names are alive in the tree at once. This is the intended map;
+Three spellings are alive in the tree at once. This is the intended map;
 everything else is drift.
 
 | Term | What it is | Where it's correct |
 |---|---|---|
-| **Neurialab** | The company / umbrella. "Neurialab builds drift-correction instruments; Sesefus is the first." | Company-level prose only |
-| **Sesefus** | **The product.** Current canonical brand. | All prose, headings, UI, video, marketing |
-| **Sesephus** | The *former* brand for the same product (lineage: AuraEngine → Sesephus → Sesefus). | **Only** where a code token literally uses it — see below. Never in new prose. |
-| **ssfs** | The CLI wrapper (`ssfs.bat` → `sesefus.exe`) **and** the config-driven storage layer (`ssfs/`, `drive-mapping.json`). A layer *of* Sesefus. | CLI invocation, storage subsystem |
-| **sesefhus** | A third spelling, used **only** as the archive-folder name. It is *load-bearing* — it matches `drive-mapping.json` `archiveRoot` and is referenced identically across the archive layer. **Do not "fix" it** without a coordinated migration. | `Archive\sesefhus` paths only |
+| **Sesephus** | **This public product.** Journal that notices drift. | All new prose, headings, this GitHub |
+| **Sesefus** | Private-tree spelling (other mouth). Binary is still `sesefus.exe`. | Binary filename, leftover docs, `ssfs.bat` launch |
+| **Neurialab** | The company / umbrella. | Company-level prose only |
+| **ssfs** | The CLI wrapper (`ssfs.bat` → `sesefus.exe`) **and** the config-driven storage layer (`ssfs/`, `drive-mapping.json`). A layer *of* this product. | CLI invocation, storage subsystem |
+| **sesefhus** | A third spelling, used **only** as the archive-folder name. It is *load-bearing* — it matches `drive-mapping.json` `archiveRoot`. **Do not "fix" it** without a coordinated migration. | `Archive\sesefhus` paths only |
 
-**"Sesephus" is legal only in these load-bearing code tokens** (changing them is a
-migration, not a copy-edit): the directory `core/sesephus/`, the vault file
-`sesephus_vault.db`, the `SESEPHUS` DB magic header, and the default path
-`V:\sesephus_vault.db`.
+Load-bearing **code** tokens (changing them is a migration, not a copy-edit):
+directory `core/sesephus/`, vault file `sesephus_vault.db`, DB magic `SESEPHUS`,
+default path `V:\sesephus_vault.db`, and the Windows binary `sesefus.exe`.
 
-**There is no three-tier `ssfs ⊂ sesefus ⊂ sesephus` nesting and no future "magnum
-opus" Sesephus.** That framing appears in exactly one showcase artifact (*drift
-architecture*) and nowhere in the repo. Sesephus is the *old name of the current
-product*, not a larger thing the product feeds.
+**There is no three-tier `ssfs ⊂ sesefus ⊂ sesephus` nesting and no future
+"magnum opus" shell.** Nested-shells is wreckage. Do not revive it.
 
-Repo slug: **`Zychs/sesefus`** (capital Z, `f` not `ph`). Never `zychs`.
+Repo slug: **`theRensisioure/sesephus`**. Not `Zychs/sesefus` (private product).
+Not `theRensisioure/sesefus` (CSS lighthouse / doctrine preview — different repo).
 
 ---
 

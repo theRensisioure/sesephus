@@ -1,7 +1,9 @@
-# Sesefus Roadmap
+# Sesephus Roadmap
 
-What's next, in order. First public stamp is **0.1.0 (prerelease)** (2026-08-21).
-Progress lives here; history lives in [CHANGELOG.md](CHANGELOG.md).
+What's next, in order. First public stamp is **0.1.0 (prerelease)** (2026-08-21)
+on `theRensisioure/sesephus`. Progress lives here; history lives in
+[CHANGELOG.md](CHANGELOG.md). Private-tracker issue numbers below are
+reconstructed from the other mouth — they are not issues on this repo.
 
 ## Working rules
 
@@ -13,15 +15,13 @@ Progress lives here; history lives in [CHANGELOG.md](CHANGELOG.md).
 - **Ship marker:** when the ladder below is done, cut a `prerelease` tag. That's the first
   version number this project gets.
 
-## GitHub rhythm (AyTree ↔ Sesefus)
+## GitHub rhythm (this public repo)
 
-- **AyTree (`Zychs/AyTree`)** — day-to-day execution. Phases A–F milestones,
-  vision issues, PRs. This is where work lives.
-- **Sesefus (`Zychs/sesefus`)** — product completions only. When an AyTree phase
-  ships, post **one** Sesefus issue or release note: "AyTree Phase B complete → [link]".
-  No duplicate phase planning, no granular AyTree issue mirroring here.
-- **Labs** (AyTree, SaturnNav, etc.) surface on Sesefus Shipment Dock as external
-  links — not as Sesefus milestones.
+- **This repo (`theRensisioure/sesephus`)** — public journal prerelease. Completions
+  land here as commits / release notes.
+- **Not** lighthouse `theRensisioure/sesefus` (CSS / doctrine preview).
+- **Not** private `Zychs/sesefus`. Do not file public work there.
+- Labs (AyTree, SaturnNav, etc.) are sibling checkouts, not milestones on this GitHub.
 
 ## The ladder
 

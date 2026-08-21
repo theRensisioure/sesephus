@@ -1,9 +1,12 @@
-# Sesefus 0.9.3 alpha — tester guide
+# Sesephus 0.1.0 prerelease — tester guide
 
-Sesefus is a voice journal that notices when you're drifting — from your
+Sesephus is a voice journal that notices when you're drifting — from your
 sleep, your mood, your own baseline — before you do. You're testing the
 first loop: **talk to it for sixty seconds a day for two weeks and tell us
 where it's annoying.**
+
+Public door: [`theRensisioure/sesephus`](https://github.com/theRensisioure/sesephus).
+Not `Zychs/sesefus`. Not lighthouse `theRensisioure/sesefus`.
 
 ## Setup (Windows, ~5 minutes + downloads)
 
@@ -11,8 +14,8 @@ where it's annoying.**
    "Add python.exe to PATH" during install.
 2. Download/clone this folder anywhere. If you use git/gh:
    ```bash
-   gh repo clone Zychs/sesefus
-   cd sesefus
+   git clone https://github.com/theRensisioure/sesephus.git
+   cd sesephus
    ```
 3. Double-click **`install.bat`** (grabs dependencies + the Whisper
    speech-to-text model; the first run downloads ~1–2 GB). It also arms the
@@ -53,7 +56,7 @@ variable (`XAI_API_KEY` / `ANTHROPIC_API_KEY`) only — never in
 `sesefus.config.json`, and never type it inline on a command line (shell
 history keeps it). The commit guard will block a key that slips into a file.
 
-## Known rough edges (0.9.3)
+## Known rough edges (0.1.0)
 
 - Terminal window, not a pretty app. The dashboard is optional and needs
   `npm`/`python` dev servers (`docs/ETDI.md` has the commands).

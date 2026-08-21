@@ -1,7 +1,7 @@
 # Circadia — Zig alarm daemon
 
 **Status: not done.**  
-This is the alarm engine inside Sesefus (`Zychs/sesefus`). The scheduler exists. The product does not.
+This is the alarm engine inside **Sesephus** (`theRensisioure/sesephus`). The scheduler exists. The Circadia product does not.
 
 One binary: `sesefus.exe` (`zig build` here). Role is `--role host` or `--role client`.  
 **There is no `host.exe` or `client.exe`.** Old docs and `run_demo.bat` that say otherwise are dated.
@@ -13,7 +13,7 @@ Canon for WIRED vs STUB: [`docs/CANON.md`](../../docs/CANON.md) §2. If this fil
 ## What it is
 
 Circadia is the **timekeeper**: schedule a cue, fire it on a connected client, optionally kick a capture.  
-Sesefus is the product brand. Circadia is not a second app and not a finished shippable.
+Sesephus is the product brand in this repo. Circadia is not a second app and not a finished shippable.
 
 Host: HTTP `127.0.0.1:3000` (embedded `dashboard.html` + `/api/status`) and TCP **5000** (length-prefixed JSON frames to clients).  
 Client: register, wait for frames, play / record / report.
