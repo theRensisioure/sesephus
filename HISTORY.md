@@ -4,6 +4,11 @@ This public git did **not** start in 2026-06. It starts at the 0.1.0 prerelease
 commit. What follows is rebuilt from the private `Zychs/sesefus` log and dated
 docs, grouped into waves. Dates are approximate.
 
+**Current disposition (2026-08-28):** this is event history, not operator
+guidance. `voice.bat`, `tools/voice.py`, and the six retired `apps/` surfaces
+are historical and unsupported. Current Voice is external Desktop Clippers at
+`C:\Users\bardw\Desktop\corection-goald\journal-clip`.
+
 ## Waves (private line, not this git)
 
 1. **Foundation (mid 2026)** — Zig host/client, vault, SSFS drive mapping, CLI

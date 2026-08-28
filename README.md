@@ -1,4 +1,4 @@
-# Sesephus — a voice journal that notices drift
+# Sesephus — public lineage and reference
 
 **Version 0.1.0 (prerelease)** · [`theRensisioure/sesephus`](https://github.com/theRensisioure/sesephus)
 
@@ -7,51 +7,48 @@ git clone https://github.com/theRensisioure/sesephus.git
 cd sesephus
 ```
 
-**Sesephus** is an offline-first voice journal that notices when you're drifting —
-from your sleep, your mood, your own baseline — before you do. You talk to it;
-it transcribes locally, scores the entry (ETDI), and keeps everything on your
-machine.
+**Sesephus** preserves the public lineage of the journal, alarm, vault, ETDI,
+bridge, and dashboard experiments. It is a reference repository: retained code
+may still build, but this checkout is not the supported Voice capture product.
 
 The Windows binary is still named `sesefus.exe`. Some older files still say
-Sesefus. That is leftover private-tree spelling. This public cut is **Sesephus**.
-Do not clone `Zychs/sesefus`. Do not confuse this repo with lighthouse
-[`theRensisioure/sesefus`](https://github.com/theRensisioure/sesefus) (not the journal).
+Sesefus. That is private-lineage spelling. This public lineage is **Sesephus**.
+The retired private checkout is not a second current product. Do not confuse
+this repo with lighthouse
+[`theRensisioure/sesefus`](https://github.com/theRensisioure/sesefus).
 
 Command status in this README follows [docs/CANON.md](docs/CANON.md) §2 — the
 single source of truth for what is **WIRED** (works today) versus **STUB**
 (prints a canned line, does nothing). Nothing below claims to work unless it does.
 
-**Circadia** (the Zig alarm daemon under `core/sesephus/`) is **not done**.
-`alarm *` is the live scheduler. `journal` / `rhythm` print stubs. Operator
-door: [core/sesephus/README.md](core/sesephus/README.md). Python
-`apps/journal-daemon/` is dogfood, not that Zig binary.
+**Circadia** (the retained Zig alarm daemon under `core/sesephus/`) is **not
+done**. `alarm *` contains wired scheduler logic; `journal` / `rhythm` print
+stubs. See [core/sesephus/README.md](core/sesephus/README.md) when studying or
+building the retained implementation. The duplicate Python app surfaces have
+been retired from this branch.
 
 ---
 
-## 🎙️ The primary path: `voice.bat`
+## Current Voice boundary
 
-The real journal loop is the Python capture path, not the REPL:
+The sole supported Voice implementation is **Desktop Clippers** at:
 
-```bash
-install.bat     # once: venv, Whisper, dependencies
-voice.bat       # push-to-talk journal loop
+```text
+C:\Users\bardw\Desktop\corection-goald\journal-clip
 ```
 
-Talk for a minute. It transcribes (local Whisper), scores the entry, and stores
-it. Inside the loop, speak the commands:
+That external tree owns the microphone, capture, tape, shredding, and cue
+projection. This repository points to it only; it does not import, vendor,
+submodule, or launch Clippers.
 
-- **"review last"** — read back your last entry's score
-- **"score"** — re-score everything
-- **"dashboard"** — open the web dashboard (optional; needs the dev servers)
-- **"goodbye"** — stop
-
-Recordings live in `aurgio/recordings/`, transcripts and scores in `aurgio/`.
-Nothing is uploaded anywhere by default. See [README-TESTERS.md](README-TESTERS.md)
-for the full tester walkthrough and privacy notes.
+The retained `voice.bat` and `tools/voice.py` describe an earlier push-to-talk
+path. They remain unchanged as historical evidence and are explicitly
+**unsupported**. [README-TESTERS.md](README-TESTERS.md) records the retired
+tester path and is not current launch guidance.
 
 ---
 
-## 🖥️ The REPL (`ssfs.bat`) — what actually works today
+## Retained REPL (`ssfs.bat`) — reference behavior
 
 One unified executable `sesefus.exe` (built by `build.zig`, launched by
 `ssfs.bat`); role chosen at first run and re-spawned with `--role host|client`.
@@ -64,7 +61,7 @@ ssfs.bat        # builds via zig build, then starts the REPL
 Syntax is space-separated: first token = module, second = subcommand
 (`group create`, `alarm list`, `vault ingest-archive`).
 
-### Wired commands (real logic runs)
+### Wired commands in the retained code
 
 | Command | What it does |
 |---|---|
@@ -93,9 +90,9 @@ workflows on them; each has a real alternative or a deferral (CANON §2, and the
 
 | Stub | Use instead |
 |---|---|
-| `journal record\|review\|prompt` | **`voice.bat`** — the real journal path |
+| `journal record\|review\|prompt` | No supported in-repo replacement; use external Desktop Clippers for current Voice capture |
 | `rhythm *` | **`alarm …`** — the real scheduler |
-| `stoic *` | Deferred; voice journal + manual reflection for now |
+| `stoic *` | Deferred in this lineage |
 | `lead mine\|feed` | Deferred; only `lead qualify` is wired |
 | `vault status\|backup\|audit` | Deferred; `--read-vault` inspects the vault |
 
@@ -108,7 +105,7 @@ workflows on them; each has a real alternative or a deferral (CANON §2, and the
 
 ---
 
-## 🔐 Vault
+## Retained vault implementation
 
 Voice data is ingested into an encrypted local database (`sesephus_vault.db`,
 ChaCha20-Poly1305). Default location `V:\sesephus_vault.db`, falling back to
@@ -118,7 +115,7 @@ to-do, not a feature.
 
 ---
 
-## ⚙️ Building
+## Reference build
 
 ```bash
 # Windows: batch wrapper runs zig build and dispatches

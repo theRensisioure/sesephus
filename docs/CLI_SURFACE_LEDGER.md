@@ -4,11 +4,17 @@
 **Machine SSOT:** [`cli_surface.jsonl`](cli_surface.jsonl) — append-only.  
 **Tool:** `python tools/cli_surface_ledger.py list`
 
-Not a full repo inventory (see `INVENTORY.md`). Only **operator CLI surfaces** you actually invoke.
+Not a full repo inventory (see `INVENTORY.md`). It lists retained operator
+surfaces and explicit historical dispositions. Sesephus is a lineage/reference
+repository, not the supported Voice recorder.
 
 ---
 
 ## Quick list (human)
+
+Current Voice is external **Desktop Clippers** at
+`C:\Users\bardw\Desktop\corection-goald\journal-clip`. This is a pointer only;
+there is no Sesephus launcher for Clippers.
 
 ### SaturnNav
 
@@ -26,14 +32,14 @@ Not a full repo inventory (see `INVENTORY.md`). Only **operator CLI surfaces** y
 
 ### Suite launchers (root .bat)
 
-- `voice.bat` — push-to-talk voice loop  
+- `voice.bat` — **historical and unsupported** push-to-talk launcher
 - `aytree.bat open` — AyTree  
 - `ssfs.bat` — Zig host build/run  
 - `fleet.bat` — fleet (venv)
 
 ### Python tools (common)
 
-- `python tools/voice.py` — voice loop (flags: `--file` `--say` `--backend`)  
+- `python tools/voice.py` — **historical and unsupported** voice loop reference
 - `python tools/etdi_pipeline.py --scan` — ETDI score  
 - `python tools/aytree_launch.py open` — AyTree  
 - `python shredder/artifact_sieve.py --scan-only` — chat dump sieve  

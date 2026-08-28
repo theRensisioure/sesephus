@@ -7,8 +7,9 @@
 > file wins** — or this file is wrong and should be fixed first, then the rest
 > re-derived from it.
 >
-> This tree is the **public** 0.1.0 prerelease (`theRensisioure/sesephus`).
-> Command-status rows below were verified against code. It is not API docs —
+> This tree is the **public lineage/reference repository**
+> (`theRensisioure/sesephus`), not the supported Voice capture product.
+> Command-status rows below describe retained code. It is not API docs —
 > see `docs/CLI.md`, `docs/ETDI.md`, `docs/DRIFT.md` for depth.
 
 ---
@@ -20,7 +21,7 @@ everything else is drift.
 
 | Term | What it is | Where it's correct |
 |---|---|---|
-| **Sesephus** | **This public product.** Journal that notices drift. | All new prose, headings, this GitHub |
+| **Sesephus** | **This public lineage/reference repository.** Retained journal, alarm, vault, and UI history. | All new prose, headings, this GitHub |
 | **Sesefus** | Private-tree spelling (other mouth). Binary is still `sesefus.exe`. | Binary filename, leftover docs, `ssfs.bat` launch |
 | **Neurialab** | The company / umbrella. | Company-level prose only |
 | **ssfs** | The CLI wrapper (`ssfs.bat` → `sesefus.exe`) **and** the config-driven storage layer (`ssfs/`, `drive-mapping.json`). A layer *of* this product. | CLI invocation, storage subsystem |
@@ -38,10 +39,12 @@ Not `theRensisioure/sesefus` (CSS lighthouse / doctrine preview — different re
 
 ---
 
-## 2 · What ships vs. what's staged (command status)
+## 2 · Retained command status
 
-The two cheat sheets contradict each other here; this is the arbitration, read from
-the actual Zig handlers. Use exactly three status words project-wide.
+The two cheat sheets contradict each other here; this is the arbitration, read
+from the retained Zig handlers. These labels describe code reachability, not a
+claim that Sesephus is the current capture product. Use exactly three status
+words project-wide.
 
 - **WIRED** — real logic runs today.
 - **STUB** — the handler only prints a canned line (`_ = allocator; _ = io;`). No effect.
@@ -140,13 +143,17 @@ Three runtimes, supervised as one unit by `fleet.bat` → `tools/fleet.ps1`.
 
 ## 5 · Capture path
 
-- **Ships (0.9.3-alpha):** Python + `sounddevice`, push-to-talk, via `voice.bat` →
-  `tools/voice.py` (16 kHz mono → Whisper). This is what testers run.
-- **The vision (does not gate shipping):** the Zig edge client via WinMM
-  (`client.zig` `record_audio` → `audio_record.zig` `waveIn`) streaming WAV over TCP.
+- **Current supported Voice:** Desktop Clippers at
+  `C:\Users\bardw\Desktop\corection-goald\journal-clip`. It owns microphone,
+  capture, Whisper transcription, tape, shredding, and cue projection.
+- **Historical and unsupported:** `voice.bat` → `tools/voice.py`. The files
+  remain unchanged for lineage; they are not current tester or launch guidance.
+- **Reference implementation:** the Zig edge client via WinMM (`client.zig`
+  `record_audio` → `audio_record.zig` `waveIn`) streaming WAV over TCP.
 
-Both exist in the tree. Showcase copy should lead with the Python path or explicitly
-mark the Zig/WinMM path as the vision.
+Clippers remains external. Do not import, vendor, submodule, or launch it from
+this repository. Artifact Scanner is optional post-capture tooling, never a
+requirement for Voice.
 
 ---
 
@@ -175,13 +182,14 @@ mark the Zig/WinMM path as the vision.
 
 ## 7 · Suite modules (siblings & attention)
 
-Sesefus is the **product core** (journal, alarms, vault, bridge, glass). Related
-tools live as **sibling checkouts** or optional paths — not as submodules that
-must be vendored into this git tree.
+Sesephus is the **public lineage/reference repository** for the journal, alarms,
+vault, bridge, and glass experiments. Related current tools live as external
+checkouts or optional paths — not as submodules that must be vendored here.
 
 | Module | Role | Status | How to open |
 |---|---|---|---|
-| **Sesefus** (this repo) | Voice journal + alarms + vault + Glass | **WIRED** | `ssfs.bat`, `voice.bat`, `fleet.bat` |
+| **Sesephus** (this repo) | Public lineage/reference: retained alarms, vault, bridge, Glass, and historical capture code | **REFERENCE** | No supported Voice door; reference builds only |
+| **Desktop Clippers** (external) | Sole supported Voice capture: mic → Whisper → tape → shred → cue projection | **CURRENT** | `C:\Users\bardw\Desktop\corection-goald\journal-clip` |
 | **AyTree** | Suite **Version Control / derivation map** — directory lineages, notes, spatial structure. **Not** full git VCS. Dyslexia-first. | **WIRED** (external) | `aytree.bat` · `python tools/aytree_launch.py open` · REPL `aytree open` |
 | **LeadLogic-Engine** | Employment / lead domain (qualify, mine). **Keep**; not the structure/VC lead. | **WIRED** (external + `lead qualify`) | `lead qualify` spawns `tools/qualify_post.py` |
 
@@ -211,9 +219,9 @@ Port: `aytree_port` (default **8000**) — same default as local vLLM for
 
 ## 8 · Repo meta
 
-- **File count:** `INVENTORY.md` says **236** (172 live + 64 archival); actual tracked
-  now **245**. The **226** figure is the 2026-07-04 snapshot — superseded. Pick one
-  (245, or cite INVENTORY's 236) and use it everywhere.
+- **File count:** the reconciliation review branch has **275 tracked files**:
+  212 in the reference tree and 63 under `archival/`. Earlier 226, 236, and
+  245 figures are dated pre-retirement snapshots.
 - The *Branch Audit* and *Session Ledger* artifacts are **dated historical records**.
   Align their *terminology* to this canon; do **not** rewrite their event history.
   (For reference: the `voice-control-integration-635p5x` branch was merged via **PR
@@ -229,7 +237,8 @@ can be regenerated cleanly.
 - [ ] `dashboard/ui/src/components/EtdiPanel.jsx:53` — **live UI** still prints the old
       product formula. **Highest priority: it's on screen in the demo.**
 - [ ] `docs/DRIFT.md:84` — still says `0.15`; should be `0.30`.
-- [ ] `README.md:1` — titled "Sesephus CLI"; brand is **Sesefus**.
+- [x] `README.md:1` — identifies Sesephus as the public lineage/reference
+      repository and points current Voice to external Desktop Clippers.
 - [ ] `overallreadmee.md:1` — "Arcadium & Circadia (AuraEngine / Sesephus Suite)";
       pre-rebrand naming.
 - [ ] `docs/manifest.json` — points at phantom `core/sesephus/circadia.zig` &

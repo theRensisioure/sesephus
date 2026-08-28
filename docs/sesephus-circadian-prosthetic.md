@@ -106,7 +106,8 @@ Sisyphus doesn't have to push the boulder alone anymore.
 
 - `core/sesephus/` — Zig Circadia alarm engine (**not done**; `alarm *` wired; `journal` / `rhythm` stubs)
 - `ssfs.bat` — launcher for `sesefus.exe`
-- `apps/journal-daemon/` — Python dogfood stand-in (Sound Recorder + alarm poll), not the Zig daemon
+- retired `apps/journal-daemon/` — historical Python dogfood stand-in,
+  preserved in Git history and the dated vault package; not a current app
 - LeadLogic-Engine vLLM work (Crow-9B local inference path) for the embedding + reflection layer
 
 The system is already moving from concept toward a working offline-first, audio-first, network-aware prosthetic. The personal experience of leaving that rehab early is part of why the circadian + supplementative audio layer is non-negotiable.

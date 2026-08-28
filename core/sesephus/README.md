@@ -37,9 +37,11 @@ Client: register, wait for frames, play / record / report.
 
 **Not this tree**
 
-- Artifact Scanner is a **finder**, not the Circadia host.
-- `apps/journal-daemon/` is a **Python dogfood** (Sound Recorder + alarm poll). Useful for capture UX. It is not this Zig daemon.
-- `apps/record-widget/` is **abandoned**.
+- Artifact Scanner is an **optional finder**, not the Circadia host or a Voice
+  requirement.
+- `apps/journal-daemon/` was retired from this tree. Its historical
+  Python dogfood code remains in Git history and the dated vault preserve.
+- `apps/record-widget/` was retired with the other duplicate/stalled surfaces.
 
 Direction (not shipped): `plans/2026-08-12-audio-journal-zig-daemon.md`.
 

@@ -1,14 +1,16 @@
-# Sesefus Repo Cheat Sheet
+# Sesephus lineage/reference inventory
 
-**Repo:** `Zychs/sesefus` · **Branch:** `claude/voice-control-integration-635p5x` · **Snapshot:** 2026-07-07
-**236 tracked files** — 172 in the live tree, 64 in `archival/` (a frozen copy of the older layout).
-Files marked **★ NEW** were added on this branch (the 0.9.3-alpha work: voice loop, ETDI pipeline, image sieve, drift thesis).
+**Repo:** `theRensisioure/sesephus` · **Branch:** `chore/reconcile-sesefus-lineage-20260828` · **Disposition:** 2026-08-28
+**275 tracked files** — 212 in the reference tree, 63 in `archival/` (a frozen copy of the older layout).
+The review branch commits the six-surface retirement and adds five boundary,
+postmortem, and ideas documents. Older file descriptions below are retained as
+lineage; historical capture commands are explicitly unsupported.
 
 ```bash
-# Get this branch — fresh machine
-gh repo clone Zychs/sesefus && cd sesefus && git checkout claude/voice-control-integration-635p5x
-# Existing clone
-git fetch origin && git checkout claude/voice-control-integration-635p5x && git pull origin claude/voice-control-integration-635p5x
+# Review the reconciliation branch
+git clone https://github.com/theRensisioure/sesephus.git
+cd sesephus
+git switch chore/reconcile-sesefus-lineage-20260828
 ```
 
 ---
@@ -30,9 +32,13 @@ git fetch origin && git checkout claude/voice-control-integration-635p5x && git 
     ▼
  React dashboard (dashboard/ui, port 5173)      ← you look at this
 
- Voice path (0.9.3-alpha, the one testers use — no Zig needed):
- you speak → tools/voice.py ★ → Whisper → manifest (aurgio/transcript/)
-           → tools/etdi_pipeline.py ★ → ETDI → etdi.db + dashboard
+ Historical Sesephus capture path (unsupported):
+ tools/voice.py ★ → Whisper → manifest (aurgio/transcript/)
+                  → tools/etdi_pipeline.py ★ → ETDI → etdi.db + dashboard
+
+ Current Voice (external pointer only):
+ C:\Users\bardw\Desktop\corection-goald\journal-clip
+ mic → Whisper → tape → shred → cue projection
 
  Side path for memos-as-files:
  audio file → tools/ingress_memos.py → tools/dual_writer.py → archive.db + manifest
@@ -46,12 +52,12 @@ git fetch origin && git checkout claude/voice-control-integration-635p5x && git 
 
 | File | Why it matters |
 |---|---|
-| `tools/voice.py` ★ | **The 0.9.3 deliverable.** Push-to-talk voice loop: speak to journal, short phrases are commands. `voice.bat` runs it. |
-| `README-TESTERS.md` ★ | What testers read. Setup, usage, privacy note. |
+| `tools/voice.py` ★ | Historical 0.9.3 push-to-talk loop; retained unchanged and unsupported. |
+| `README-TESTERS.md` ★ | Retired tester-path disposition and current external Voice pointer. |
 | `tools/etdi_pipeline.py` ★ | Run this to score memos. `python tools/etdi_pipeline.py --scan` |
 | `tools/sesefus_config.py` ★ | Per-user config loader (`sesefus.config.json`). Replaced the hardcoded paths. |
 | `docs/DRIFT.md` ★ | The app thesis: six drift forms, one shared loop. Read this to remember *why*. |
-| `core/sesephus/src/host.zig` | The Zig brain. 2,436 lines. Vault, TCP, command routing. Not on the alpha's critical path. |
+| `core/sesephus/src/host.zig` | Retained Zig reference. Vault, TCP, command routing. |
 
 ---
 
@@ -64,9 +70,9 @@ git fetch origin && git checkout claude/voice-control-integration-635p5x && git 
 | `ARCHIVED-BRANCHES.md` | 52 | Record of old branches archived with `archive/*` tags on 2026-06-13. |
 | `toclaude.md` | 18 | Session handoff notes to Claude (dashboard consolidation summary). |
 | `primordial-read` | 180 | The original AuraEngine readme (project's first incarnation). |
-| `README-TESTERS.md` ★ | 58 | Tester guide: 5-step setup, usage, local-only privacy note. |
-| `install.bat` ★ | 32 | One-double-click installer: venv, deps, Whisper, starter config. |
-| `voice.bat` ★ | 9 | Launches `tools/voice.py` in the venv. |
+| `README-TESTERS.md` ★ | — | Retired tester path; points to external Desktop Clippers. |
+| `install.bat` ★ | 32 | Historical installer for the retained Python environment. |
+| `voice.bat` ★ | 9 | Historical launcher for `tools/voice.py`; unsupported. |
 | `ssfs.bat` | 10 | Builds the Zig core then dispatches your args to the daemon. |
 | `requirements.txt` | 5 | Python deps: psutil, sounddevice, numpy. |
 | `requirements-dev.txt` | 3 | Adds fastapi, uvicorn; whisper optional. |
@@ -117,7 +123,7 @@ git fetch origin && git checkout claude/voice-control-integration-635p5x && git 
 
 | File | Lines | What it is |
 |---|---|---|
-| `tools/voice.py` ★ | 299 | **The voice loop (0.9.3).** PTT capture → Whisper → intent grammar → journal manifest + ETDI score. `--file`/`--say` test hooks. |
+| `tools/voice.py` ★ | 299 | Historical 0.9.3 PTT loop; retained for lineage and unsupported as a recorder. |
 | `tools/etdi_pipeline.py` ★ | 261 | **Main ETDI entry point.** Memo → Whisper → emotion JSON → score → vault + manifest. Backends: ollama / grok / heuristic. `--into-manifest` backfills old memos. |
 | `tools/etdi_inference.py` ★ | 181 | Locked system prompt, strict JSON schema, Ollama/Grok HTTP calls, audio stats, ETDI formula (√(v²+a²+s²)/(√3·min)). |
 | `tools/etdi_store.py` ★ | 160 | `etdi_scores` SQLite table + trend/flags/entries queries. Platform-aware db path. |
@@ -174,8 +180,8 @@ git fetch origin && git checkout claude/voice-control-integration-635p5x && git 
 
 | File | Lines | What it is |
 |---|---|---|
-| `aurgio/transcript/aje-*.json` (6 files) | 55 each | Memo manifests (`heydhd.audio-journal-entry.v0`). **All 6 have empty transcript text + `durationSeconds: null`.** Backfill each with `etdi_pipeline.py --wav "<source.sourcePath>" --into-manifest <aje>.json`, then it scores. New voice memos (via `voice.py`) are born complete. |
-| `aurgio/recordings/` ★ | — | Where `voice.py` drops wavs (gitignored). |
+| `aurgio/transcript/aje-*.json` (6 files) | 55 each | Historical memo manifests (`heydhd.audio-journal-entry.v0`); not the current Clippers tape. |
+| `aurgio/recordings/` ★ | — | Historical `voice.py` output location (gitignored). |
 | `aurgio/readme-sort-n-ingest.md` | 1 | One-line note about checking ingestion compatibility. |
 
 ---
@@ -261,10 +267,6 @@ Rule of thumb: **if a path exists both live and under `archival/`, the live one 
 ## Quick commands
 
 ```bash
-# Voice loop — the 0.9.3 path (Windows)  ★
-install.bat                       # one-time: venv, deps, Whisper, config
-voice.bat                         # speak: long = journal, short = command
-
 # Backfill the six waiting memos (read source.sourcePath from each aje-*.json)  ★
 python tools/etdi_pipeline.py --wav "<path>" --into-manifest aurgio/transcript/aje-xxx.json
 
@@ -280,6 +282,10 @@ python shredder/image_sieve.py                            # Ollama vision
 python dashboard/dashboard_server.py
 cd dashboard/ui && npm install && npm run dev
 
-# Zig engine (Windows; not on the alpha critical path)
+# Retained Zig reference build (Windows)
 ssfs.bat status
 ```
+
+Current Voice is Desktop Clippers at
+`C:\Users\bardw\Desktop\corection-goald\journal-clip`. This inventory records
+the pointer only and provides no launcher for that external tree.

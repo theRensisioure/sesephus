@@ -2,9 +2,11 @@
 
 > ⚠️ **STALE — [CANON.md](CANON.md) §2 is authoritative.** Most module commands
 > documented below (`journal`, `rhythm`, `stoic`, `lead mine|feed`, most of
-> `vault`) are **STUBS**: they print a canned line and do nothing. The real
-> journal path is `voice.bat`; the real scheduler is `alarm`. This file stays
-> as-is until the Phase 2 redirect work lands (issues #68–#70, umbrella #74).
+> `vault`) are **STUBS**: they print a canned line and do nothing. `voice.bat`
+> and `tools/voice.py` are historical and unsupported. Current Voice is the
+> external Desktop Clippers tree at
+> `C:\Users\bardw\Desktop\corection-goald\journal-clip`; this repository does
+> not launch it. The retained scheduler logic is `alarm`.
 
 **Sesefus** is an audio-first personal growth engine that combines circadian rhythm enforcement, encrypted audio journaling, and intelligent agentic support to cultivate Stoic resilience and negentropic refinement.
 
@@ -35,7 +37,8 @@ ssfs status
 ---
 
 ### `journal`
-The primary interaction path for Sesephus. Handles core audio journaling.
+Historical command shape for Sesephus audio journaling. The handler is a stub;
+this is not the current Voice path.
 
 * `ssfs journal record [minutes]` - Start a voice journal. Defaults to 3-10 minutes.
 * `ssfs journal review last` - Listen to your last entry.
@@ -107,4 +110,4 @@ WIRED command surface (CANON §2):
 
 ---
 
-*Just speak. Just journal. Growth is for everyone.*
+*Historical command reference. Do not use it as current Voice launch guidance.*

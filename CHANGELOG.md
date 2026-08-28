@@ -4,6 +4,12 @@ History of what actually shipped, newest first. Public tree starts at **0.1.0
 (prerelease)** on 2026-08-21. Earlier bullets were reconstructed from the
 private `Zychs/sesefus` line and are marked as such.
 
+**Disposition note (2026-08-28):** entries below preserve what shipped at the
+time. `voice.bat`, `tools/voice.py`, and the retired `apps/` surfaces are
+historical evidence, not current launch guidance. The sole supported Voice
+implementation is external Desktop Clippers at
+`C:\Users\bardw\Desktop\corection-goald\journal-clip`.
+
 ## [Unreleased]
 
 ### Docs

@@ -1,66 +1,32 @@
-# Sesephus 0.1.0 prerelease — tester guide
+# Sesephus tester guide — retired capture path
 
-Sesephus is a voice journal that notices when you're drifting — from your
-sleep, your mood, your own baseline — before you do. You're testing the
-first loop: **talk to it for sixty seconds a day for two weeks and tell us
-where it's annoying.**
+This file records the former Sesephus 0.1.0 push-to-talk test surface. It is
+historical documentation, not current launch guidance.
 
-Public door: [`theRensisioure/sesephus`](https://github.com/theRensisioure/sesephus).
-Not `Zychs/sesefus`. Not lighthouse `theRensisioure/sesefus`.
+Do not use `voice.bat` or `tools/voice.py` as a supported recorder. Those files
+remain unchanged in this lineage/reference repository so the public history is
+inspectable, but the in-repo capture product is retired.
 
-## Setup (Windows, ~5 minutes + downloads)
+## Current Voice door
 
-1. Install [Python 3.10+](https://www.python.org/downloads/) — check
-   "Add python.exe to PATH" during install.
-2. Download/clone this folder anywhere. If you use git/gh:
-   ```bash
-   git clone https://github.com/theRensisioure/sesephus.git
-   cd sesephus
-   ```
-3. Double-click **`install.bat`** (grabs dependencies + the Whisper
-   speech-to-text model; the first run downloads ~1–2 GB). It also arms the
-   git guards that block committing vault data or API keys.
-4. Double-click **`voice.bat`**.
-5. Press Enter, talk, press Enter again. That's the whole interface.
+The sole supported Voice implementation is **Desktop Clippers**:
 
-## How to use it
+```text
+C:\Users\bardw\Desktop\corection-goald\journal-clip
+```
 
-- **Long sentences are journal entries.** Speak your mind for 30–90
-  seconds. It transcribes locally, scores the emotional density (ETDI),
-  and files it.
-- **Short phrases are commands** (5 words or fewer):
-  - "status" — is everything running, how many memos are vaulted
-  - "review last" — read back your last entry's score
-  - "score" — re-score everything
-  - "dashboard" — open the web dashboard (needs the dev servers; optional)
-  - "goodbye" — stop
+Desktop Clippers owns the microphone, capture, Whisper transcription, tape,
+shredding, and cue projection. It is an external tree; Sesephus only records
+the pointer and does not import, vendor, submodule, or launch it.
 
-## What we want to hear from you
+Artifact Scanner is optional post-capture tooling. It is not required to use
+Clippers and is not part of this retired tester path.
 
-Where it's annoying. Where it misheard you. Whether the score ever felt
-*right*. Anything that made you not want to open it on day three.
+## Historical disposition
 
-## Privacy — read this once
-
-**Everything stays on your machine.** Recording, transcription, and
-scoring all run locally; nothing is uploaded anywhere by default. Your
-recordings live in `aurgio/recordings/`, transcripts and scores in
-`aurgio/`. Delete those folders and the data is gone. The optional
-cloud-scoring mode (`"backend": "grok"`) sends transcript text — never
-audio — to the xAI API, and it is OFF unless you turn it on. By testing
-you're agreeing to record your own voice on your own computer — nothing
-more.
-
-**If you ever enable cloud scoring:** keep your API key in an environment
-variable (`XAI_API_KEY` / `ANTHROPIC_API_KEY`) only — never in
-`sesefus.config.json`, and never type it inline on a command line (shell
-history keeps it). The commit guard will block a key that slips into a file.
-
-## Known rough edges (0.1.0)
-
-- Terminal window, not a pretty app. The dashboard is optional and needs
-  `npm`/`python` dev servers (`docs/ETDI.md` has the commands).
-- Default scoring is a crude offline gauge (confidence pinned low). With
-  Ollama + `qwen2.5:7b-instruct` installed it gets real inference —
-  `install.bat` prints the two commands.
-- Whisper's first transcription after launch is slow (model load).
+- `voice.bat` and `tools/voice.py` are historical and unsupported.
+- The six duplicate or stalled `apps/` surfaces were removed on the
+  reconciliation review branch; their code remains available in Git history
+  and the dated vault preserve.
+- This repository remains useful for lineage, contracts, architecture, and
+  reference builds. It is not a second Voice recorder.
