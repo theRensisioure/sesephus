@@ -95,6 +95,14 @@ sesefus.config.json
 
 # Machine-local WizTree dumps (atlas uses git ls-files via tools/atlas/build.py)
 sesefus-dev-tree.csv
+
+# dev-watcher: machine-local config + snapshots/ledgers (absolute paths, full listings)
+apps/dev-watcher/config.json
+apps/dev-watcher/.data/
+
+# Machine-local planning and Sesephus runtime state
+.hermes/
+core/sesephus/.sesefus/
 aurgio/recordings/
 *.7z
 
@@ -104,4 +112,3 @@ docs/PRODUCT_ESSAY_QUESTIONS.md
 docs/PRODUCT_ESSAY_QUESTIONS.bak-*.md
 docs/PRODUCT_ESSAY_QUESTIONS.*.md
 !docs/PRODUCT_ESSAY_QUESTIONS.md.stub
-
