@@ -5,7 +5,7 @@
 > `vault`) are **STUBS**: they print a canned line and do nothing. `voice.bat`
 > and `tools/voice.py` are historical and unsupported. Current Voice is the
 > external Desktop Clippers tree at
-> `C:\Users\bardw\Desktop\corection-goald\journal-clip`; this repository does
+> `C:\dev\journal-clippers\audio-journal-system`; this repository does
 > not launch it. The retained scheduler logic is `alarm`.
 
 **Sesefus** is an audio-first personal growth engine that combines circadian rhythm enforcement, encrypted audio journaling, and intelligent agentic support to cultivate Stoic resilience and negentropic refinement.

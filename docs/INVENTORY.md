@@ -37,7 +37,7 @@ git switch chore/reconcile-sesefus-lineage-20260828
                   → tools/etdi_pipeline.py ★ → ETDI → etdi.db + dashboard
 
  Current Voice (external pointer only):
- C:\Users\bardw\Desktop\corection-goald\journal-clip
+ C:\dev\journal-clippers\audio-journal-system
  mic → Whisper → tape → shred → cue projection
 
  Side path for memos-as-files:
@@ -287,5 +287,5 @@ ssfs.bat status
 ```
 
 Current Voice is Desktop Clippers at
-`C:\Users\bardw\Desktop\corection-goald\journal-clip`. This inventory records
+`C:\dev\journal-clippers\audio-journal-system`. This inventory records
 the pointer only and provides no launcher for that external tree.

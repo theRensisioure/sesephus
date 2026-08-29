@@ -13,7 +13,7 @@ off belongs to two separate roles, not one: the **archiver** (read) and the
 ## The split
 
 - **Clipper** — the external Desktop tree at
-  `C:\Users\bardw\Desktop\corection-goald\journal-clip`. Records,
+  `C:\dev\journal-clippers\audio-journal-system`. Records,
   transcribes, writes the tape, shreds audio, and projects cues. Owns
   nothing once it hands off. Its job ends at the handoff, full stop.
 - **Archiver** — owns the clip for *reading*, post-handoff. Two surfaces:

@@ -21,7 +21,7 @@ block at the end of `.devcontainer/post-create.sh`):
 | React/Vite dashboard | `dashboard/ui` | `npm run dev` | 5173 (proxies `/api` → 3001) |
 
 The sole supported Voice implementation is external Desktop Clippers at
-`C:\Users\bardw\Desktop\corection-goald\journal-clip`. This repository points
+`C:\dev\journal-clippers\audio-journal-system`. This repository points
 to it only. `voice.bat` and `tools/voice.py` are retained historical code and
 must not be presented as a supported recorder.
 

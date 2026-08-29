@@ -8,7 +8,7 @@ private `Zychs/sesefus` line and are marked as such.
 time. `voice.bat`, `tools/voice.py`, and the retired `apps/` surfaces are
 historical evidence, not current launch guidance. The sole supported Voice
 implementation is external Desktop Clippers at
-`C:\Users\bardw\Desktop\corection-goald\journal-clip`.
+`C:\dev\journal-clippers\audio-journal-system`.
 
 ## [Unreleased]
 

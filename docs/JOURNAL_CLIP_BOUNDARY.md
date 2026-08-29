@@ -2,7 +2,7 @@
 
 > Single source of truth for where the external Desktop Clippers tree ends
 > and who owns a take after that. The canonical implementation is
-> `C:\Users\bardw\Desktop\corection-goald\journal-clip`; this repository
+> `C:\dev\journal-clippers\audio-journal-system`; this repository
 > records a pointer only. Ranks as a scoped sibling to `docs/CANON.md`, same
 > arbitration rule.
 
@@ -23,7 +23,7 @@ write. Nothing owns more than one of these three jobs.
 Canonical path:
 
 ```text
-C:\Users\bardw\Desktop\corection-goald\journal-clip
+C:\dev\journal-clippers\audio-journal-system
 ```
 
 Owns: record → transcribe (Whisper, in-window) → append to `takes.jsonl` →

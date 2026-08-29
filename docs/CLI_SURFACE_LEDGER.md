@@ -13,7 +13,7 @@ repository, not the supported Voice recorder.
 ## Quick list (human)
 
 Current Voice is external **Desktop Clippers** at
-`C:\Users\bardw\Desktop\corection-goald\journal-clip`. This is a pointer only;
+`C:\dev\journal-clippers\audio-journal-system`. This is a pointer only;
 there is no Sesephus launcher for Clippers.
 
 ### SaturnNav

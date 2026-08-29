@@ -7,7 +7,7 @@ docs, grouped into waves. Dates are approximate.
 **Current disposition (2026-08-28):** this is event history, not operator
 guidance. `voice.bat`, `tools/voice.py`, and the six retired `apps/` surfaces
 are historical and unsupported. Current Voice is external Desktop Clippers at
-`C:\Users\bardw\Desktop\corection-goald\journal-clip`.
+`C:\dev\journal-clippers\audio-journal-system`.
 
 ## Waves (private line, not this git)
 

@@ -12,7 +12,7 @@ inspectable, but the in-repo capture product is retired.
 The sole supported Voice implementation is **Desktop Clippers**:
 
 ```text
-C:\Users\bardw\Desktop\corection-goald\journal-clip
+C:\dev\journal-clippers\audio-journal-system
 ```
 
 Desktop Clippers owns the microphone, capture, Whisper transcription, tape,

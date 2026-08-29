@@ -34,7 +34,7 @@ been retired from this branch.
 The sole supported Voice implementation is **Desktop Clippers** at:
 
 ```text
-C:\Users\bardw\Desktop\corection-goald\journal-clip
+C:\dev\journal-clippers\audio-journal-system
 ```
 
 That external tree owns the microphone, capture, tape, shredding, and cue

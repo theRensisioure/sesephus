@@ -23,8 +23,8 @@ Note the path: `C:\dev\sesefus` (the retired private-tree identity), not
 `C:\dev\sesephus` (this public lineage/reference repo — see
 `docs/CANON.md` §1). The in-repo `apps/journal-daemon` removal is committed
 on the reconciliation review branch and preserved in Git history plus the
-dated vault package. The shortcut is retired as a supported door; its
-physical removal remains gated to destructive reconciliation Phase 2.
+dated vault package. The shortcut is retired as a supported door; hide-only
+reconciliation Phase 2 may conceal it, but must not delete it.
 
 ## The complaint, verbatim
 
@@ -63,7 +63,7 @@ its supported successor: one compact capture tree with numbered click-to-record
 (1=30s/2=60s/3=90s/4=120s), transcribes in-window, done. journal-clip has no
 external app to launch, no probe/designate step, and no separate land
 command — the friction `journal-daemon` had is exactly what got cut. The
-canonical tree is `C:\Users\bardw\Desktop\corection-goald\journal-clip`.
+canonical tree is `C:\dev\journal-clippers\audio-journal-system`.
 
 ## Why the screenshot is the proof
 
@@ -84,10 +84,10 @@ have the identical defect.
   through Git history and the dated vault preserve; revival requires a new
   named plan.
 - `Sesefus.lnk` is retired as an operator door. It is not redirected to a
-  second recorder under the old name; destructive Phase 2 removes it after
-  the reconciliation gates pass.
+  second recorder under the old name; hide-only Phase 2 may conceal the
+  shortcut after the reconciliation gates pass, but must not delete it.
 - **Desktop Clippers** at
-  `C:\Users\bardw\Desktop\corection-goald\journal-clip` is the sole supported
+  `C:\dev\journal-clippers\audio-journal-system` is the sole supported
   Voice door.
 - See [`docs/JOURNAL_CLIP_BOUNDARY.md`](JOURNAL_CLIP_BOUNDARY.md) §5 for how
   journal-daemon's land wiring relates to journal-clip's (still-missing)

@@ -144,7 +144,7 @@ Three runtimes, supervised as one unit by `fleet.bat` → `tools/fleet.ps1`.
 ## 5 · Capture path
 
 - **Current supported Voice:** Desktop Clippers at
-  `C:\Users\bardw\Desktop\corection-goald\journal-clip`. It owns microphone,
+  `C:\dev\journal-clippers\audio-journal-system`. It owns microphone,
   capture, Whisper transcription, tape, shredding, and cue projection.
 - **Historical and unsupported:** `voice.bat` → `tools/voice.py`. The files
   remain unchanged for lineage; they are not current tester or launch guidance.
@@ -189,7 +189,7 @@ checkouts or optional paths — not as submodules that must be vendored here.
 | Module | Role | Status | How to open |
 |---|---|---|---|
 | **Sesephus** (this repo) | Public lineage/reference: retained alarms, vault, bridge, Glass, and historical capture code | **REFERENCE** | No supported Voice door; reference builds only |
-| **Desktop Clippers** (external) | Sole supported Voice capture: mic → Whisper → tape → shred → cue projection | **CURRENT** | `C:\Users\bardw\Desktop\corection-goald\journal-clip` |
+| **Desktop Clippers** (external) | Sole supported Voice capture: mic → Whisper → tape → shred → cue projection | **CURRENT** | `C:\dev\journal-clippers\audio-journal-system` |
 | **AyTree** | Suite **Version Control / derivation map** — directory lineages, notes, spatial structure. **Not** full git VCS. Dyslexia-first. | **WIRED** (external) | `aytree.bat` · `python tools/aytree_launch.py open` · REPL `aytree open` |
 | **LeadLogic-Engine** | Employment / lead domain (qualify, mine). **Keep**; not the structure/VC lead. | **WIRED** (external + `lead qualify`) | `lead qualify` spawns `tools/qualify_post.py` |
 
