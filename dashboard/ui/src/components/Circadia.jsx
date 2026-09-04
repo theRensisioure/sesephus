@@ -268,6 +268,7 @@ const Circadia = () => {
     <div className="circadia-module animate-fade-in" style={{ color: '#f3f4f6' }}>
       <div className="flex-between">
         <h2>Circadia Alarm Engine</h2>
+        <p className="text-sm text-secondary">Retained alarm UI in this 0.1.0 lineage. Voice capture is external Clippers, not this panel.</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ 
             width: '10px', 

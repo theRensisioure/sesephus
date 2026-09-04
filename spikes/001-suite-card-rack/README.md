@@ -6,7 +6,7 @@
 
 - **Horizontal** rack (scroll X) — not a vertical list  
 - **Flippable** cards — same grammar as suite cards (face A / face B), not accordion rows  
-- Front = who (Circadia · Arcadium · AyTree · Scanner)  
+- Front = who (Clippers · Sesephus · Scanner · AyTree)  
 - Back = implementation (live embed when up, else honest disk map)  
 - Open = real surface  
 
@@ -22,8 +22,12 @@ Earlier thrash: “vertical” was a misread of language. Horizontal + flip is t
 ## Run
 
 ```bat
-C:\dev\sesefus\spikes\001-suite-card-rack\open.bat
+C:\dev\sesephus\spikes\001-suite-card-rack\open.bat
 ```
+
+Exhibition rule: cards are a **finder / inventory** face. Clippers, Sesephus,
+and Artifact Scanner stay three separate owners. Scanner is not Circadia,
+not Arcadium, and not a Sesefus host.
 
 Or: `http://127.0.0.1:8791/rack.html` if server already up.
 

@@ -20,7 +20,7 @@ DATA_TAG = re.compile(
 
 START_HERE = {
     "core": "Zig host (sesephus) — CLI, vault, rhythm, discovery",
-    "audio": "Voice capture pipeline — pairs with voice.bat",
+    "audio": "Historical capture experiments — current Voice is external Clippers",
     "dashboard": "React UI + dashboard_server.py API",
     "tools": "Maintenance scripts, ETDI, atlas builder",
     "docs": "Operator guides and session notes",
