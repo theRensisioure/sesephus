@@ -1,16 +1,17 @@
 # Sesephus lineage/reference inventory
 
-**Repo:** `theRensisioure/sesephus` · **Branch:** `chore/reconcile-sesefus-lineage-20260828` · **Disposition:** 2026-08-28
-**275 tracked files** — 212 in the reference tree, 63 in `archival/` (a frozen copy of the older layout).
-The review branch commits the six-surface retirement and adds five boundary,
-postmortem, and ideas documents. Older file descriptions below are retained as
-lineage; historical capture commands are explicitly unsupported.
+**Repo:** `theRensisioure/sesephus` · **Snapshot:** 2026-09-04 · **Base release:** `v0.2.0`
+**282 tracked files after this documentation set is committed** — 219 in the
+reference tree, 63 in `archival/` (a frozen copy of the older layout).
+This inventory includes the reconciliation baseline, the journal-clip stub
+exhibition, and the docs-only Method Card and audio PR-review contracts. Older
+file descriptions below are retained as lineage; historical capture commands
+are explicitly unsupported.
 
 ```bash
-# Review the reconciliation branch
 git clone https://github.com/theRensisioure/sesephus.git
 cd sesephus
-git switch chore/reconcile-sesefus-lineage-20260828
+git status --short --branch
 ```
 
 ---
@@ -65,6 +66,11 @@ git switch chore/reconcile-sesefus-lineage-20260828
 
 | File | Lines | What it is |
 |---|---|---|
+| `CLAUDE.md` | 49 | Agent working context for public-lineage identity, external Voice ownership, and docs-only contracts. |
+| `docs/specs/audio-pr-review-contract-v1.md` | 176 | Docs-only boundary for a future model-neutral PR reviewer with distinct GitHub, audio, evidence, and authorization states. |
+| `docs/specs/method-card-schema-v1.md` | 104 | Frozen v1 schema for durable method cards: id, method ref, change prompt, AyTree directory representation, manual prefabs. |
+| `docs/specs/method-card-examples-v1.json` | 104 | Illustrative record set covering a simple tool card, a function card, an AyTree directory reference card, and a prefab-backed card. |
+| `docs/specs/method-card-boundary-v1.md` | 38 | Boundary note for the schema lock: docs-only, no transport, no sync, no device or live-state contract. |
 | `README.md` | 156 | Main guide: `ssfs` CLI workflows (journal / rhythm / stoic / vault). |
 | `overallreadmee.md` | 123 | Architecture readme: Zig daemons + Python bridge + React UI, FSM table. |
 | `ARCHIVED-BRANCHES.md` | 52 | Record of old branches archived with `archive/*` tags on 2026-06-13. |
