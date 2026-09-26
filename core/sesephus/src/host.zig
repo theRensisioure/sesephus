@@ -7,6 +7,7 @@ const lead = @import("commands/lead.zig");
 const vault = @import("commands/vault.zig");
 const dialogue = @import("commands/dialogue.zig");
 const aytree = @import("commands/aytree.zig");
+const help_text = @import("commands/help_text.zig");
 const cli = @import("cli.zig");
 
 const common = @import("common.zig");
@@ -94,49 +95,7 @@ fn resolveSidevaultPath(allocator: std.mem.Allocator, v_path: []const u8) ![]con
 }
 
 fn printHostUsage() void {
-    std.debug.print(
-        \\==================================================
-        \\           SESEFUS — Audio-First Growth Engine
-        \\   For Everyone. Voice-First. Stoic. Negentropic.
-        \\==================================================
-        \\
-        \\Wired commands (real logic runs — docs/CANON.md section 2):
-        \\
-        \\  status                                     Show state, clients, subgroups, pending alarms
-        \\
-        \\  dialogue start [appliance]                 Turn-taking capture into the vault (appliance = spoken aloud)
-        \\  dialogue review [n] [appliance]            Read (or hear) your last n written entries
-        \\
-        \\  alarm schedule <client_id> <sec> <action> <duration>
-        \\  alarm group <group_id> <sec> <action> <duration>
-        \\  alarm list | toggle <true|false> | bulk ... | interval ... | adjust ...
-        \\
-        \\  group create <name> <client_ids_comma_sep>
-        \\  group list | rename | edit | delete
-        \\
-        \\  lead qualify <post_text> [--handle <h>]    Score a post (spawns tools/qualify_post.py)
-        \\  vault ingest-archive [--dry-run] [--limit n]   Ingest memos (spawns tools/ingress_memos.py)
-        \\  aytree open|map|tree|serve|status          Suite derivation map (spawns tools/aytree_launch.py)
-        \\
-        \\  backup [dest_path]                         Hot backup copy of the vault database
-        \\  help | exit
-        \\
-        \\Not wired yet (prints a canned line, does NOTHING):
-        \\
-        \\  journal *                  -> use voice.bat (the real journal loop)
-        \\  rhythm *                   -> use alarm (the real scheduler)
-        \\  stoic *                    -> deferred
-        \\  lead mine|feed             -> deferred (only lead qualify is wired)
-        \\  vault status|backup|audit  -> deferred (use --read-vault to inspect)
-        \\
-        \\Global Flags:
-        \\  --production     Strict safety mode
-        \\  --dry-run, -n    Test without executing
-        \\  --help, -h       Show this help
-        \\
-        \\Just speak. Just journal. Growth is for everyone.
-        \\
-        , .{});
+    std.debug.print("{s}", .{help_text.host_usage});
 }
 
 var global_flags: cli.GlobalFlags = .{};

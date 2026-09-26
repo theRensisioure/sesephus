@@ -30,10 +30,14 @@ Client: register, wait for frames, play / record / report.
 - `--read-vault` / `--extract` host flags
 - Host↔client TCP + WAV upload path when the client actually records (WinMM on Windows; synthetic fallback elsewhere)
 
-**Stubs (print a line, do nothing)**
+**Stubs (honest STUB — not silently WIRED)**
 
-- `journal record | review | prompt`
-- `rhythm schedule | status | next` — `status` prints fake `ALIGNED`; `next` prints fake `4 hours`. Use `alarm`, not `rhythm`.
+- `journal record | review | prompt` — STUB. Capture owner is Desktop Clippers
+  at `C:\dev\journal-clippers\audio-journal-system`. Finish path: consume
+  `takes.jsonl` schema=1 (keep text; wav already destroyed). Not a recorder.
+  Not `voice.bat`. `journal review --tape <takes.jsonl>` exercises the reader.
+- `rhythm schedule | status | next` — STUB. Deferred to live `alarm`. Does not
+  print fake `ALIGNED` or `4 hours` as state.
 
 **Not this tree**
 

@@ -12,6 +12,16 @@ implementation is external Desktop Clippers at
 
 ## [Unreleased]
 
+### Changed
+- **Journal stub finish-path (alpha exhibition):** `journal record|review|prompt`
+  stays **STUB** but no longer prints canned capture-success lines. It names
+  external Desktop Clippers (`C:\dev\journal-clippers\audio-journal-system`) and
+  the documented finish path: consume `takes.jsonl` schema=1 (keep text; wav
+  already destroyed). `rhythm *` stays deferred to `alarm` without fake
+  `ALIGNED` / `4 hours` state. Host help, ATLAS operate spine, and the suite
+  card rack present Artifact Scanner cards as finder/inventory, not as a
+  Sesefus host.
+
 ### Docs
 - **Public mouth (2026-08-21):** clone door is `theRensisioure/sesephus`. Tester
   guide no longer points at `Zychs/sesefus`. CANON §1 names **Sesephus** as this

@@ -31,6 +31,11 @@ been retired from this branch.
 
 ## Current Voice boundary
 
+Artifact Scanner **cards** (`/suite` flip cards, `/cards`, and the in-repo
+spike `spikes/001-suite-card-rack`) are a **finder / inventory** face. They do
+not host Sesephus and they do not implement Circadia or Arcadium. Clippers,
+Sesephus, and Scanner stay three owners.
+
 The sole supported Voice implementation is **Desktop Clippers** at:
 
 ```text
@@ -90,7 +95,7 @@ workflows on them; each has a real alternative or a deferral (CANON §2, and the
 
 | Stub | Use instead |
 |---|---|
-| `journal record\|review\|prompt` | No supported in-repo replacement; use external Desktop Clippers for current Voice capture |
+| `journal record\|review\|prompt` | **STUB.** Capture owner is Desktop Clippers (`C:\dev\journal-clippers\audio-journal-system`). Finish path: consume `takes.jsonl` schema=1 (keep text; wav already destroyed). Not a recorder. Not `voice.bat`. |
 | `rhythm *` | **`alarm …`** — the real scheduler |
 | `stoic *` | Deferred in this lineage |
 | `lead mine\|feed` | Deferred; only `lead qualify` is wired |

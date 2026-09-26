@@ -26,6 +26,7 @@ const Arcadium = () => {
   return (
     <div className="arcadium-module animate-fade-in">
       <h2>Arcadium Audio Journaling</h2>
+      <p className="text-sm text-secondary">Retained dashboard face. Current Voice is external Clippers at C:\dev\journal-clippers\audio-journal-system. This panel is not the recorder.</p>
       
       <div className="grid-2 mt-6">
         <div className="glass-panel">

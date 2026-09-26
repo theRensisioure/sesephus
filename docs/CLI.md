@@ -1,10 +1,10 @@
-# Sesefus CLI Command Reference
+# Sesephus CLI Command Reference (0.1.0)
 
-> ⚠️ **STALE — [CANON.md](CANON.md) §2 is authoritative.** Most module commands
-> documented below (`journal`, `rhythm`, `stoic`, `lead mine|feed`, most of
-> `vault`) are **STUBS**: they print a canned line and do nothing. `voice.bat`
-> and `tools/voice.py` are historical and unsupported. Current Voice is the
-> external Desktop Clippers tree at
+> ⚠️ **[CANON.md](CANON.md) §2 is authoritative.** `journal`, `rhythm`, `stoic`,
+> `lead mine|feed`, and most of `vault` are **STUBS**. `journal` prints STUB +
+> the Clippers pointer; finish path is consume `takes.jsonl` schema=1 — it does
+> not record. `voice.bat` and `tools/voice.py` are historical and unsupported.
+> Current Voice is the external Desktop Clippers tree at
 > `C:\dev\journal-clippers\audio-journal-system`; this repository does
 > not launch it. The retained scheduler logic is `alarm`.
 
@@ -37,21 +37,25 @@ ssfs status
 ---
 
 ### `journal`
-Historical command shape for Sesephus audio journaling. The handler is a stub;
-this is not the current Voice path.
+**STUB.** Not a recorder. Capture owner is external Desktop Clippers at
+`C:\dev\journal-clippers\audio-journal-system`. Finish path: consume Clippers
+`takes.jsonl` (`schema=1` — keep text; wav already destroyed). Optional
+`--tape <takes.jsonl>` exercises that reader. Historical `voice.bat` is
+unsupported.
 
-* `ssfs journal record [minutes]` - Start a voice journal. Defaults to 3-10 minutes.
-* `ssfs journal review last` - Listen to your last entry.
-* `ssfs journal prompt stoic` - Get a spoken stoic reflection prompt.
+* `ssfs journal record` — STUB. Does not start a session.
+* `ssfs journal review [--tape takes.jsonl]` — STUB. May consume a tape row; no mic.
+* `ssfs journal prompt` — STUB. Will not invent a stoic prompt.
 
 ---
 
 ### `rhythm`
-Circadian anchors through predictable, rhythmic sound and voice cues.
+**STUB.** Deferred to live `alarm *`. Does not print fake ALIGNED state or a
+fake countdown.
 
-* `ssfs rhythm schedule morning` - Set the morning ritual alarm sequence.
-* `ssfs rhythm schedule evening` - Set the evening wind-down cue.
-* `ssfs rhythm next` - Ask the system: "What is my next growth anchor?"
+* `ssfs rhythm schedule morning` — STUB; use `alarm schedule`.
+* `ssfs rhythm schedule evening` — STUB; use `alarm schedule`.
+* `ssfs rhythm next` — STUB; use `alarm list`.
 
 ---
 

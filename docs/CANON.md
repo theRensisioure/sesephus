@@ -47,14 +47,15 @@ claim that Sesephus is the current capture product. Use exactly three status
 words project-wide.
 
 - **WIRED** — real logic runs today.
-- **STUB** — the handler only prints a canned line (`_ = allocator; _ = io;`). No effect.
+- **STUB** — not a live product loop. Prints honesty (and journal may optionally
+  read a Clippers `takes.jsonl` schema=1 row). No capture. Do not mark WIRED.
 - **DEAD** — implemented but *unreachable*; the dispatcher never routes to it.
 
 | Command | Status | Evidence |
 |---|---|---|
 | `status` | **WIRED** | host.zig |
-| `journal record\|review\|prompt` | **STUB** | commands/journal.zig:4-16 (print only) |
-| `rhythm schedule\|status\|next` | **STUB** — `status` prints hardcoded `ALIGNED`, `next` prints `4 hours` | commands/rhythm.zig:4-17 |
+| `journal record\|review\|prompt` | **STUB** | commands/journal.zig — STUB + Clippers pointer; finish path reads `takes.jsonl` schema=1 (keep text, no mic). Not a recorder. |
+| `rhythm schedule\|status\|next` | **STUB** — deferred to live `alarm *`. Does not print fake `ALIGNED` / `4 hours` as state. | commands/rhythm.zig |
 | `stoic daily-reflection\|virtue-check\|obstacle` | **STUB** | commands/stoic.zig:4-17 |
 | `lead qualify` | **WIRED** — spawns `python tools/qualify_post.py …` | commands/lead.zig:40-84 |
 | `lead mine\|feed` | **STUB** | commands/lead.zig:92-116 |
@@ -190,7 +191,7 @@ checkouts or optional paths — not as submodules that must be vendored here.
 |---|---|---|---|
 | **Sesephus** (this repo) | Public lineage/reference: retained alarms, vault, bridge, Glass, and historical capture code | **REFERENCE** | No supported Voice door; reference builds only |
 | **Desktop Clippers** (external) | Sole supported Voice capture: mic → Whisper → tape → shred → cue projection | **CURRENT** | `C:\dev\journal-clippers\audio-journal-system` |
-| **AyTree** | Suite **Version Control / derivation map** — directory lineages, notes, spatial structure. **Not** full git VCS. Dyslexia-first. | **WIRED** (external) | `aytree.bat` · `python tools/aytree_launch.py open` · REPL `aytree open` |
+| **Artifact Scanner** (external) | Finder / inventory **cards** (`/suite`, `/cards`). Not Circadia, not Arcadium, not a Sesephus host. | **FINDER** | `C:\Users\bardw\artifact-scanner` — pointer only; this repo exhibits the three-owner split |
 | **LeadLogic-Engine** | Employment / lead domain (qualify, mine). **Keep**; not the structure/VC lead. | **WIRED** (external + `lead qualify`) | `lead qualify` spawns `tools/qualify_post.py` |
 
 **Attention rule:** day-to-day “open this first” for *how work folders relate*

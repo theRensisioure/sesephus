@@ -287,15 +287,15 @@
 <body>
   <div class="frame">
     <header>
-      <h1>Sesefus · <em>rack</em></h1>
-      <div class="meta">horizontal · flippable cards · F = flip · Open = real surface</div>
+      <h1>Sesephus · <em>finder cards</em></h1>
+      <div class="meta">0.1.0 · three owners · inventory, not a host · F = flip</div>
     </header>
 
     <div class="rack" id="rack" role="list" aria-label="Product card rack"></div>
 
     <footer>
-      <span><strong>Shape:</strong> horizontal rack of flippable cards (suite face A / face B).</span>
-      <span>Front = who · Back = implementation (live embed or disk map).</span>
+      <span><strong>Owners:</strong> Clippers (Voice) · Sesephus (this lineage) · Scanner (finder).</span>
+      <span>Cards are inventory, not Circadia/Arcadium implementation, not a Sesefus host.</span>
       <span>Serve: <code>open.bat</code> → <code>http://127.0.0.1:8791/rack.html</code></span>
     </footer>
   </div>
@@ -308,11 +308,36 @@
      */
     const CARDS = [
       {
-        id: "circadia",
+        id: "clippers",
+        glyph: "◎",
+        name: "Clippers",
+        line: "Voice capture owner — external Desktop tree",
+        path: "C:\\dev\\journal-clippers\\audio-journal-system",
+        kind: "local",
+        open: null,
+        openCmd: null,
+        probes: [],
+        fallback: [
+          "OWNER: Voice (not this repo)",
+          "",
+          "Canonical tree:",
+          "  C:\\dev\\journal-clippers\\audio-journal-system",
+          "",
+          "Tape: takes.jsonl  schema=1",
+          "  keep text · wav already destroyed",
+          "",
+          "Sesephus journal * is STUB.",
+          "Finish path: consume that tape. No mic here.",
+          "This repo does not launch or vendor Clippers.",
+          "Historical voice.bat is unsupported.",
+        ].join("\n"),
+      },
+      {
+        id: "sesephus",
         glyph: "◐",
-        name: "Circadia",
-        line: "Alarms · timekeeper · rhythm face",
-        path: "C:\\dev\\sesefus  ·  ssfs alarm / status  ·  host :3000",
+        name: "Sesephus",
+        line: "Public lineage 0.1.0 — retained alarm / vault / bridge",
+        path: "C:\\dev\\sesephus  ·  theRensisioure/sesephus",
         kind: "http",
         open: "http://127.0.0.1:3000/",
         probes: [
@@ -320,48 +345,16 @@
           "http://127.0.0.1:3000/",
         ],
         fallback: [
-          "IMPLEMENTATION (disk / REPL — host not required)",
+          "OWNER: this public reference repo (not Voice)",
           "",
-          "Wired today:",
-          "  ssfs.bat  →  alarm schedule|group|list|toggle|…",
-          "  status",
-          "  Timekeeper thread (50ms) in host binary",
+          "WIRED: alarm * · group * · status · vault ingest-archive",
+          "STUB: journal * · rhythm * · stoic * · lead mine|feed",
           "",
-          "UI leftovers:",
-          "  dashboard/ui/src/components/Circadia.jsx",
+          "Circadia product is not done. alarm * is the scheduler.",
+          "journal * points at Clippers; does not record.",
           "",
-          "Open host when built:",
+          "Binary: sesefus.exe --role host",
           "  http://127.0.0.1:3000/api/status",
-        ].join("\n"),
-      },
-      {
-        id: "arcadium",
-        glyph: "◎",
-        name: "Arcadium",
-        line: "Voice journal — primary path, local Whisper + ETDI",
-        path: "C:\\dev\\sesefus\\voice.bat  ·  aurgio/",
-        kind: "local",
-        open: null,
-        openCmd: "voice.bat",
-        probes: [],
-        fallback: [
-          "IMPLEMENTATION (no web surface — that is honest)",
-          "",
-          "Primary loop:",
-          "  install.bat   # once",
-          "  voice.bat     # push-to-talk journal",
-          "",
-          "Speak: review last · score · dashboard · goodbye",
-          "",
-          "Data stays local:",
-          "  aurgio/recordings/",
-          "  aurgio/ scores + transcripts",
-          "",
-          "Tools:",
-          "  tools/etdi_*.py",
-          "  dashboard/ui/src/components/Arcadium.jsx (dashboard face, optional)",
-          "",
-          "REPL journal * is STUB — use voice.bat, not ssfs journal.",
         ].join("\n"),
       },
       {
@@ -395,24 +388,24 @@
         id: "scanner",
         glyph: "▣",
         name: "Scanner",
-        line: "Artifact finder — sessions, maps, archives (not suite host)",
-        path: "C:\\Users\\bardw\\artifact-scanner  ·  :8765/",
+        line: "Finder / inventory cards — not Circadia, not a Sesefus host",
+        path: "C:\\Users\\bardw\\artifact-scanner  ·  :8765/  ·  /cards",
         kind: "http",
         open: "http://127.0.0.1:8765/",
         probes: ["http://127.0.0.1:8765/", "http://127.0.0.1:8765/api/index.json"],
         iframe: "http://127.0.0.1:8765/",
         fallback: [
-          "IMPLEMENTATION",
+          "OWNER: finder / inventory (not a product host)",
           "",
           "  C:\\Users\\bardw\\artifact-scanner\\",
           "    board.html      SSOT UI",
           "    win_serve.py    :8765",
-          "    window_host.py  native windows",
+          "    /suite  flip cards",
+          "    /cards  session cards",
           "",
-          "Sesefus on scanner = inventory only",
-          "  GET /api/sesefus  → still no modules loaded into finder",
-          "",
-          "This rack is the opposite bet: Sesefus owns the deck.",
+          "Sesephus on scanner = inventory only.",
+          "Does not load Circadia or Arcadium as runtime.",
+          "Does not host Sesefus. Three owners stay three.",
         ].join("\n"),
       },
     ];
