@@ -8,8 +8,6 @@ const vault = @import("commands/vault.zig");
 const dialogue = @import("commands/dialogue.zig");
 const aytree = @import("commands/aytree.zig");
 const cli = @import("cli.zig");
-const runtime_config = @import("runtime_config.zig");
-const router = @import("commands/router.zig");
 
 const common = @import("common.zig");
 const database = @import("database.zig");
@@ -41,14 +39,6 @@ const AlarmGroup = struct {
     client_ids: std.ArrayList([]const u8),
 };
 
-
-// Lock order (never invert; take a prefix of this chain only):
-//   1. clients_mutex
-//   2. alarms_mutex
-//   3. subgroups_mutex
-// db_write_mutex is independent of the three above. Never hold it across
-// network I/O. Never hold clients/alarms/subgroups across writeMessage.
-
 var clients = std.ArrayList(*ClientConnection).empty;
 var clients_mutex = std.Io.Mutex.init;
 
@@ -66,9 +56,6 @@ var vault_public_key: [32]u8 = undefined;
 var vault_path: []const u8 = if (@import("builtin").os.tag == .windows) "V:\\sesephus_vault.db" else "sesephus_vault.db";
 var sidevault_path: []const u8 = "";
 var db_write_mutex = std.Io.Mutex.init;
-
-/// Host worker threads exit their loops when this becomes false.
-var host_running: std.atomic.Value(bool) = .init(true);
 
 fn resolveVaultPath(allocator: std.mem.Allocator, path: []const u8, io: std.Io) []const u8 {
     if (!std.fs.path.isAbsolute(path)) {
@@ -215,18 +202,8 @@ pub fn runHost(init: std.process.Init) !void {
     std.debug.print("      SESEFUS HOST DAEMON & VAULT ENGINE          \n", .{});
     std.debug.print("==================================================\n", .{});
 
-    // Vault password from vault.key (next to runtime.json). No hardcoded secret.
-    const password = runtime_config.loadVaultPassword(allocator, io) catch |err| {
-        const key_path = runtime_config.vaultKeyPath(allocator, io) catch "(unknown)";
-        std.debug.print(
-            \\[Vault] No vault.key ({s}): {}.
-            \\        Write a password with: vault set-key <password>
-            \\        Or place the password in the vault.key path above.
-            \\
-        , .{ key_path, err });
-        return error.VaultKeyMissing;
-    };
-    defer allocator.free(password);
+    // Setup vault database using static secure password to bypass interactive prompt
+    const password = "sesephus_default_vault_secure_password_string_2026";
 
     // Resolve robust database path and fallback if drive/directory is inaccessible
     const resolved_path = resolveVaultPath(allocator, vault_path, io);
@@ -328,16 +305,7 @@ pub fn runHost(init: std.process.Init) !void {
         }
     }
 
-    shutdownHost(allocator, io);
-}
-
-fn shutdownHost(allocator: std.mem.Allocator, io: std.Io) void {
-    std.debug.print("[Host] Stopping workers...\n", .{});
-    host_running.store(false, .release);
-    // Detached accept loops may still block on accept; process exit reclaims them.
-    common.sleepMs(100);
-
-    // Free state in lock order: clients → alarms → subgroups.
+    // Cleanup memory to prevent memory leaks on exit
     clients_mutex.lockUncancelable(io);
     for (clients.items) |c| {
         allocator.free(c.client_id);
@@ -374,12 +342,9 @@ fn shutdownHost(allocator: std.mem.Allocator, io: std.Io) void {
     }
     subgroups.deinit(allocator);
     subgroups_mutex.unlock(io);
-
     if (sidevault_path.len > 0) {
         allocator.free(sidevault_path);
-        sidevault_path = "";
     }
-    std.process.exit(0);
 }
 
 fn promptPassword(allocator: std.mem.Allocator, prompt: []const u8, io: std.Io) ![]const u8 {
@@ -460,15 +425,12 @@ fn startTcpListener(allocator: std.mem.Allocator, io: std.Io) !void {
 
     std.debug.print("[Host] Listening for client devices on port {}...\n", .{port});
 
-    while (host_running.load(.acquire)) {
-        const stream = server.accept(io) catch |err| {
-            if (!host_running.load(.acquire)) return;
-            std.debug.print("[Host] Accept error: {}\n", .{err});
-            continue;
-        };
+    while (true) {
+        const stream = try server.accept(io);
         errdefer stream.close(io);
 
-        const t = try std.Thread.spawn(.{}, handleClient, .{ stream, allocator, io });
+        // Spawn a thread to handle this connection
+        const t = try std.Thread.spawn(.{}, handleClient, .{stream, allocator, io});
         t.detach();
     }
 }
@@ -753,141 +715,68 @@ fn handleClient(stream: std.Io.net.Stream, allocator: std.mem.Allocator, io: std
     }
 }
 
-const AlarmDispatch = struct {
-    alarm_ptr: *Alarm,
-    alarm_id: []const u8,
-    action: []const u8,
-    duration: f32,
-    group_id: ?[]const u8,
-    client_ids: []const []const u8,
-};
-
-fn freeAlarmDispatch(d: AlarmDispatch, allocator: std.mem.Allocator) void {
-    allocator.free(d.alarm_id);
-    allocator.free(d.action);
-    if (d.group_id) |g| allocator.free(g);
-    for (d.client_ids) |c| allocator.free(c);
-    allocator.free(d.client_ids);
-}
-
 fn startTimekeeper(io: std.Io) void {
-    const allocator = std.heap.page_allocator;
-    while (host_running.load(.acquire)) {
-        common.sleepMs(50);
+    while (true) {
+        common.sleepMs(50); // Responsive 50ms polling rate
 
         const now = common.getMilliTimestamp();
-        var due = std.ArrayList(AlarmDispatch).empty;
-        defer {
-            for (due.items) |d| freeAlarmDispatch(d, allocator);
-            due.deinit(allocator);
-        }
-
-        // Phase 1: snapshot due alarms under alarms_mutex only. Do not mark fired yet.
         alarms_mutex.lockUncancelable(io);
+        
         for (alarms.items) |alarm| {
-            if (!(alarm.enabled and now >= alarm.trigger_time and !alarm.fired)) continue;
+            if (alarm.enabled and now >= alarm.trigger_time and !alarm.fired) {
+                alarm.fired = true;
+                
+                // Dispatch to client(s)
+                clients_mutex.lockUncancelable(io);
+                subgroups_mutex.lockUncancelable(io);
+                
+                var target_clients = std.ArrayList([]const u8).empty;
+                defer target_clients.deinit(std.heap.page_allocator);
+                
+                if (alarm.group_id) |g_id| {
+                    for (subgroups.items) |g| {
+                        if (std.mem.eql(u8, g.group_id, g_id)) {
+                            for (g.client_ids.items) |cid| {
+                                target_clients.append(std.heap.page_allocator, cid) catch {};
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                if (target_clients.items.len == 0) {
+                    for (alarm.client_ids.items) |cid| {
+                        target_clients.append(std.heap.page_allocator, cid) catch {};
+                    }
+                }
+                
+                var dispatched = false;
+                for (target_clients.items) |target_cid| {
+                    for (clients.items) |client| {
+                        if (client.active and std.mem.eql(u8, client.client_id, target_cid)) {
+                            std.debug.print("\n[Host] Triggering alarm {s} on client {s} for action: {s}...\n", .{alarm.alarm_id, client.client_id, alarm.action});
+                            const trigger_msg = common.Message{
+                                .type = "AlarmTrigger",
+                                .alarm_id = alarm.alarm_id,
+                                .action = alarm.action,
+                                .duration = alarm.duration,
+                            };
+                            common.writeMessage(client.stream, trigger_msg, std.heap.page_allocator, io) catch |err| {
+                                std.debug.print("Failed to dispatch alarm to client {s}: {}\n", .{client.client_id, err});
+                            };
+                            dispatched = true;
+                        }
+                    }
+                }
+                subgroups_mutex.unlock(io);
+                clients_mutex.unlock(io);
 
-            var cid_copies: std.ArrayList([]const u8) = .empty;
-            for (alarm.client_ids.items) |cid| {
-                const c = allocator.dupe(u8, cid) catch continue;
-                cid_copies.append(allocator, c) catch allocator.free(c);
+                if (!dispatched) {
+                    std.debug.print("\n[Host] Failed to trigger alarm {s}: No active client target online.\n", .{alarm.alarm_id});
+                }
             }
-            const ids_slice = cid_copies.toOwnedSlice(allocator) catch {
-                for (cid_copies.items) |c| allocator.free(c);
-                cid_copies.deinit(allocator);
-                continue;
-            };
-
-            const id_copy = allocator.dupe(u8, alarm.alarm_id) catch {
-                for (ids_slice) |c| allocator.free(c);
-                allocator.free(ids_slice);
-                continue;
-            };
-            const action_copy = allocator.dupe(u8, alarm.action) catch {
-                allocator.free(id_copy);
-                for (ids_slice) |c| allocator.free(c);
-                allocator.free(ids_slice);
-                continue;
-            };
-            const group_copy: ?[]const u8 = if (alarm.group_id) |g|
-                allocator.dupe(u8, g) catch null
-            else
-                null;
-
-            const snap = AlarmDispatch{
-                .alarm_ptr = alarm,
-                .alarm_id = id_copy,
-                .action = action_copy,
-                .duration = alarm.duration,
-                .group_id = group_copy,
-                .client_ids = ids_slice,
-            };
-            due.append(allocator, snap) catch freeAlarmDispatch(snap, allocator);
         }
         alarms_mutex.unlock(io);
-
-        // Phase 2–3: resolve streams under clients → subgroups; write outside locks.
-        for (due.items) |d| {
-            var streams: std.ArrayList(std.Io.net.Stream) = .empty;
-            defer streams.deinit(allocator);
-
-            var target_cids: std.ArrayList([]const u8) = .empty;
-            defer target_cids.deinit(allocator);
-
-            clients_mutex.lockUncancelable(io);
-            subgroups_mutex.lockUncancelable(io);
-
-            if (d.group_id) |g_id| {
-                for (subgroups.items) |g| {
-                    if (std.mem.eql(u8, g.group_id, g_id)) {
-                        for (g.client_ids.items) |cid| {
-                            target_cids.append(allocator, cid) catch {};
-                        }
-                        break;
-                    }
-                }
-            }
-            if (target_cids.items.len == 0) {
-                for (d.client_ids) |cid| {
-                    target_cids.append(allocator, cid) catch {};
-                }
-            }
-
-            for (target_cids.items) |target_cid| {
-                for (clients.items) |client| {
-                    if (client.active and std.mem.eql(u8, client.client_id, target_cid)) {
-                        streams.append(allocator, client.stream) catch {};
-                    }
-                }
-            }
-            subgroups_mutex.unlock(io);
-            clients_mutex.unlock(io);
-
-            var dispatched = false;
-            for (streams.items) |stream| {
-                std.debug.print("\n[Host] Triggering alarm {s} action: {s}...\n", .{ d.alarm_id, d.action });
-                const trigger_msg = common.Message{
-                    .type = "AlarmTrigger",
-                    .alarm_id = d.alarm_id,
-                    .action = d.action,
-                    .duration = d.duration,
-                };
-                common.writeMessage(stream, trigger_msg, allocator, io) catch |err| {
-                    std.debug.print("Failed to dispatch alarm {s}: {}\n", .{ d.alarm_id, err });
-                    continue;
-                };
-                dispatched = true;
-            }
-
-            // Phase 4: mark fired only after a successful write so offline targets retry.
-            if (dispatched) {
-                alarms_mutex.lockUncancelable(io);
-                d.alarm_ptr.fired = true;
-                alarms_mutex.unlock(io);
-            } else {
-                std.debug.print("\n[Host] Alarm {s} not delivered (no active target). Will retry.\n", .{d.alarm_id});
-            }
-        }
     }
 }
 
@@ -1021,13 +910,9 @@ fn startHttpServer(allocator: std.mem.Allocator, io: std.Io) !void {
     
     std.debug.print("[HTTP] Dashboard Web UI listening at http://localhost:{}/\n", .{port});
     
-    while (host_running.load(.acquire)) {
-        const stream = server.accept(io) catch |err| {
-            if (!host_running.load(.acquire)) return;
-            std.debug.print("[HTTP] Accept error: {}\n", .{err});
-            continue;
-        };
-        const t = try std.Thread.spawn(.{}, handleHttpRequest, .{ stream, allocator, io });
+    while (true) {
+        const stream = try server.accept(io);
+        const t = try std.Thread.spawn(.{}, handleHttpRequest, .{stream, allocator, io});
         t.detach();
     }
 }
@@ -1480,11 +1365,11 @@ fn handleDeleteGroup(stream: std.Io.net.Stream, request: []const u8, allocator: 
     const parsed = try std.json.parseFromSlice(GroupDeletePost, allocator, body, .{ .ignore_unknown_fields = true });
     defer parsed.deinit();
     
-    // Lock order: alarms before subgroups (prefix of clients → alarms → subgroups).
-    alarms_mutex.lockUncancelable(io);
-    defer alarms_mutex.unlock(io);
     subgroups_mutex.lockUncancelable(io);
     defer subgroups_mutex.unlock(io);
+    
+    alarms_mutex.lockUncancelable(io);
+    defer alarms_mutex.unlock(io);
     
     var found_idx: ?usize = null;
     for (subgroups.items, 0..) |g, idx| {
@@ -1829,7 +1714,6 @@ fn handleCliCommand(line: []const u8, allocator: std.mem.Allocator, io: std.Io, 
 
     if (std.mem.eql(u8, trimmed, "exit")) {
         std.debug.print("[Host] Shutting down growth engine...\n", .{});
-        shutdownHost(allocator, io);
         return false;
     }
     if (std.mem.eql(u8, trimmed, "status") or std.mem.eql(u8, trimmed, "s")) {
@@ -1844,21 +1728,7 @@ fn handleCliCommand(line: []const u8, allocator: std.mem.Allocator, io: std.Io, 
     var it = std.mem.tokenizeAny(u8, trimmed, " ");
     const module = it.next() orelse return true;
 
-    // Reject unknown names using the command router table.
-    if (router.find(module) == null and !std.mem.eql(u8, module, "agent")) {
-        std.debug.print("Unknown module '{s}'. Type 'help' for mission-aligned commands.\n", .{module});
-        return true;
-    }
-
-    if (std.mem.eql(u8, module, "backup")) {
-        const dest = it.next() orelse "sesephus_vault.backup.db";
-        database.replicateDatabase(vault_path, dest, io) catch |err| {
-            std.debug.print("[Backup] Failed: {}\n", .{err});
-            return true;
-        };
-        std.debug.print("[Backup] Hot copy written to {s}\n", .{dest});
-        return true;
-    } else if (std.mem.eql(u8, module, "dialogue")) {
+    if (std.mem.eql(u8, module, "dialogue")) {
         return try dialogue.handleDialogueCommand(&it, allocator, io, stdin, vault_path, vault_key);
     } else if (std.mem.eql(u8, module, "journal")) {
         return try journal.handleJournalCommand(&it, allocator, io);
@@ -1871,6 +1741,7 @@ fn handleCliCommand(line: []const u8, allocator: std.mem.Allocator, io: std.Io, 
     } else if (std.mem.eql(u8, module, "vault")) {
         return try vault.handleVaultCommand(&it, allocator, io);
     } else if (std.mem.eql(u8, module, "aytree") or std.mem.eql(u8, module, "tree")) {
+        // `tree` alias — suite Version Control / derivation map (not full VCS)
         return try aytree.handleAytreeCommand(&it, allocator, io);
     } else if (std.mem.eql(u8, module, "group")) {
         return try handleGroupCommand(&it, allocator, io);
@@ -1878,6 +1749,7 @@ fn handleCliCommand(line: []const u8, allocator: std.mem.Allocator, io: std.Io, 
         std.debug.print("[Agent] Running optimization...\n", .{});
         return true;
     } else if (std.mem.eql(u8, module, "alarm")) {
+        // Keep legacy for backward compatibility during transition
         return try handleAlarmCommand(&it, allocator, io);
     }
 

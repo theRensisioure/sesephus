@@ -6,7 +6,7 @@ logic:
 
   1. AYTREE_ROOT env
   2. sesefus.config.json ``aytree_root``
-  3. the aytree domain in manifest.json
+  3. Sibling folders next to this repo: AyTree / aytree
 
 Surfaces (HTTP on aytree_port, default 8000):
   open / map  → /derivation   (directory lineage map)
@@ -59,22 +59,13 @@ def resolve_aytree_root(cfg: dict | None = None) -> Path | None:
             return p.resolve()
         print(f"[aytree] aytree_root in config not valid: {p}", file=sys.stderr)
 
-    # Domain map only. Do not walk to a sibling of this repo.
-    if str(REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(REPO_ROOT))
-    from ledger.domains import load_domains, resolve_domain
+    # Sibling discovery only — not a hardcoded suite inventory
+    parent = REPO_ROOT.parent
+    for name in ("AyTree", "aytree"):
+        cand = parent / name
+        if _is_aytree(cand):
+            return cand.resolve()
 
-    manifest = REPO_ROOT / "manifest.json"
-    if not manifest.is_file():
-        return None
-    try:
-        domains = load_domains(manifest)
-        cand = Path(resolve_domain("aytree", domains))
-    except (KeyError, ValueError, OSError) as exc:
-        print(f"[aytree] aytree domain not usable: {exc}", file=sys.stderr)
-        return None
-    if _is_aytree(cand):
-        return cand
     return None
 
 
@@ -261,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "[aytree] AyTree not found.\n"
             "  Set AYTREE_ROOT, or aytree_root in sesefus.config.json,\n"
-            "  or set the aytree domain to an absolute path in manifest.json.",
+            "  or clone AyTree as a sibling of the sesefus repo (../AyTree).",
             file=sys.stderr,
         )
         return 2

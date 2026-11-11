@@ -32,22 +32,19 @@ reconstructed from the other mouth — they are not issues on this repo.
 - `docs/PRODUCTION.md` §5 — SSFS guardrails
 - Host hook landed with autostart deliberately paused
 
-### ✅ Module extraction (`feat/extract-modules`) — shipped (Zychs/sesefus PR #49)
+### ⬜ Module extraction (`feat/extract-modules`)
 Extract cli / capture / net into modules:
 - `src/cli/flags.zig`
 - `src/modules/capture/wav_record.zig`
 - `src/net/protocol.zig`
 - `.gitignore` hardening
 
-*Merged after the ssfs-storage work; all three files are on disk (checked 2026-10-03).*
+*Merge note: rebase onto current `main`; expect a `.gitignore` conflict with the
+ssfs-storage work already merged.*
 
 ### ⬜ Dashboard on the path resolver
 Dashboard/sidecar consume `ssfs/storage/paths.js`; zero hardcoded `V:` paths remain
 in dashboard code.
-
-*Status 2026-10-03: no `V:` path is used in dashboard logic (only an input
-placeholder hint in `Sieve.jsx`), but nothing in `dashboard/` imports the resolver
-yet. Still open.*
 
 ### ⬜ Vault resolver migration
 Migrate remaining vault hardcodes to the resolver, per `docs/vault_security.md`.
@@ -68,7 +65,7 @@ Tag `prerelease` on `main`. First version number gets assigned here.
 
 ## Open loops (carried from planning)
 
-- [x] Rebase `feat/extract-modules` onto post-ssfs `main` and PR it (PR #49)
+- [ ] Rebase `feat/extract-modules` onto post-ssfs `main` and PR it
 - [ ] Confirm or swap the scope of the middle rungs (dashboard/vault/host) against
       whatever is hottest at the time
 - [ ] Voice-control/ETDI pipeline (PR #25) merged outside the ladder — its follow-ups
