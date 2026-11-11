@@ -64,6 +64,72 @@ pub fn configPath(allocator: std.mem.Allocator, io: std.Io) ![]const u8 {
     return try std.fmt.allocPrint(allocator, "{s}" ++ sep ++ "runtime.json", .{primary});
 }
 
+pub fn vaultKeyPath(allocator: std.mem.Allocator, io: std.Io) ![]const u8 {
+    const primary = primaryConfigDir(io) catch {
+        const fallback = try fallbackConfigDir(allocator);
+        defer allocator.free(fallback);
+        return try std.fmt.allocPrint(allocator, "{s}" ++ sep ++ "vault.key", .{fallback});
+    };
+    return try std.fmt.allocPrint(allocator, "{s}" ++ sep ++ "vault.key", .{primary});
+}
+
+/// Read the vault password from vault.key next to runtime.json.
+/// Trims trailing whitespace. Caller owns the returned slice.
+pub fn loadVaultPassword(allocator: std.mem.Allocator, io: std.Io) ![]const u8 {
+    const path = try vaultKeyPath(allocator, io);
+    defer allocator.free(path);
+
+    const file = std.Io.Dir.openFileAbsolute(io, path, .{ .mode = .read_only }) catch |err| {
+        // Relative fallback path (when primary is inaccessible)
+        if (!std.fs.path.isAbsolute(path)) {
+            const f = std.Io.Dir.cwd().openFile(io, path, .{ .mode = .read_only }) catch return err;
+            defer f.close(io);
+            return try readPasswordFile(f, allocator, io);
+        }
+        return err;
+    };
+    defer file.close(io);
+    return try readPasswordFile(file, allocator, io);
+}
+
+fn readPasswordFile(file: std.Io.File, allocator: std.mem.Allocator, io: std.Io) ![]const u8 {
+    var read_buf: [512]u8 = undefined;
+    var reader = file.reader(io, &read_buf);
+    const data = try reader.interface.allocRemaining(allocator, .limited(4096));
+    errdefer allocator.free(data);
+    const trimmed = std.mem.trim(u8, data, " \t\r\n");
+    if (trimmed.len == 0) {
+        allocator.free(data);
+        return error.EmptyPassword;
+    }
+    if (trimmed.ptr != data.ptr or trimmed.len != data.len) {
+        const owned = try allocator.dupe(u8, trimmed);
+        allocator.free(data);
+        return owned;
+    }
+    return data;
+}
+
+/// Write vault password to vault.key (creates parent dirs). Overwrites.
+pub fn saveVaultPassword(password: []const u8, allocator: std.mem.Allocator, io: std.Io) !void {
+    const path = try vaultKeyPath(allocator, io);
+    defer allocator.free(path);
+
+    if (std.fs.path.dirname(path)) |dir| {
+        if (dir.len > 0) {
+            std.Io.Dir.cwd().createDirPath(io, dir) catch {};
+        }
+    }
+
+    const file = if (std.fs.path.isAbsolute(path))
+        try std.Io.Dir.createFileAbsolute(io, path, .{ .truncate = true })
+    else
+        try std.Io.Dir.cwd().createFile(io, path, .{ .truncate = true });
+    defer file.close(io);
+    try file.writeStreamingAll(io, password);
+    try file.writeStreamingAll(io, "\n");
+}
+
 pub fn load(allocator: std.mem.Allocator, io: std.Io) !?Config {
     // Read path is probe-free: loading config must never write outside the
     // project (resolveWritableDir creates dirs + a probe file, so it is only

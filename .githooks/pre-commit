@@ -12,6 +12,7 @@ echo "pre-commit:"
 echo "  - vault guard";      bash "$root/tools/guard_vaults.sh"  --staged || rc=1
 echo "  - secret scan";      bash "$root/tools/scan_secrets.sh"  --staged || rc=1
 echo "  - large-file guard"; bash "$root/tools/guard_bigfiles.sh" --staged || rc=1
+echo "  - flat workspace";   python "$root/ledger/flat_workspace.py" --root "$root" || rc=1
 
 if [ "$rc" -ne 0 ]; then
   echo "" >&2

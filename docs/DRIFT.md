@@ -81,11 +81,13 @@ drift instrument — a cognitive prosthetic — not a mental-health product.
 
 ## Implementation ladder
 
-- **v1 (built)** — ETDI state metric per memo; fixed flag threshold 0.15;
+- **v1 (built)** — ETDI state metric per memo; fixed flag threshold 0.30 (was 0.15 under the old
+  product form; recalibrated in PR #30);
   screenshots → embeddable abstract-notion chunks.
 - **v2 (next)** — the drift layer in `etdi_store.py`: `s̄`/`σ` columns per
   axis, drift D computed at score time, flag layer reads D > τ instead of
-  raw ETDI. Candidate formula switch: ETDI state = √(v²+a²+s²)/(√3·min).
+  raw ETDI. The formula switch to ETDI state = √(v²+a²+s²)/(√3·min)
+  already landed with v1 (PR #30).
 - **v3 (later)** — cross-domain drift dashboard: one panel per drift form,
   same normalization everywhere; attention drift from screenshot concepts;
   calibration drift (model-inferred vs self-reported — the same math watching

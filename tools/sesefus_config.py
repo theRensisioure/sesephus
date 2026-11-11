@@ -32,7 +32,7 @@ DEFAULTS = {
     # UI
     "dashboard_url": "http://localhost:5173",
     # AyTree (suite Version Control / derivation-map) — sibling checkout or absolute path.
-    # Leave null to auto-discover ../AyTree or AYTREE_ROOT. Never a roster of projects.
+    # Leave null to use the aytree domain in manifest.json, or AYTREE_ROOT.
     "aytree_root": None,
     "aytree_port": 8000,
 }

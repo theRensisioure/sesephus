@@ -1,0 +1,15 @@
+EVENT e1
+hello world
+END EVENT
+REASON e1 e2
+the second follows the first
+END REASON
+EVENT e2
+second event
+END EVENT
+DECISION d1 theme blue
+pick blue
+END DECISION
+DECISION d2 size large
+pick large
+END DECISION

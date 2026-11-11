@@ -1,0 +1,21 @@
+:root {
+  --bg: #050509;
+  --panel: #101018;
+  --void: #0a0a10;
+  --line: #272739;
+  --ink: #e7e7f2;
+  --ink-strong: #f4f4fb;
+  --ink-soft: #a7a7bd;
+  --ink-mute: #6c6c83;
+  --good: #4CAE7C;
+  --warn: #e2a24a;
+  --bad: #e07a7a;
+  --accent-journal: #7cf7ff;
+  --accent-circadia: #a78bfa;
+  --accent-vej: #d4b23a;
+  --accent-clivor: #6bcf9b;
+  --accent: var(--accent-clivor);
+  --font-read: "Segoe UI", system-ui, sans-serif;
+  --font-mono: Consolas, ui-monospace, monospace;
+  --ratio: 0.8;
+}

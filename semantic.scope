@@ -1,0 +1,13 @@
+# Local brain. Live tree only. Nested AyTree and archival stay out.
+include core
+include dashboard
+include tools
+include src
+include client
+include ssfs
+exclude AyTree
+exclude tests
+exclude aether-dashboard-v2
+exclude node_modules
+exclude zig-out
+exclude zig-cache

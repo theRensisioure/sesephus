@@ -234,26 +234,28 @@ Port: `aytree_port` (default **8000**) — same default as local vLLM for
 Everything below contradicts §1–§8 and should be fixed at the source so the artifacts
 can be regenerated cleanly.
 
-- [ ] `dashboard/ui/src/components/EtdiPanel.jsx:53` — **live UI** still prints the old
-      product formula. **Highest priority: it's on screen in the demo.**
-- [ ] `docs/DRIFT.md:84` — still says `0.15`; should be `0.30`.
+- [x] `dashboard/ui/src/components/EtdiPanel.jsx:53` — **live UI** printed the old
+      product formula. Fixed: it prints the norm form @0.30 (checked 2026-10-03).
+- [x] `docs/DRIFT.md:84` — said `0.15`. Fixed: says `0.30`, with `0.15` kept as
+      history (2026-10-03).
 - [x] `README.md:1` — identifies Sesephus as the public lineage/reference
       repository and points current Voice to external Desktop Clippers.
-- [ ] `overallreadmee.md:1` — "Arcadium & Circadia (AuraEngine / Sesephus Suite)";
-      pre-rebrand naming.
-- [ ] `docs/manifest.json` — points at phantom `core/sesephus/circadia.zig` &
-      `arcadium.zig` (neither exists); version `0.1.0`, repo `t:/sesephus-database`
-      all stale.
-- [ ] `host.zig:266-282` — startup banner advertises underscore commands + the DEAD
-      vault ops as if usable.
-- [ ] `tools/archive_schema.py:1` — docstring says `T:/Archive/sesefhus`; the code now
-      derives `E:` from `drive-mapping.json`.
+- [x] `overallreadmee.md:1` — "Arcadium & Circadia (AuraEngine / Sesephus Suite)";
+      pre-rebrand naming. Handled by a dated banner on top; the body stays as a
+      historical record (2026-10-03).
+- [x] `docs/manifest.json` — pointed at phantom `core/sesephus/circadia.zig` &
+      `arcadium.zig`. Fixed: real paths (`host.zig`, `client.zig`), real repo, and
+      no invented version (2026-10-03).
+- [x] `host.zig` startup banner — advertised underscore commands + the DEAD vault
+      ops. Fixed: space-separated forms, no DEAD vault ops (checked 2026-10-03).
+- [x] `tools/archive_schema.py:1` — docstring said `T:/Archive/sesefhus`. Fixed: it
+      names `drive-mapping.json` via `ssfs_config` as the source (2026-10-03).
 - [x] `core/alarm_engine.zig` and the second `handleVaultCommand` in `host.zig` —
       removed (#67).
 
 ---
 
-## 9 · The six artifacts, at a glance
+## 10 · The six artifacts, at a glance
 
 | Artifact | Verdict | Fix priority |
 |---|---|---|

@@ -1,4 +1,8 @@
-"""SQLite schemas for T:/Archive/sesefhus dual-append archive."""
+"""SQLite schemas for the Archive/sesefhus dual-append archive.
+
+The drive letter and folder come from ssfs/drive-mapping.json
+(coldArchive + archiveRoot) via ssfs_config.get_archive_root().
+"""
 from __future__ import annotations
 
 import sqlite3

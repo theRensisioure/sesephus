@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Card surface look</title>
+  <link rel="stylesheet" href="colors.css" />
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-read);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    #slot {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #card {
+      --accent: var(--accent-clivor);
+      width: 336px;
+      height: 420px;
+      border: 1px solid var(--accent);
+      background: var(--panel);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform-origin: center center;
+    }
+
+    #card.is-back { background: var(--void); }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .crumb {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.45em;
+      margin: 0;
+      min-width: 0;
+      font: 14px/1.4 var(--font-mono);
+      color: var(--ink-soft);
+    }
+
+    #switch, #flip {
+      font: 14px/1.4 var(--font-mono);
+      color: var(--accent);
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    #flip {
+      border-color: var(--accent);
+      padding: 4px 10px;
+      flex: none;
+    }
+
+    .face {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 22px 22px 18px;
+      overflow: auto;
+    }
+
+    .face[hidden] { display: none; }
+
+    h2 {
+      margin: 0;
+      font: 18px/1.5 var(--font-read);
+      font-weight: 600;
+      color: var(--ink-strong);
+    }
+
+    p, li {
+      margin: 0;
+      font: 18px/1.5 var(--font-read);
+      color: var(--ink);
+    }
+
+    .soft {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
+    .chip {
+      margin: 0;
+      font: 14px/1.4 var(--font-mono);
+    }
+
+    .chip.warn { color: var(--warn); }
+    .chip.good { color: var(--good); }
+    .chip.bad { color: var(--bad); }
+
+    .path {
+      font: 14px/1.5 var(--font-mono);
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .decide {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .decide button {
+      font: 18px/1.5 var(--font-read);
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--line);
+      padding: 8px 18px;
+      cursor: pointer;
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .rows { display: flex; flex-direction: column; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 7.2em 1fr;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .row b {
+      font: 14px/1.5 var(--font-mono);
+      font-weight: 600;
+    }
+
+    .row .wired { color: var(--good); }
+    .row .stub, .row .open, .row .mock { color: var(--warn); }
+    .row .none { color: var(--bad); }
+
+    .box {
+      border: 1px solid var(--line);
+      padding: 14px 16px;
+    }
+
+    .day {
+      margin: 8px 0 0;
+      font: 14px/1.4 var(--font-mono);
+      color: var(--ink-soft);
+    }
+
+    .kept {
+      display: grid;
+      grid-template-columns: 2.4em 1fr;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .kept .yes { color: var(--good); }
+    .kept .no { color: var(--warn); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 18px 14px;
+      border-top: 1px solid var(--line);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
+    footer strong {
+      font-weight: 600;
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <div id="slot">
+    <article id="card">
+      <header>
+        <p class="crumb">
+          <span>o</span>
+          <button id="switch" type="button">Clivor yes/no</button>
+          <span>/</span>
+          <span id="face-name">yes-no</span>
+        </p>
+        <button id="flip" type="button">flip</button>
+      </header>
+      <div id="front" class="face"></div>
+      <div id="back" class="face" hidden></div>
+    </article>
+  </div>
+  <footer>
+    <div id="keys"></div>
+    <div id="note">Look prototype. Nothing is written.</div>
+  </footer>
+  <script type="module">
+    import {
+      FLIP_STEPS, FLIP_MS, PORTRAIT,
+      flipWidthScale, flipSwapStep, portraitBox, createFlip
+    } from "./flip.js";
+
+    // Expose for console / verification
+    window.flipWidthScale = flipWidthScale;
+    window.flipSwapStep = flipSwapStep;
+    window.portraitBox = portraitBox;
+
+    const flip = createFlip();
+    const ledger = [];
+    let index = 0;
+    let deck = [];
+    let cards = [];
+    let asked = [];
+
+    const cardEl = document.getElementById("card");
+    const frontEl = document.getElementById("front");
+    const backEl = document.getElementById("back");
+    const faceName = document.getElementById("face-name");
+    const keysEl = document.getElementById("keys");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function el(tag, cls, text) {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function row(word, cls, value) {
+      const line = el("div", "row");
+      line.append(el("b", cls, word), el("span", null, value));
+      return line;
+    }
+
+    function paintFront(card) {
+      frontEl.replaceChildren();
+      if (card.kind === "native") {
+        frontEl.append(el("p", "chip good", "runs here"));
+        if (asked.length === 0) {
+          frontEl.append(el("h2", null, "Deck empty."));
+          frontEl.append(el("p", "soft", "Flip for the ledger."));
+          return;
+        }
+        const q = asked[0];
+        frontEl.append(el("p", "soft", asked.length + " left. Sample questions, not your deck."));
+        frontEl.append(el("h2", null, q.question));
+        frontEl.append(el("p", "soft", "Done when"));
+        frontEl.append(el("p", null, q.done_when));
+        const decide = el("div", "decide");
+        const no = el("button", null, "no");
+        const yes = el("button", null, "yes");
+        no.type = "button";
+        yes.type = "button";
+        no.addEventListener("click", function () { answer("no"); });
+        yes.addEventListener("click", function () { answer("yes"); });
+        decide.append(no, yes);
+        frontEl.append(decide);
+        return;
+      }
+      if (card.slug === "journal-clip") {
+        frontEl.append(el("p", "chip", "pointer only"));
+        frontEl.append(el("h2", null, "You speak. It keeps text. It destroys the wav."));
+        frontEl.append(el("p", "soft", "Path to copy. This page does not launch it."));
+        frontEl.append(el("p", "path", "C:\\dev\\journal-clippers\\audio-journal-system"));
+        return;
+      }
+      if (card.slug === "circadia") {
+        frontEl.append(el("p", "chip warn", "Not done"));
+        frontEl.append(el("h2", null, "The scheduler exists. The product does not."));
+        frontEl.append(el("p", null, "Is the next step the Windows mood cue?"));
+        frontEl.append(el("p", "soft", "Unanswered. Nothing is written."));
+        return;
+      }
+      frontEl.append(el("p", "chip warn", "mock only"));
+      frontEl.append(el("h2", null, "No data yet."));
+      const box = el("div", "box");
+      box.append(el("p", null, "Scores were not read for this look."));
+      box.append(el("p", "soft", "No Jev number. Jev was never run. No score for fresh-004 or fresh-005."));
+      frontEl.append(box);
+    }
+
+    function paintBack(card) {
+      backEl.replaceChildren();
+      if (card.kind === "native") {
+        backEl.append(el("p", "chip", "read only"));
+        if (ledger.length === 0) {
+          backEl.append(el("h2", null, "Nothing kept yet."));
+          backEl.append(el("p", "soft", "An answer on the front lands here. This page writes no file."));
+          return;
+        }
+        const yesN = ledger.filter(function (r) { return r.answer === "yes"; }).length;
+        const noN = ledger.length - yesN;
+        backEl.append(el("p", "soft", "yes " + yesN + "    no " + noN));
+        let day = "";
+        ledger.forEach(function (r) {
+          const label = new Date(r.ts).toLocaleDateString(undefined, {
+            year: "numeric", month: "short", day: "numeric"
+          });
+          if (label !== day) {
+            day = label;
+            backEl.append(el("p", "day", label));
+          }
+          const line = el("div", "kept");
+          line.append(el("b", r.answer, r.answer), el("span", null, r.question));
+          backEl.append(line);
+        });
+        return;
+      }
+      if (card.slug === "journal-clip") {
+        backEl.append(el("p", "chip", "read only"));
+        backEl.append(el("h2", null, "This surface does not read the tape."));
+        const notes = el("div", "rows");
+        notes.append(row("fence", null, "Do not launch Clippers from here."));
+        notes.append(row("fence", null, "Do not present Sesephus as Clippers."));
+        notes.append(row("file", null, "takes.jsonl stays in the external app."));
+        notes.append(row("unknown", "open", "The Desktop tree may not be that path."));
+        backEl.append(notes);
+        backEl.append(el("p", "soft", "External ladder, not wired here: 30 / 60 / 90 / 120 s, and 7.5 / 15 / 22.5 / 30 min."));
+        return;
+      }
+      if (card.slug === "circadia") {
+        backEl.append(el("p", "chip", "read only"));
+        backEl.append(el("h2", null, "From this repo. Circadia's own tree was not read."));
+        const notes = el("div", "rows");
+        notes.append(row("wired", "wired", "Alarm schedule, in the host."));
+        notes.append(row("stub", "stub", "Journal and rhythm."));
+        notes.append(row("not built", "none", "The Circadia product."));
+        notes.append(row("open", "open", "Phone concept, or the Windows 0.1 cue."));
+        notes.append(row("mock only", "mock", "This card. It writes nothing."));
+        backEl.append(notes);
+        return;
+      }
+      backEl.append(el("p", "chip", "read only"));
+      backEl.append(el("h2", null, "Set status was not read."));
+      const box = el("div", "box");
+      box.append(el("p", null, "No data yet."));
+      box.append(el("p", "soft", "A reader report said five spent and two fresh. Not verified here. This card does not mark a set spent."));
+      backEl.append(box);
+    }
+
+    function paintKeys() {
+      const card = cards[index];
+      const decide = card.kind === "native" && !flip.is_back && asked.length > 0;
+      keysEl.replaceChildren();
+      const flipBit = el("span", null, "");
+      flipBit.append(el("strong", null, "↑ ↓"), document.createTextNode(" flip"));
+      keysEl.append(flipBit);
+      keysEl.append(document.createTextNode("   "));
+      if (decide) {
+        const bits = el("span", null, "");
+        bits.append(el("strong", null, "←"), document.createTextNode(" no    "), el("strong", null, "→"), document.createTextNode(" yes"));
+        keysEl.append(bits);
+      } else {
+        keysEl.append(el("span", null, "← → do nothing on this face"));
+      }
+    }
+
+    function showFace() {
+      const card = cards[index];
+      cardEl.style.setProperty("--accent", "var(" + card.accent + ")");
+      document.getElementById("switch").textContent = card.label;
+      faceName.textContent = flip.is_back ? card.backName : card.frontName;
+      cardEl.classList.toggle("is-back", flip.is_back);
+      frontEl.hidden = flip.is_back;
+      backEl.hidden = !flip.is_back;
+      paintFront(card);
+      paintBack(card);
+      paintKeys();
+    }
+
+    function applyScale(scale) {
+      cardEl.style.transform = scale === 1 ? "none" : "scaleX(" + scale + ")";
+    }
+
+    function finishTick() {
+      const was = flip.is_back;
+      const scale = flip.tick();
+      applyScale(scale);
+      if (flip.is_back !== was || !flip.flipping) showFace();
+      if (flip.flipping) flip.timer = setTimeout(finishTick, FLIP_MS);
+    }
+
+    function doFlip() {
+      const animate = !reduced.matches;
+      if (!flip.start(animate)) return;
+      if (!animate) {
+        applyScale(1);
+        showFace();
+        return;
+      }
+      finishTick();
+    }
+
+    function answer(which) {
+      const card = cards[index];
+      if (card.kind !== "native" || flip.is_back || flip.flipping || asked.length === 0) return;
+      const q = asked.shift();
+      ledger.push({
+        ts: Date.now(),
+        card: "clivor",
+        id: q.id,
+        question: q.question,
+        answer: which
+      });
+      showFace();
+    }
+
+    function nextCard() {
+      flip.resetFront();
+      applyScale(1);
+      index = (index + 1) % cards.length;
+      showFace();
+    }
+
+    function fit() {
+      const slot = document.getElementById("slot");
+      const ratioCss = getComputedStyle(document.documentElement).getPropertyValue("--ratio").trim();
+      const ratio = parseFloat(ratioCss) || PORTRAIT;
+      const box = portraitBox(slot.clientWidth, slot.clientHeight, ratio);
+      cardEl.style.width = box.w + "px";
+      cardEl.style.height = box.h + "px";
+    }
+
+    document.getElementById("flip").addEventListener("click", doFlip);
+    document.getElementById("switch").addEventListener("click", nextCard);
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        doFlip();
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        answer("no");
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        answer("yes");
+      }
+    });
+    window.addEventListener("resize", fit);
+    new ResizeObserver(fit).observe(document.getElementById("slot"));
+    reduced.addEventListener("change", function () {
+      if (reduced.matches && flip.flipping) {
+        const dest = flip.dest_back;
+        flip.resetFront();
+        flip.is_back = dest;
+        applyScale(1);
+        showFace();
+      }
+    });
+
+    const fallback = {
+      deck: [
+        { id: "look-1", question: "Is this a page you can flip before the Zig draft?", done_when: "You have seen all four cards, front and back." },
+        { id: "look-2", question: "Does left mean no, only on the front?", done_when: "A no is kept, and the back has no yes or no button." },
+        { id: "look-3", question: "Is face 2 read-only?", done_when: "The ledger shows the kept line and nothing else decides." }
+      ],
+      cards: [
+        { slug: "clivor", label: "Clivor yes/no", accent: "--accent-clivor", frontName: "yes-no", backName: "ledger", kind: "native" },
+        { slug: "journal-clip", label: "journal-clip", accent: "--accent-journal", frontName: "this tower", backName: "ledgar", kind: "pointer" },
+        { slug: "circadia", label: "Circadia", accent: "--accent-circadia", frontName: "status", backName: "evidence", kind: "mock" },
+        { slug: "vej-test", label: "Vej testing", accent: "--accent-vej", frontName: "scores", backName: "sets", kind: "mock" }
+      ]
+    };
+
+    async function boot() {
+      let data = fallback;
+      try {
+        const res = await fetch("deck.json", { cache: "no-store" });
+        if (res.ok) data = await res.json();
+      } catch (_) {
+        // file:// or offline — use fallback; deck.json remains the source of truth under http
+      }
+      deck = data.deck;
+      cards = data.cards;
+      asked = deck.slice();
+      fit();
+      showFace();
+    }
+
+    boot();
+  </script>
+</body>
+</html>
