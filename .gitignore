@@ -112,3 +112,7 @@ docs/PRODUCT_ESSAY_QUESTIONS.md
 docs/PRODUCT_ESSAY_QUESTIONS.bak-*.md
 docs/PRODUCT_ESSAY_QUESTIONS.*.md
 !docs/PRODUCT_ESSAY_QUESTIONS.md.stub
+AyTree/
+fuzzy-dow-card/
+tui-editor/
+fuzzy-dow/
